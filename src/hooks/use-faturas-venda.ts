@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { faturasVendaApi } from "@/lib/api/faturas-venda";
 import type { CriarFaturaVendaRequest } from "@/app/(myapp)/types/efatura";
+import { faturasVendaApi } from "@/lib/api/faturas-venda";
 
 export const FATURAS_VENDA_KEY = "faturas-venda" as const;
 

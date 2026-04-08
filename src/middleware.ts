@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "@igrp/framework-next-auth";
+import { type NextRequest, NextResponse } from "next/server";
 import { isPreviewMode } from "@/lib/utils";
 
 const PUBLIC_PATHS = ["/login", "/logout", "/api/auth"];

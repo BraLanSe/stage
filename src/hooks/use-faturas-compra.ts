@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { faturasCompraApi } from "@/lib/api/faturas-compra";
 import type { CriarFaturaCompraRequest } from "@/app/(myapp)/types/efatura";
+import { faturasCompraApi } from "@/lib/api/faturas-compra";
 
 export const FATURAS_COMPRA_KEY = "faturas-compra" as const;
 
@@ -35,8 +35,13 @@ export function useCriarFaturaCompra() {
 export function useAtualizarFaturaCompra() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CriarFaturaCompraRequest> }) =>
-      faturasCompraApi.atualizar(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<CriarFaturaCompraRequest>;
+    }) => faturasCompraApi.atualizar(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [FATURAS_COMPRA_KEY, "list"] });
       queryClient.setQueryData([FATURAS_COMPRA_KEY, "detail", data.id], data);

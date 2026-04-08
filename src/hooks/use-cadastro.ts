@@ -1,8 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  Cliente,
+  Entidade,
+  Fornecedor,
+  Produto,
+} from "@/app/(myapp)/types/efatura";
 import { cadastroApi } from "@/lib/api/cadastro";
-import type { Cliente, Entidade, Fornecedor, Produto } from "@/app/(myapp)/types/efatura";
 
 export const CLIENTES_KEY = "clientes" as const;
 export const FORNECEDORES_KEY = "fornecedores" as const;
@@ -29,8 +34,12 @@ export function useCliente(id: number | null) {
 export function useCriarCliente() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Cliente, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">) =>
-      cadastroApi.clientes.criar(data),
+    mutationFn: (
+      data: Omit<
+        Cliente,
+        "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+      >,
+    ) => cadastroApi.clientes.criar(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [CLIENTES_KEY] }),
   });
 }
@@ -64,8 +73,12 @@ export function useFornecedor(id: number | null) {
 export function useCriarFornecedor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Fornecedor, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">) =>
-      cadastroApi.fornecedores.criar(data),
+    mutationFn: (
+      data: Omit<
+        Fornecedor,
+        "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+      >,
+    ) => cadastroApi.fornecedores.criar(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [FORNECEDORES_KEY] }),
   });
 }
@@ -91,8 +104,12 @@ export function useProdutos(page = 0, size = 50, search?: string) {
 export function useCriarProduto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Produto, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">) =>
-      cadastroApi.produtos.criar(data),
+    mutationFn: (
+      data: Omit<
+        Produto,
+        "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+      >,
+    ) => cadastroApi.produtos.criar(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [PRODUTOS_KEY] }),
   });
 }
@@ -109,7 +126,8 @@ export function useEntidade() {
 export function useAtualizarEntidade() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Entidade>) => cadastroApi.entidade.atualizar(data),
+    mutationFn: (data: Partial<Entidade>) =>
+      cadastroApi.entidade.atualizar(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ENTIDADE_KEY] }),
   });
 }

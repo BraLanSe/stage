@@ -6,7 +6,11 @@
 
 export type EstadoFatura = "RASCUNHO" | "CONFIRMADO";
 export type PagamentoStatus = "NAO_PROCESSADO" | "PROCESSADO" | "PARCIAL";
-export type DocFiscalStatus = "VALIDADO" | "RECUSADO" | "PENDENTE" | "NAO_ENVIADO";
+export type DocFiscalStatus =
+  | "VALIDADO"
+  | "RECUSADO"
+  | "PENDENTE"
+  | "NAO_ENVIADO";
 export type TipoCalculo = "PERCENTAGEM" | "VALOR_FIXO";
 
 export type TipoDocumento =
@@ -116,7 +120,17 @@ export interface CriarFaturaVendaRequest {
   dataVencimento?: string;
   condicoesPagamento?: string;
   observacoes?: string;
-  itens: Omit<ItemFaturaVenda, "id" | "totalSemIva" | "totalIva" | "totalLinha" | "valorBruto" | "valorLiquido" | "valorImposto" | "valorTotal">[];
+  itens: Omit<
+    ItemFaturaVenda,
+    | "id"
+    | "totalSemIva"
+    | "totalIva"
+    | "totalLinha"
+    | "valorBruto"
+    | "valorLiquido"
+    | "valorImposto"
+    | "valorTotal"
+  >[];
 }
 
 // ── Compra ───────────────────────────────────────────────────
@@ -155,7 +169,10 @@ export interface CriarFaturaCompraRequest {
   serie?: string;
   dataVencimento?: string;
   observacoes?: string;
-  itens: Omit<ItemFaturaCompra, "id" | "totalSemIva" | "totalIva" | "totalLinha">[];
+  itens: Omit<
+    ItemFaturaCompra,
+    "id" | "totalSemIva" | "totalIva" | "totalLinha"
+  >[];
 }
 
 // ── Parametrização ───────────────────────────────────────────

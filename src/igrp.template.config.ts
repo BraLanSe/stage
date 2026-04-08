@@ -9,8 +9,8 @@ import { getMockApps } from "@/temp/applications/use-mock-apps";
 import { getMockMenus } from "@/temp/menus/use-mock-menus";
 import { getMockUser } from "@/temp/users/use-mock-user";
 import { getPackageJson } from "./lib/config/get-pkj";
-import { getSessionArgs } from "./lib/config/get-session-args";
 import { getRoutes } from "./lib/config/get-routes";
+import { getSessionArgs } from "./lib/config/get-session-args";
 
 export function createConfig(
   config: IGRPLayoutConfigArgs,

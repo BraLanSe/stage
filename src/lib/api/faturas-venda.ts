@@ -1,15 +1,19 @@
-import { apiRequest } from "./client";
 import type {
   CriarFaturaVendaRequest,
   FaturaVenda,
   PaginatedResponse,
 } from "@/app/(myapp)/types/efatura";
+import { apiRequest } from "./client";
 
 const BASE = "/faturas-venda";
 
 export const faturasVendaApi = {
   listar: (page = 0, size = 10, params?: Record<string, string>) => {
-    const search = new URLSearchParams({ page: String(page), size: String(size), ...params });
+    const search = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+      ...params,
+    });
     return apiRequest<PaginatedResponse<FaturaVenda>>(`${BASE}?${search}`);
   },
 
@@ -34,5 +38,7 @@ export const faturasVendaApi = {
     apiRequest<void>(`${BASE}/${id}`, { method: "DELETE" }),
 
   pdf: (id: number) =>
-    apiRequest<Blob>(`${BASE}/${id}/pdf`, { headers: { Accept: "application/pdf" } }),
+    apiRequest<Blob>(`${BASE}/${id}/pdf`, {
+      headers: { Accept: "application/pdf" },
+    }),
 };

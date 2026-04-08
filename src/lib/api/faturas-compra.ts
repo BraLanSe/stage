@@ -1,9 +1,9 @@
-import { apiRequest } from "./client";
 import type {
   CriarFaturaCompraRequest,
   FaturaCompra,
   PaginatedResponse,
 } from "@/app/(myapp)/types/efatura";
+import { apiRequest } from "./client";
 
 const BASE = "/faturas-compra";
 

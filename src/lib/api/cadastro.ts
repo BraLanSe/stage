@@ -1,4 +1,3 @@
-import { apiRequest } from "./client";
 import type {
   Cliente,
   Entidade,
@@ -6,10 +5,20 @@ import type {
   PaginatedResponse,
   Produto,
 } from "@/app/(myapp)/types/efatura";
+import { apiRequest } from "./client";
 
-type ClienteWrite = Omit<Cliente, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">;
-type FornecedorWrite = Omit<Fornecedor, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">;
-type ProdutoWrite = Omit<Produto, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">;
+type ClienteWrite = Omit<
+  Cliente,
+  "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+>;
+type FornecedorWrite = Omit<
+  Fornecedor,
+  "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+>;
+type ProdutoWrite = Omit<
+  Produto,
+  "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+>;
 
 export const cadastroApi = {
   clientes: {

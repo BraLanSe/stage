@@ -1,16 +1,18 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
 import { useRouter } from "next/navigation";
-import { useCriarFaturaCompra } from "@/hooks/use-faturas-compra";
-import { useFornecedores } from "@/hooks/use-cadastro";
+import { useFieldArray, useForm } from "react-hook-form";
+import { z } from "zod/v4";
 import type { TipoDocumento } from "@/app/(myapp)/types/efatura";
+import { useFornecedores } from "@/hooks/use-cadastro";
+import { useCriarFaturaCompra } from "@/hooks/use-faturas-compra";
 
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição obrigatória"),
-  quantidade: z.number({ error: "Quantidade inválida" }).positive("Deve ser > 0"),
+  quantidade: z
+    .number({ error: "Quantidade inválida" })
+    .positive("Deve ser > 0"),
   precoUnitario: z.number({ error: "Preço inválido" }).positive("Deve ser > 0"),
   percentagemIva: z.number().min(0).max(100),
 });
@@ -69,17 +71,25 @@ export default function NovaFaturaCompraPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       tipoDocumento: "FATURA",
-      itens: [{ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 }],
+      itens: [
+        { descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 },
+      ],
     } as Partial<FormValues>,
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
   const itens = watch("itens");
 
-  const subtotal = itens.reduce((acc, item) => acc + (item.quantidade ?? 0) * (item.precoUnitario ?? 0), 0);
+  const subtotal = itens.reduce(
+    (acc, item) => acc + (item.quantidade ?? 0) * (item.precoUnitario ?? 0),
+    0,
+  );
   const totalIva = itens.reduce(
     (acc, item) =>
-      acc + (item.quantidade ?? 0) * (item.precoUnitario ?? 0) * ((item.percentagemIva ?? 15) / 100),
+      acc +
+      (item.quantidade ?? 0) *
+        (item.precoUnitario ?? 0) *
+        ((item.percentagemIva ?? 15) / 100),
     0,
   );
   const total = subtotal + totalIva;
@@ -92,18 +102,25 @@ export default function NovaFaturaCompraPage() {
   return (
     <div className="mx-auto max-w-5xl p-8">
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <a href="/faturas-compra" className="hover:text-foreground hover:underline">
+        <a
+          href="/faturas-compra"
+          className="hover:text-foreground hover:underline"
+        >
           Faturas de Compra
         </a>
         <span>/</span>
         <span className="text-foreground font-medium">Nova Fatura</span>
       </nav>
 
-      <h1 className="mb-8 text-2xl font-bold text-foreground">Nova Fatura de Compra</h1>
+      <h1 className="mb-8 text-2xl font-bold text-foreground">
+        Nova Fatura de Compra
+      </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-foreground">Informações Gerais</h2>
+          <h2 className="mb-4 text-base font-semibold text-foreground">
+            Informações Gerais
+          </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-foreground">
@@ -121,7 +138,9 @@ export default function NovaFaturaCompraPage() {
                 ))}
               </select>
               {errors.fornecedorId && (
-                <p className="text-xs text-destructive">{errors.fornecedorId.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.fornecedorId.message}
+                </p>
               )}
             </div>
 
@@ -134,13 +153,17 @@ export default function NovaFaturaCompraPage() {
                 {...register("tipoDocumento")}
               >
                 {TIPOS_DOCUMENTO.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Série</label>
+              <label className="text-sm font-medium text-foreground">
+                Série
+              </label>
               <input
                 placeholder="Ex: FC-2025"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -149,7 +172,9 @@ export default function NovaFaturaCompraPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Data de Vencimento</label>
+              <label className="text-sm font-medium text-foreground">
+                Data de Vencimento
+              </label>
               <input
                 type="date"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -158,7 +183,9 @@ export default function NovaFaturaCompraPage() {
             </div>
 
             <div className="col-span-full flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Observações</label>
+              <label className="text-sm font-medium text-foreground">
+                Observações
+              </label>
               <textarea
                 rows={2}
                 placeholder="Observações adicionais…"
@@ -171,10 +198,19 @@ export default function NovaFaturaCompraPage() {
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">Itens da Fatura</h2>
+            <h2 className="text-base font-semibold text-foreground">
+              Itens da Fatura
+            </h2>
             <button
               type="button"
-              onClick={() => append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 })}
+              onClick={() =>
+                append({
+                  descricao: "",
+                  quantidade: 1,
+                  precoUnitario: 0,
+                  percentagemIva: 15,
+                })
+              }
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors"
             >
               + Adicionar Linha
@@ -182,18 +218,30 @@ export default function NovaFaturaCompraPage() {
           </div>
 
           {errors.itens && !Array.isArray(errors.itens) && (
-            <p className="mb-3 text-sm text-destructive">{errors.itens.message}</p>
+            <p className="mb-3 text-sm text-destructive">
+              {errors.itens.message}
+            </p>
           )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="pb-2 text-left font-medium text-muted-foreground">Produto / Serviço</th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">Qtd.</th>
-                  <th className="pb-2 w-32 text-right font-medium text-muted-foreground">Preço Unit.</th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">IVA %</th>
-                  <th className="pb-2 w-36 text-right font-medium text-muted-foreground">Total Linha</th>
+                  <th className="pb-2 text-left font-medium text-muted-foreground">
+                    Produto / Serviço
+                  </th>
+                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
+                    Qtd.
+                  </th>
+                  <th className="pb-2 w-32 text-right font-medium text-muted-foreground">
+                    Preço Unit.
+                  </th>
+                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
+                    IVA %
+                  </th>
+                  <th className="pb-2 w-36 text-right font-medium text-muted-foreground">
+                    Total Linha
+                  </th>
                   <th className="pb-2 w-8" />
                 </tr>
               </thead>
@@ -201,7 +249,11 @@ export default function NovaFaturaCompraPage() {
                 {fields.map((field, i) => {
                   const item = itens[i];
                   const linhaTotal = item
-                    ? calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0, item.percentagemIva ?? 15)
+                    ? calcLinha(
+                        item.quantidade ?? 0,
+                        item.precoUnitario ?? 0,
+                        item.percentagemIva ?? 15,
+                      )
                     : 0;
                   return (
                     <tr key={field.id}>
@@ -214,26 +266,41 @@ export default function NovaFaturaCompraPage() {
                       </td>
                       <td className="py-2 px-1">
                         <input
-                          type="number" min={0} step="0.01"
+                          type="number"
+                          min={0}
+                          step="0.01"
                           className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.quantidade`, { valueAsNumber: true })}
+                          {...register(`itens.${i}.quantidade`, {
+                            valueAsNumber: true,
+                          })}
                         />
                       </td>
                       <td className="py-2 px-1">
                         <input
-                          type="number" min={0} step="0.01"
+                          type="number"
+                          min={0}
+                          step="0.01"
                           className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.precoUnitario`, { valueAsNumber: true })}
+                          {...register(`itens.${i}.precoUnitario`, {
+                            valueAsNumber: true,
+                          })}
                         />
                       </td>
                       <td className="py-2 px-1">
                         <input
-                          type="number" min={0} max={100} step="0.1"
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.1"
                           className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.percentagemIva`, { valueAsNumber: true })}
+                          {...register(`itens.${i}.percentagemIva`, {
+                            valueAsNumber: true,
+                          })}
                         />
                       </td>
-                      <td className="py-2 pl-3 text-right font-medium">{formatCVE(linhaTotal)}</td>
+                      <td className="py-2 pl-3 text-right font-medium">
+                        {formatCVE(linhaTotal)}
+                      </td>
                       <td className="py-2 pl-2">
                         <button
                           type="button"

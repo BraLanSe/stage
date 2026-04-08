@@ -1,5 +1,5 @@
-import { apiRequest } from "./client";
 import type { SerieDocumento, TaxaIva } from "@/app/(myapp)/types/efatura";
+import { apiRequest } from "./client";
 
 export const parametrizacaoApi = {
   taxasIva: {

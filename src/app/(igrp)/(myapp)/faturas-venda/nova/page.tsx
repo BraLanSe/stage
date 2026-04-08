@@ -1,24 +1,35 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
 import { useRouter } from "next/navigation";
-import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
-import { useClientes } from "@/hooks/use-cadastro";
+import { useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod/v4";
 import type { TipoDocumento } from "@/app/(myapp)/types/efatura";
+import { useClientes } from "@/hooks/use-cadastro";
+import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
 
 // ── Schema ───────────────────────────────────────────────────
 
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
-  quantidade: z.number({ error: "Quantidade inválida" }).positive("Deve ser > 0"),
-  precoUnitario: z.number({ error: "Preço inválido" }).positive("Deve ser > 0"),
-  percentagemIva: z.number().min(0).max(100),
+  quantidade: z
+    .number({ invalid_type_error: "Quantidade inválida" })
+    .positive("Deve ser > 0"),
+  precoUnitario: z
+    .number({ invalid_type_error: "Preço inválido" })
+    .min(0, "Deve ser >= 0"),
+  percentagemIva: z
+    .number({ invalid_type_error: "IVA inválido" })
+    .min(0)
+    .max(100),
 });
 
 const schema = z.object({
-  clienteId: z.number({ error: "Selecione um cliente" }),
+  clienteId: z.number({
+    invalid_type_error: "Selecione um cliente",
+    required_error: "Selecione um cliente",
+  }),
   tipoDocumento: z.enum([
     "FATURA",
     "FATURA_RECIBO",
@@ -45,11 +56,15 @@ const TIPOS_DOCUMENTO: { value: TipoDocumento; label: string }[] = [
 // ── Helpers ──────────────────────────────────────────────────
 
 function calcLinha(qty: number, unit: number, iva: number) {
-  const base = qty * unit;
-  return base + base * (iva / 100);
+  const q = Number.isNaN(qty) ? 0 : Number(qty);
+  const u = Number.isNaN(unit) ? 0 : Number(unit);
+  const i = Number.isNaN(iva) ? 0 : Number(iva);
+  const base = q * u;
+  return base + base * (i / 100);
 }
 
 function formatCVE(v: number) {
+  if (Number.isNaN(v)) return "0 CVE";
   return new Intl.NumberFormat("pt-CV", {
     style: "currency",
     currency: "CVE",
@@ -75,47 +90,62 @@ export default function NovaFaturaVendaPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       tipoDocumento: "FATURA",
-      percentagemIva: 15,
-      itens: [{ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 }],
+      itens: [
+        { descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 },
+      ],
     } as Partial<FormValues>,
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
-  const itens = watch("itens");
+  const watchedItens = watch("itens") || [];
 
-  const subtotal = itens.reduce(
-    (acc, item) => acc + (item.quantidade ?? 0) * (item.precoUnitario ?? 0),
-    0,
-  );
-  const totalIva = itens.reduce(
-    (acc, item) =>
-      acc +
-      (item.quantidade ?? 0) *
-        (item.precoUnitario ?? 0) *
-        ((item.percentagemIva ?? 15) / 100),
-    0,
-  );
+  const subtotal = watchedItens.reduce((acc, item) => {
+    const q = Number(item?.quantidade) || 0;
+    const u = Number(item?.precoUnitario) || 0;
+    return acc + q * u;
+  }, 0);
+
+  const totalIva = watchedItens.reduce((acc, item) => {
+    const q = Number(item?.quantidade) || 0;
+    const u = Number(item?.precoUnitario) || 0;
+    const i = Number(item?.percentagemIva) || 0;
+    return acc + q * u * (i / 100);
+  }, 0);
+
   const total = subtotal + totalIva;
 
   async function onSubmit(values: FormValues) {
-    const fatura = await criar({
-      ...values,
-      itens: values.itens.map(({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
-        desig: descricao,
-        descricao,
-        quantidade,
-        precoUnitario,
-        percentagemIva,
-      })),
-    });
-    router.push(`/faturas-venda/${fatura.id}`);
+    try {
+      const fatura = await criar({
+        ...values,
+        itens: values.itens.map(
+          ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
+            desig: descricao,
+            descricao,
+            quantidade,
+            precoUnitario,
+            percentagemIva,
+          }),
+        ),
+      });
+      toast.success("Fatura criada com sucesso!");
+      router.push(`/faturas-venda/${fatura.id}`);
+    } catch (error) {
+      toast.error(
+        "Erro ao criar fatura. Verifique os dados e tente novamente.",
+      );
+      console.error("Erro ao criar fatura:", error);
+    }
   }
 
   return (
     <div className="mx-auto max-w-5xl p-8">
       {/* Breadcrumbs */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <a href="/faturas-venda" className="hover:text-foreground hover:underline">
+        <a
+          href="/faturas-venda"
+          className="hover:text-foreground hover:underline"
+        >
           Faturas de Venda
         </a>
         <span>/</span>
@@ -139,7 +169,7 @@ export default function NovaFaturaVendaPage() {
                 Cliente <span className="text-destructive">*</span>
               </label>
               <select
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.clienteId ? "border-destructive" : "border-input"}`}
                 {...register("clienteId", { valueAsNumber: true })}
               >
                 <option value="">Selecionar cliente…</option>
@@ -150,7 +180,9 @@ export default function NovaFaturaVendaPage() {
                 ))}
               </select>
               {errors.clienteId && (
-                <p className="text-xs text-destructive">{errors.clienteId.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.clienteId.message}
+                </p>
               )}
             </div>
 
@@ -173,7 +205,9 @@ export default function NovaFaturaVendaPage() {
 
             {/* Série */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Série</label>
+              <label className="text-sm font-medium text-foreground">
+                Série
+              </label>
               <input
                 placeholder="Ex: FT-2025"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -217,7 +251,12 @@ export default function NovaFaturaVendaPage() {
             <button
               type="button"
               onClick={() =>
-                append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 })
+                append({
+                  descricao: "",
+                  quantidade: 1,
+                  precoUnitario: 0,
+                  percentagemIva: 15,
+                })
               }
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors"
             >
@@ -226,7 +265,9 @@ export default function NovaFaturaVendaPage() {
           </div>
 
           {errors.itens && !Array.isArray(errors.itens) && (
-            <p className="mb-3 text-sm text-destructive">{errors.itens.message}</p>
+            <p className="mb-3 text-sm text-destructive">
+              {errors.itens.message}
+            </p>
           )}
 
           <div className="overflow-x-auto">
@@ -253,7 +294,7 @@ export default function NovaFaturaVendaPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {fields.map((field, i) => {
-                  const item = itens[i];
+                  const item = watchedItens[i];
                   const linhaTotal = item
                     ? calcLinha(
                         item.quantidade ?? 0,
@@ -262,53 +303,60 @@ export default function NovaFaturaVendaPage() {
                       )
                     : 0;
 
+                  const itemErrors = errors.itens?.[i];
+
                   return (
                     <tr key={field.id}>
-                      <td className="py-2 pr-3">
+                      <td className="py-2 pr-3 align-top">
                         <input
                           placeholder="Descrição do produto ou serviço"
-                          className="w-full rounded border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          className={`w-full rounded border bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.descricao ? "border-destructive" : "border-input"}`}
                           {...register(`itens.${i}.descricao`)}
                         />
+                        {itemErrors?.descricao && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {itemErrors.descricao.message}
+                          </p>
+                        )}
                       </td>
-                      <td className="py-2 px-1">
+                      <td className="py-2 px-1 align-top">
                         <input
                           type="number"
                           min={0}
                           step="0.01"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.quantidade ? "border-destructive" : "border-input"}`}
                           {...register(`itens.${i}.quantidade`, {
                             valueAsNumber: true,
                           })}
                         />
                       </td>
-                      <td className="py-2 px-1">
+                      <td className="py-2 px-1 align-top">
                         <input
                           type="number"
                           min={0}
                           step="0.01"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.precoUnitario ? "border-destructive" : "border-input"}`}
                           {...register(`itens.${i}.precoUnitario`, {
                             valueAsNumber: true,
                           })}
                         />
                       </td>
-                      <td className="py-2 px-1">
+                      <td className="py-2 px-1 align-top">
                         <input
                           type="number"
                           min={0}
                           max={100}
                           step="0.1"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.percentagemIva ? "border-destructive" : "border-input"}`}
                           {...register(`itens.${i}.percentagemIva`, {
                             valueAsNumber: true,
                           })}
                         />
                       </td>
-                      <td className="py-2 pl-3 text-right font-medium">
+                      <td className="py-2 pl-3 text-right font-medium align-top pt-3">
                         {formatCVE(linhaTotal)}
                       </td>
-                      <td className="py-2 pl-2">
+                      <td className="py-2 pl-2 align-top pt-3">
                         <button
                           type="button"
                           onClick={() => remove(i)}
@@ -336,7 +384,7 @@ export default function NovaFaturaVendaPage() {
               <span>{formatCVE(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm mt-2">
-              <span className="text-muted-foreground">IVA (auto 15%)</span>
+              <span className="text-muted-foreground">Total IVA</span>
               <span>{formatCVE(totalIva)}</span>
             </div>
             <hr className="my-3 border-border" />
@@ -359,7 +407,7 @@ export default function NovaFaturaVendaPage() {
               disabled={isPending}
               className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
-              {isPending ? "A guardar…" : "Guardar Rascunho"}
+              {isPending ? "A guardar…" : "Confirmar Fatura"}
             </button>
           </div>
         </div>
