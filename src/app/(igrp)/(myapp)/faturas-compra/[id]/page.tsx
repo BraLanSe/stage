@@ -86,6 +86,7 @@ function LinhaItem({
       </td>
       <td className="px-2 py-1.5 text-center">
         <button
+          type="button"
           onClick={onRemove}
           className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none"
         >
@@ -209,6 +210,7 @@ export default function FaturaCompraDetailPage() {
           {(error as Error)?.message ?? "Fatura não encontrada"}
         </p>
         <button
+          type="button"
           onClick={() => router.back()}
           className="text-xs text-blue-500 hover:underline"
         >
@@ -246,6 +248,7 @@ export default function FaturaCompraDetailPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
                 className="h-4 w-4 text-gray-400"
+                aria-hidden="true"
               >
                 <path d="M3 4h14M3 8h14M3 12h14M3 16h8" />
               </svg>
@@ -255,18 +258,22 @@ export default function FaturaCompraDetailPage() {
             </div>
             <div className="grid grid-cols-4 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500">Nº Documento</label>
+                <label htmlFor="numDocumento" className="text-xs text-gray-500">
+                  Nº Documento
+                </label>
                 <input
+                  id="numDocumento"
                   disabled
                   value={fatura.numero ?? `FC${id}`}
                   className="h-8 rounded border border-gray-200 bg-gray-50 px-2.5 text-xs text-gray-500"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500">
+                <label htmlFor="serie" className="text-xs text-gray-500">
                   Série <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="serie"
                   value={serie}
                   onChange={(e) => setSerie(e.target.value)}
                   className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
@@ -277,10 +284,11 @@ export default function FaturaCompraDetailPage() {
                 </select>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500">
+                <label htmlFor="dataFatura" className="text-xs text-gray-500">
                   Data <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="dataFatura"
                   type="date"
                   value={data_}
                   onChange={(e) => setData_(e.target.value)}
@@ -288,10 +296,11 @@ export default function FaturaCompraDetailPage() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500">
+                <label htmlFor="condicoes" className="text-xs text-gray-500">
                   Condições Pagamento <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="condicoes"
                   value={condicoes}
                   onChange={(e) => setCondicoes(e.target.value)}
                   className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
@@ -316,6 +325,7 @@ export default function FaturaCompraDetailPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
                 className="h-4 w-4 text-gray-400"
+                aria-hidden="true"
               >
                 <rect x="1" y="3" width="15" height="13" rx="1" />
                 <path d="M16 8h4l3 5v3h-7V8z" />
@@ -325,11 +335,15 @@ export default function FaturaCompraDetailPage() {
               </h2>
             </div>
             <div className="relative">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label
+                htmlFor="fornecedorSearch"
+                className="mb-1 block text-xs text-gray-500"
+              >
                 Fornecedor
               </label>
               <div className="flex h-8 items-center rounded border border-gray-300 bg-white">
                 <input
+                  id="fornecedorSearch"
                   value={
                     fornecedorSelecionado
                       ? `${fornecedorSelecionado.nome} - ${fornecedorSelecionado.nif ?? ""} -`
@@ -345,6 +359,7 @@ export default function FaturaCompraDetailPage() {
                 />
                 {selectedFornecedorId && (
                   <button
+                    type="button"
                     onClick={() => {
                       setSelectedFornecedorId(undefined);
                       setFornecedorSearch("");
@@ -357,14 +372,17 @@ export default function FaturaCompraDetailPage() {
               </div>
               {showFornecedorDD && fornecedoresFiltrados.length > 0 && (
                 <>
-                  <div
-                    className="fixed inset-0 z-10"
+                  <button
+                    type="button"
+                    aria-label="Fechar lista de fornecedores"
+                    className="fixed inset-0 z-10 cursor-default"
                     onClick={() => setShowFornecedorDD(false)}
                   />
                   <div className="absolute z-20 mt-1 w-full rounded border border-gray-200 bg-white shadow-md max-h-40 overflow-y-auto">
                     {fornecedoresFiltrados.map((f) => (
                       <button
                         key={f.id}
+                        type="button"
                         onClick={() => {
                           setSelectedFornecedorId(f.id);
                           setFornecedorSearch(f.nome);
@@ -392,6 +410,7 @@ export default function FaturaCompraDetailPage() {
                   stroke="currentColor"
                   strokeWidth="1.5"
                   className="h-4 w-4 text-gray-400"
+                  aria-hidden="true"
                 >
                   <path d="M4 6h12M4 10h12M4 14h6" />
                 </svg>
@@ -400,6 +419,7 @@ export default function FaturaCompraDetailPage() {
                 </h2>
               </div>
               <button
+                type="button"
                 onClick={addLinha}
                 className="flex items-center gap-1.5 rounded border border-blue-400 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
               >
@@ -445,7 +465,7 @@ export default function FaturaCompraDetailPage() {
                   ) : (
                     itens.map((item, i) => (
                       <LinhaItem
-                        key={i}
+                        key={item.id ?? i}
                         item={item}
                         index={i}
                         onChange={(f, v) => updateItem(i, f, v)}
@@ -476,8 +496,11 @@ export default function FaturaCompraDetailPage() {
 
           {/* Nota */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500">Nota</label>
+            <label htmlFor="nota" className="text-xs text-gray-500">
+              Nota
+            </label>
             <textarea
+              id="nota"
               value={nota}
               onChange={(e) => setNota(e.target.value)}
               rows={3}
@@ -488,6 +511,7 @@ export default function FaturaCompraDetailPage() {
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-gray-200 pt-4">
             <button
+              type="button"
               onClick={() => router.push("/faturas-compra")}
               className="rounded border border-gray-300 px-5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
             >
@@ -496,6 +520,7 @@ export default function FaturaCompraDetailPage() {
             <div className="flex gap-2">
               {fatura.estado === "RASCUNHO" && (
                 <button
+                  type="button"
                   onClick={() => confirmar(id)}
                   disabled={isConfirming}
                   className="rounded bg-green-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
@@ -504,6 +529,7 @@ export default function FaturaCompraDetailPage() {
                 </button>
               )}
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
                 className="rounded bg-blue-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"

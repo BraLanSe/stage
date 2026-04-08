@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Nota sobre decimais: O JavaScript usa double-precision floats.
 // Para cálculos precisos no frontend (como exigido no doc), recomenda-se
@@ -79,7 +79,7 @@ export const ProdutoSchema = z.object({
 export type Produto = z.infer<typeof ProdutoSchema>;
 
 // 8.5. pr_imposto
-export const TipoCalculoEnum = z.enum(['PERCENTAGEM', 'VALOR_FIXO']);
+export const TipoCalculoEnum = z.enum(["PERCENTAGEM", "VALOR_FIXO"]);
 
 export const PrImpostoSchema = z.object({
   id: z.string().min(1, "ID é obrigatório"),
@@ -164,11 +164,13 @@ export const FaturaVendaItemImpostoSchema = z.object({
   contaGlId: z.string().optional().nullable(),
   ordem: z.number().int().optional().nullable(),
 });
-export type FaturaVendaItemImposto = z.infer<typeof FaturaVendaItemImpostoSchema>;
+export type FaturaVendaItemImposto = z.infer<
+  typeof FaturaVendaItemImpostoSchema
+>;
 
 // 8.9. fatura_compra e tabelas associadas
 export const FaturaCompraSchema = FaturaVendaSchema.extend({
-  clienteId: z.undefined(), 
+  clienteId: z.undefined(),
   fornecedorId: z.string().min(1, "Fornecedor é obrigatório"),
   faturaVendaId: z.undefined(),
   faturaCompraId: z.string().optional().nullable(),
@@ -181,11 +183,16 @@ export const FaturaCompraItemSchema = FaturaVendaItemSchema.extend({
 });
 export type FaturaCompraItem = z.infer<typeof FaturaCompraItemSchema>;
 
-export const FaturaCompraItemImpostoSchema = FaturaVendaItemImpostoSchema.extend({
-  faturaVendaItemId: z.undefined(),
-  faturaCompraItemId: z.string().min(1, "Item da Fatura de Compra é obrigatório"),
-});
-export type FaturaCompraItemImposto = z.infer<typeof FaturaCompraItemImpostoSchema>;
+export const FaturaCompraItemImpostoSchema =
+  FaturaVendaItemImpostoSchema.extend({
+    faturaVendaItemId: z.undefined(),
+    faturaCompraItemId: z
+      .string()
+      .min(1, "Item da Fatura de Compra é obrigatório"),
+  });
+export type FaturaCompraItemImposto = z.infer<
+  typeof FaturaCompraItemImpostoSchema
+>;
 
 // 8.10. pagamento
 export const PagamentoSchema = z.object({
@@ -221,7 +228,13 @@ export const PagamentoDocumentoSchema = z.object({
 export type PagamentoDocumento = z.infer<typeof PagamentoDocumentoSchema>;
 
 // 8.12. gl_conta
-export const TipoContaEnum = z.enum(['Ativo', 'Passivo', 'Capital', 'Rendimento', 'Gasto']);
+export const TipoContaEnum = z.enum([
+  "Ativo",
+  "Passivo",
+  "Capital",
+  "Rendimento",
+  "Gasto",
+]);
 
 export const GlContaSchema = z.object({
   id: z.string().min(1, "ID é obrigatório"),

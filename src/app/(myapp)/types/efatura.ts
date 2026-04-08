@@ -2,6 +2,17 @@
 // eFatura — TypeScript Types (mirrors Spring Boot entities)
 // ────────────────────────────────────────────────────────────
 
+// ── Monetary type ────────────────────────────────────────────
+
+/**
+ * Monetary value in Cabo Verde Escudos (CVE).
+ * Always stored and transmitted with at most 2 decimal places.
+ * Never use raw float arithmetic on these — apply `round2()` after each
+ * intermediate operation to mirror Java BigDecimal(scale=2) behaviour
+ * as required by the eFatura technical specification §119.
+ */
+export type CVE = number;
+
 // ── Shared ──────────────────────────────────────────────────
 
 export type EstadoFatura = "RASCUNHO" | "CONFIRMADO";
@@ -47,10 +58,10 @@ export interface ItemImpostoFaturaVenda {
   impostoId: number;
   impostoDesig?: string;
   tipoCalculo: TipoCalculo;
-  taxa?: number;
-  valorFixo?: number;
-  baseCalculo: number;
-  valorImposto: number;
+  taxa?: number; // percentage, not monetary
+  valorFixo?: CVE;
+  baseCalculo: CVE;
+  valorImposto: CVE;
   motivoNaoAplicar?: string;
 }
 
@@ -61,24 +72,24 @@ export interface ItemFaturaVenda {
   codigoArtigo?: string;
   desig: string;
   descr?: string;
-  quantidade: number;
+  quantidade: number; // quantity — not monetary
   unidade?: string;
-  precoUnitario: number;
-  descontoComercialPerc?: number;
-  descontoComercialValor?: number;
-  descontoFinanceiroPerc?: number;
-  descontoFinanceiroValor?: number;
-  valorBruto?: number;
-  valorLiquido?: number;
-  valorImposto?: number;
-  valorTotal?: number;
+  precoUnitario: CVE;
+  descontoComercialPerc?: number; // percentage — not monetary
+  descontoComercialValor?: CVE;
+  descontoFinanceiroPerc?: number; // percentage — not monetary
+  descontoFinanceiroValor?: CVE;
+  valorBruto?: CVE;
+  valorLiquido?: CVE;
+  valorImposto?: CVE;
+  valorTotal?: CVE;
   impostos?: ItemImpostoFaturaVenda[];
   // Legacy compatibility
   descricao?: string;
-  percentagemIva?: number;
-  totalSemIva?: number;
-  totalIva?: number;
-  totalLinha?: number;
+  percentagemIva?: number; // percentage — not monetary
+  totalSemIva?: CVE;
+  totalIva?: CVE;
+  totalLinha?: CVE;
 }
 
 export interface FaturaVenda extends AuditFields {
@@ -96,20 +107,20 @@ export interface FaturaVenda extends AuditFields {
   dataVencimento?: string;
   condicoesPagamento?: string;
   requisicao?: string;
-  descontoFinanceiro?: number;
-  descontoComercial?: number;
+  descontoFinanceiro?: number; // percentage — not monetary
+  descontoComercial?: number; // percentage — not monetary
   nota?: string;
   observacoes?: string;
-  valorIliquido?: number;
-  valorImposto?: number;
-  valorFatura?: number;
-  valorPago?: number;
-  valorPorPagar?: number;
+  valorIliquido?: CVE;
+  valorImposto?: CVE;
+  valorFatura?: CVE;
+  valorPago?: CVE;
+  valorPorPagar?: CVE;
   pago?: boolean;
-  subtotal?: number;
-  totalDesconto?: number;
-  totalIva?: number;
-  total?: number;
+  subtotal?: CVE;
+  totalDesconto?: CVE;
+  totalIva?: CVE;
+  total?: CVE;
   itens: ItemFaturaVenda[];
 }
 
@@ -139,12 +150,12 @@ export interface ItemFaturaCompra {
   id?: number;
   desig?: string;
   descricao: string;
-  quantidade: number;
-  precoUnitario: number;
-  percentagemIva: number;
-  totalSemIva?: number;
-  totalIva?: number;
-  totalLinha?: number;
+  quantidade: number; // quantity — not monetary
+  precoUnitario: CVE;
+  percentagemIva: number; // percentage — not monetary
+  totalSemIva?: CVE;
+  totalIva?: CVE;
+  totalLinha?: CVE;
 }
 
 export interface FaturaCompra extends AuditFields {
@@ -156,10 +167,11 @@ export interface FaturaCompra extends AuditFields {
   estado?: EstadoFatura;
   dataEmissao?: string;
   dataVencimento?: string;
+  condicoesPagamento?: string;
   observacoes?: string;
-  subtotal?: number;
-  totalIva?: number;
-  total?: number;
+  subtotal?: CVE;
+  totalIva?: CVE;
+  total?: CVE;
   itens: ItemFaturaCompra[];
 }
 
@@ -260,10 +272,10 @@ export interface Produto extends AuditFields {
   codigo: string;
   desig: string;
   descr?: string;
-  preco?: number;
+  preco?: CVE;
   unidade?: string;
   categoria?: string;
-  percentagemIva?: number;
+  percentagemIva?: number; // percentage — not monetary
   ativo: boolean;
 }
 
@@ -317,12 +329,12 @@ export interface DashboardStats {
   totalClientes: number;
   totalFornecedores: number;
   totalProdutos: number;
-  totalVendas: number;
-  totalDespesas: number;
-  ganhoLucro: number;
-  variacaoVendas: number;
-  variacaoDespesas: number;
-  variacaoLucro: number;
-  vendasMensais: Array<{ mes: string; vendas: number; compras: number }>;
-  vendasPorMeio: Array<{ meio: string; valor: number; cor: string }>;
+  totalVendas: CVE;
+  totalDespesas: CVE;
+  ganhoLucro: CVE;
+  variacaoVendas: number; // percentage variation
+  variacaoDespesas: number; // percentage variation
+  variacaoLucro: number; // percentage variation
+  vendasMensais: Array<{ mes: string; vendas: CVE; compras: CVE }>;
+  vendasPorMeio: Array<{ meio: string; valor: CVE; cor: string }>;
 }

@@ -114,6 +114,15 @@ export function useCriarProduto() {
   });
 }
 
+export function useAtualizarProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Produto> }) =>
+      cadastroApi.produtos.atualizar(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [PRODUTOS_KEY] }),
+  });
+}
+
 // ── Entidade ─────────────────────────────────────────────────
 
 export function useEntidade() {

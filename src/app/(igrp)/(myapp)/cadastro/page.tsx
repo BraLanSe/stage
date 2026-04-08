@@ -3,16 +3,21 @@
 import { useState } from "react";
 import type {
   Cliente,
+  CVE,
   Fornecedor,
+  Produto,
   TipoEntidade,
 } from "@/app/(myapp)/types/efatura";
 import {
   useAtualizarCliente,
   useAtualizarFornecedor,
+  useAtualizarProduto,
   useClientes,
   useCriarCliente,
   useCriarFornecedor,
+  useCriarProduto,
   useFornecedores,
+  useProdutos,
 } from "@/hooks/use-cadastro";
 
 // ── Cape Verde geographic data ────────────────────────────────
@@ -53,7 +58,17 @@ const TIPOS_ENTIDADE: { value: TipoEntidade; label: string }[] = [
 
 // ── Helpers ───────────────────────────────────────────────────
 
-type Tab = "clientes" | "fornecedores";
+type Tab = "clientes" | "fornecedores" | "produtos";
+
+function formatCVE(v: CVE | undefined | null) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return new Intl.NumberFormat("pt-CV", {
+    style: "currency",
+    currency: "CVE",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(v);
+}
 
 function emptyCliente(): Omit<
   Cliente,

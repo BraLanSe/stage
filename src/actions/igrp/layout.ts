@@ -23,7 +23,7 @@ export async function configLayout() {
         user: { name: "Preview User", email: "preview@example.com" },
         accessToken: "preview-token",
         expires: "9999-12-31T23:59:59.999Z",
-      } as any)
+      } as unknown as Awaited<ReturnType<typeof getAccessToken>>)
     : await getAccessToken();
 
   const { activeThemeValue, isScaled } = await getTheme();

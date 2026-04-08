@@ -68,11 +68,17 @@ function AcoesMenu({ id }: { id?: number }) {
   return (
     <div className="relative inline-block">
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50"
       >
         Ações
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="h-3 w-3"
+          aria-hidden="true"
+        >
           <path
             fillRule="evenodd"
             d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -82,7 +88,12 @@ function AcoesMenu({ id }: { id?: number }) {
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            className="fixed inset-0 z-10 cursor-default"
+            onClick={() => setOpen(false)}
+          />
           <div className="absolute right-0 z-20 mt-1 w-40 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
             <Link
               href={`/faturas-compra/${id}`}
@@ -92,12 +103,14 @@ function AcoesMenu({ id }: { id?: number }) {
               Ver / Editar
             </Link>
             <button
+              type="button"
               className="block w-full px-4 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
               onClick={() => setOpen(false)}
             >
               Imprimir PDF
             </button>
             <button
+              type="button"
               className="block w-full px-4 py-1.5 text-left text-xs text-red-600 hover:bg-red-50"
               onClick={() => setOpen(false)}
             >
@@ -277,6 +290,7 @@ export default function FaturasCompraPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
                 className="h-4 w-4 text-blue-500"
+                aria-hidden="true"
               >
                 <line x1="4" y1="5" x2="16" y2="5" />
                 <line x1="4" y1="10" x2="16" y2="10" />
@@ -301,6 +315,7 @@ export default function FaturasCompraPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
                 className="h-3.5 w-3.5 text-gray-400"
+                aria-hidden="true"
               >
                 <circle cx="8" cy="8" r="5" />
                 <path d="M18 18l-4-4" />
@@ -317,6 +332,7 @@ export default function FaturasCompraPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
                 className="h-3.5 w-3.5 text-gray-500"
+                aria-hidden="true"
               >
                 <rect x="3" y="4" width="14" height="13" rx="2" />
                 <path d="M7 2v3M13 2v3M3 9h14" />
@@ -341,6 +357,7 @@ export default function FaturasCompraPage() {
                 </svg>
               </Link>
               <button
+                type="button"
                 onClick={() => window.location.reload()}
                 className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
                 title="Actualizar"
@@ -351,18 +368,23 @@ export default function FaturasCompraPage() {
                   stroke="currentColor"
                   strokeWidth="1.5"
                   className="h-3.5 w-3.5"
+                  aria-hidden="true"
                 >
                   <path d="M4 12a8 8 0 0 1 13.66-4.24M16 4v4h-4" />
                   <path d="M16 8a8 8 0 0 1-13.66 4.24M4 16v-4h4" />
                 </svg>
               </button>
-              <button className="flex h-7 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 text-xs text-gray-600 hover:bg-gray-50">
+              <button
+                type="button"
+                className="flex h-7 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 text-xs text-gray-600 hover:bg-gray-50"
+              >
                 <svg
                   viewBox="0 0 20 20"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   className="h-3.5 w-3.5"
+                  aria-hidden="true"
                 >
                   <circle cx="10" cy="7" r="4" />
                   <path d="M2 17c0-3.3 2.7-6 6-6h4c3.3 0 6 2.7 6 6" />
@@ -371,6 +393,7 @@ export default function FaturasCompraPage() {
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   className="h-3 w-3"
+                  aria-hidden="true"
                 >
                   <path
                     fillRule="evenodd"
@@ -403,6 +426,7 @@ export default function FaturasCompraPage() {
               </span>
               <div className="flex gap-1">
                 <button
+                  type="button"
                   disabled={data.first}
                   onClick={() => setPage((p) => p - 1)}
                   className="rounded border border-gray-300 px-2.5 py-1 hover:bg-gray-50 disabled:opacity-40"
@@ -410,6 +434,7 @@ export default function FaturasCompraPage() {
                   Anterior
                 </button>
                 <button
+                  type="button"
                   disabled={data.last}
                   onClick={() => setPage((p) => p + 1)}
                   className="rounded border border-gray-300 px-2.5 py-1 hover:bg-gray-50 disabled:opacity-40"

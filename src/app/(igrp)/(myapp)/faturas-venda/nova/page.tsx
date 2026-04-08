@@ -14,22 +14,14 @@ import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
   quantidade: z
-    .number({ invalid_type_error: "Quantidade inválida" })
+    .number({ error: "Quantidade inválida" })
     .positive("Deve ser > 0"),
-  precoUnitario: z
-    .number({ invalid_type_error: "Preço inválido" })
-    .min(0, "Deve ser >= 0"),
-  percentagemIva: z
-    .number({ invalid_type_error: "IVA inválido" })
-    .min(0)
-    .max(100),
+  precoUnitario: z.number({ error: "Preço inválido" }).min(0, "Deve ser >= 0"),
+  percentagemIva: z.number({ error: "IVA inválido" }).min(0).max(100),
 });
 
 const schema = z.object({
-  clienteId: z.number({
-    invalid_type_error: "Selecione um cliente",
-    required_error: "Selecione um cliente",
-  }),
+  clienteId: z.number({ error: "Selecione um cliente" }),
   tipoDocumento: z.enum([
     "FATURA",
     "FATURA_RECIBO",
@@ -53,22 +45,41 @@ const TIPOS_DOCUMENTO: { value: TipoDocumento; label: string }[] = [
   { value: "RECIBO", label: "Recibo" },
 ];
 
-// ── Helpers ──────────────────────────────────────────────────
+// ── Monetary helpers ─────────────────────────────────────────
 
-function calcLinha(qty: number, unit: number, iva: number) {
-  const q = Number.isNaN(qty) ? 0 : Number(qty);
-  const u = Number.isNaN(unit) ? 0 : Number(unit);
-  const i = Number.isNaN(iva) ? 0 : Number(iva);
-  const base = q * u;
-  return base + base * (i / 100);
+/** Round to 2 decimal places — mirrors Java BigDecimal(scale=2) on the server */
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
+/** NaN-safe coerce: undefined / null / NaN → 0 */
+function n(v: number | undefined | null): number {
+  const x = Number(v);
+  return Number.isNaN(x) ? 0 : x;
+}
+
+/**
+ * Per-line total with step-by-step rounding.
+ * Each intermediate value is rounded before the next operation
+ * to stay in sync with the server-side BigDecimal calculation.
+ *
+ * Formula: valorBruto = qty × price
+ *          valorImposto = round2(valorBruto × iva%)
+ *          totalLinha   = valorBruto + valorImposto
+ */
+function calcLinha(qty: number, unit: number, iva: number): number {
+  const valorBruto = round2(n(qty) * n(unit));
+  const valorImposto = round2(valorBruto * (n(iva) / 100));
+  return round2(valorBruto + valorImposto);
 }
 
 function formatCVE(v: number) {
-  if (Number.isNaN(v)) return "0 CVE";
+  if (Number.isNaN(v)) return "0,00 CVE";
   return new Intl.NumberFormat("pt-CV", {
     style: "currency",
     currency: "CVE",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(v);
 }
 
@@ -93,26 +104,25 @@ export default function NovaFaturaVendaPage() {
       itens: [
         { descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 },
       ],
-    } as Partial<FormValues>,
+    },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
   const watchedItens = watch("itens") || [];
 
-  const subtotal = watchedItens.reduce((acc, item) => {
-    const q = Number(item?.quantidade) || 0;
-    const u = Number(item?.precoUnitario) || 0;
-    return acc + q * u;
-  }, 0);
-
-  const totalIva = watchedItens.reduce((acc, item) => {
-    const q = Number(item?.quantidade) || 0;
-    const u = Number(item?.precoUnitario) || 0;
-    const i = Number(item?.percentagemIva) || 0;
-    return acc + q * u * (i / 100);
-  }, 0);
-
-  const total = subtotal + totalIva;
+  const valorIliquido = round2(
+    watchedItens.reduce(
+      (acc, item) => acc + round2(n(item?.quantidade) * n(item?.precoUnitario)),
+      0,
+    ),
+  );
+  const valorImposto = round2(
+    watchedItens.reduce((acc, item) => {
+      const base = round2(n(item?.quantidade) * n(item?.precoUnitario));
+      return acc + round2(base * (n(item?.percentagemIva) / 100));
+    }, 0),
+  );
+  const valorTotal = round2(valorIliquido + valorImposto);
 
   async function onSubmit(values: FormValues) {
     try {
@@ -165,10 +175,11 @@ export default function NovaFaturaVendaPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Cliente */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="clienteId" className="text-sm font-medium text-foreground">
                 Cliente <span className="text-destructive">*</span>
               </label>
               <select
+                id="clienteId"
                 className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.clienteId ? "border-destructive" : "border-input"}`}
                 {...register("clienteId", { valueAsNumber: true })}
               >
@@ -188,10 +199,11 @@ export default function NovaFaturaVendaPage() {
 
             {/* Tipo de Documento */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="tipoDocumento" className="text-sm font-medium text-foreground">
                 Tipo de Documento <span className="text-destructive">*</span>
               </label>
               <select
+                id="tipoDocumento"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...register("tipoDocumento")}
               >
@@ -205,10 +217,11 @@ export default function NovaFaturaVendaPage() {
 
             {/* Série */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="serie" className="text-sm font-medium text-foreground">
                 Série
               </label>
               <input
+                id="serie"
                 placeholder="Ex: FT-2025"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...register("serie")}
@@ -217,10 +230,11 @@ export default function NovaFaturaVendaPage() {
 
             {/* Data de Vencimento */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="dataVencimento" className="text-sm font-medium text-foreground">
                 Data de Vencimento
               </label>
               <input
+                id="dataVencimento"
                 type="date"
                 className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...register("dataVencimento")}
@@ -229,10 +243,11 @@ export default function NovaFaturaVendaPage() {
 
             {/* Observações */}
             <div className="col-span-full flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="observacoes" className="text-sm font-medium text-foreground">
                 Observações
               </label>
               <textarea
+                id="observacoes"
                 rows={2}
                 placeholder="Observações adicionais…"
                 className="rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
@@ -380,17 +395,17 @@ export default function NovaFaturaVendaPage() {
           {/* Financial summary */}
           <div className="rounded-lg border border-border bg-card p-5 w-80 shadow-sm">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>{formatCVE(subtotal)}</span>
+              <span className="text-muted-foreground">Valor Ilíquido</span>
+              <span>{formatCVE(valorIliquido)}</span>
             </div>
             <div className="flex justify-between text-sm mt-2">
-              <span className="text-muted-foreground">Total IVA</span>
-              <span>{formatCVE(totalIva)}</span>
+              <span className="text-muted-foreground">Valor Imposto (IVA)</span>
+              <span>{formatCVE(valorImposto)}</span>
             </div>
             <hr className="my-3 border-border" />
             <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span className="text-lg">{formatCVE(total)}</span>
+              <span>Valor Total</span>
+              <span className="text-lg">{formatCVE(valorTotal)}</span>
             </div>
           </div>
 
