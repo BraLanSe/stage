@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src' -type f -name *.java)",
+      "Bash(where pdftotext:*)",
+      "Bash(where pdftoppm:*)",
+      "Bash(python -c \"import pdfplumber; print\\('pdfplumber ok'\\)\")",
+      "Bash(python -c \"import PyPDF2; print\\('PyPDF2 ok'\\)\")",
+      "Bash(python -c \"import pypdf; print\\('pypdf ok'\\)\")",
+      "Bash(pdftotext \"c:/Users/bradl/Downloads/requisitos_tecnicos_core_faturacao_erp.pdf\" -)",
+      "Bash(pdftotext \"c:/Users/bradl/Downloads/igrp/iGRP 3.0 Training 2026.pdf\" -)",
+      "Bash(mkdir -p '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/parametrizacao/infrastructure/persistence/entity')",
+      "Bash(mkdir -p '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/parametrizacao/infrastructure/persistence/repository')",
+      "Bash(mkdir -p '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/parametrizacao/application/dto')",
+      "Bash(mkdir -p '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/parametrizacao/interfaces/rest')",
+      "Bash(mkdir -p '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/contabilidade/infrastructure/persistence/entity')",
+      "Bash(find '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/fiscal_document' -type d -empty -delete)",
+      "Bash(find '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/party' -type d -empty -delete)",
+      "Bash(find '/c/Users/bradl/OneDrive/Ambiente de Trabalho/igrp première essai/projects/eFatura/src/main/java/cv/igrp/fatura/taxation' -type d -empty -delete)",
+      "Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File seed-and-test.ps1)",
+      "Bash(where pwsh.exe)",
+      "Bash(where powershell.exe)",
+      "Read(//mnt/c/Windows/System32/WindowsPowerShell/v1.0/**)",
+      "Read(//mnt/c/Program Files/PowerShell/7/**)",
+      "Bash(powershell.exe:*)",
+      "Bash(mvn clean:*)"
+    ]
+  }
+}
