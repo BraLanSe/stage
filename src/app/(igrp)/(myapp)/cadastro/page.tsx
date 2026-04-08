@@ -115,6 +115,24 @@ function emptyFornecedor(): Omit<
   };
 }
 
+function emptyProduto(): Omit<
+  Produto,
+  "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+> & { controlarStock?: boolean; stock?: number } {
+  return {
+    codigo: "",
+    desig: "",
+    descr: "",
+    preco: 0,
+    unidade: "",
+    categoria: "",
+    percentagemIva: 0,
+    ativo: true,
+    controlarStock: false,
+    stock: 0,
+  };
+}
+
 // ── Cliente Modal ─────────────────────────────────────────────
 
 function ClienteModal({
@@ -955,6 +973,243 @@ function FornecedoresTab() {
   );
 }
 
+// ── Produto Modal ──────────────────────────────────────────
+
+function ProdutoModal({
+  produto,
+  onClose,
+}: {
+  produto: Produto | null;
+  onClose: () => void;
+}) {
+  const criar = useCriarProduto();
+  const atualizar = useAtualizarProduto();
+  const isEditing = !!produto?.id;
+
+  const [form, setForm] = useState<
+    Omit<
+      Produto,
+      "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+    > & { controlarStock?: boolean; stock?: number }
+  >(
+    produto
+      ? {
+          codigo: produto.codigo,
+          desig: produto.desig,
+          descr: produto.descr ?? "",
+          preco: produto.preco ?? 0,
+          unidade: produto.unidade ?? "",
+          categoria: produto.categoria ?? "",
+          percentagemIva: produto.percentagemIva ?? 0,
+          ativo: produto.ativo,
+          controlarStock: false,
+          stock: 0,
+        }
+      : emptyProduto(),
+  );
+
+  const saving = criar.isPending || atualizar.isPending;
+
+  async function handleSave() {
+    const { controlarStock, stock, ...dataToSave } = form;
+    if (isEditing && produto?.id) {
+      await atualizar.mutateAsync({ id: produto.id, data: dataToSave });
+    } else {
+      await criar.mutateAsync(dataToSave);
+    }
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h2 className="text-sm font-semibold text-gray-800">
+            {isEditing ? `Editar #${produto?.desig}` : "Novo Produto"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">
+                Código <span className="text-red-400">*</span>
+              </label>
+              <input
+                disabled
+                value={form.codigo}
+                placeholder="Gerado automaticamente..."
+                className="h-8 rounded border border-gray-200 bg-gray-50 px-2.5 text-xs text-gray-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">
+                Designação <span className="text-red-400">*</span>
+              </label>
+              <input
+                value={form.desig}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, desig: e.target.value }))
+                }
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">
+                Preço (CVE) <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="number"
+                value={form.preco ?? 0}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    preco: parseFloat(e.target.value) || 0,
+                  }))
+                }
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                id="controlarStock"
+                checked={form.controlarStock}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, controlarStock: e.target.checked }))
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="controlarStock" className="text-xs text-gray-600">
+                Controlar Stock
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="rounded border border-gray-300 px-5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+          >
+            Fechar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded bg-indigo-600 px-6 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {saving ? "A guardar…" : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Produtos Table ────────────────────────────────────────────
+
+function ProdutosTab() {
+  const { data, isLoading } = useProdutos(0, 50);
+  const produtos = data?.content ?? [];
+  const [modal, setModal] = useState<Produto | null | "new">(null);
+
+  return (
+    <div className="space-y-4">
+      {modal !== null && (
+        <ProdutoModal
+          produto={modal === "new" ? null : modal}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-gray-700">Produtos</h2>
+        <button
+          onClick={() => setModal("new")}
+          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+        >
+          <span className="text-base leading-none">+</span> Novo Produto
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-gray-200">
+        {isLoading ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            A carregar…
+          </div>
+        ) : produtos.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            Nenhum produto encontrado
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="w-10 px-3 py-2.5 text-center font-medium text-gray-500">
+                  #
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-gray-600">
+                  Código
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-gray-600">
+                  Designação
+                </th>
+                <th className="px-3 py-2.5 text-right font-medium text-gray-600">
+                  Preço
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  Stock
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {produtos.map((p, idx) => (
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-2.5 text-center text-xs text-gray-400">
+                    {idx + 1}
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-gray-700">
+                    {p.codigo ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 font-medium text-gray-800">
+                    {p.desig}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-xs text-gray-600">
+                    {formatCVE(p.preco)}
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-xs text-gray-600">
+                    —
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <button
+                      onClick={() => setModal(p)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────
 
 export default function CadastroPage() {
@@ -991,7 +1246,7 @@ export default function CadastroPage() {
 
           {/* Tabs */}
           <div className="flex border-b border-gray-200 bg-gray-50 px-5">
-            {(["clientes", "fornecedores"] as Tab[]).map((t) => (
+            {(["clientes", "fornecedores", "produtos"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -1001,13 +1256,23 @@ export default function CadastroPage() {
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {t === "clientes" ? "Clientes" : "Fornecedores"}
+                {t === "clientes"
+                  ? "Clientes"
+                  : t === "fornecedores"
+                    ? "Fornecedores"
+                    : "Produtos"}
               </button>
             ))}
           </div>
 
           <div className="p-5">
-            {tab === "clientes" ? <ClientesTab /> : <FornecedoresTab />}
+            {tab === "clientes" ? (
+              <ClientesTab />
+            ) : tab === "fornecedores" ? (
+              <FornecedoresTab />
+            ) : (
+              <ProdutosTab />
+            )}
           </div>
         </div>
       </div>
