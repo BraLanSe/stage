@@ -115,6 +115,22 @@ function emptyFornecedor(): Omit<
   };
 }
 
+function emptyProduto(): Omit<
+  Produto,
+  "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
+> {
+  return {
+    codigo: "",
+    desig: "",
+    descr: "",
+    preco: 0,
+    unidade: "",
+    categoria: "",
+    percentagemIva: 15,
+    ativo: true,
+  };
+}
+
 // ── Cliente Modal ─────────────────────────────────────────────
 
 function ClienteModal({
@@ -955,6 +971,373 @@ function FornecedoresTab() {
   );
 }
 
+// ── Produto Modal ─────────────────────────────────────────────
+
+function ProdutoModal({
+  produto,
+  onClose,
+}: {
+  produto: Produto | null;
+  onClose: () => void;
+}) {
+  const criar = useCriarProduto();
+  const atualizar = useAtualizarProduto();
+  const isEditing = !!produto?.id;
+
+  const [form, setForm] = useState<
+    Omit<Produto, "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy">
+  >(
+    produto
+      ? {
+          codigo: produto.codigo,
+          desig: produto.desig,
+          descr: produto.descr ?? "",
+          preco: produto.preco ?? 0,
+          unidade: produto.unidade ?? "",
+          categoria: produto.categoria ?? "",
+          percentagemIva: produto.percentagemIva ?? 15,
+          ativo: produto.ativo,
+        }
+      : emptyProduto(),
+  );
+
+  const saving = criar.isPending || atualizar.isPending;
+
+  async function handleSave() {
+    if (isEditing && produto?.id) {
+      await atualizar.mutateAsync({ id: produto.id, data: form });
+    } else {
+      await criar.mutateAsync(form);
+    }
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h2 className="text-sm font-semibold text-gray-800">
+            {isEditing ? `Editar — ${produto?.desig}` : "Novo Produto / Serviço"}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+            aria-label="Fechar"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+              <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Código + Designação */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="prod-codigo" className="text-xs text-gray-500">
+                Código
+              </label>
+              <input
+                id="prod-codigo"
+                disabled
+                value={form.codigo}
+                className="h-8 rounded border border-gray-200 bg-gray-50 px-2.5 text-xs text-gray-500"
+              />
+            </div>
+            <div className="col-span-2 flex flex-col gap-1">
+              <label htmlFor="prod-desig" className="text-xs text-gray-500">
+                Designação <span className="text-red-400">*</span>
+              </label>
+              <input
+                id="prod-desig"
+                value={form.desig}
+                onChange={(e) => setForm((p) => ({ ...p, desig: e.target.value }))}
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+          </div>
+
+          {/* Descrição */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="prod-descr" className="text-xs text-gray-500">
+              Descrição
+            </label>
+            <textarea
+              id="prod-descr"
+              rows={2}
+              value={form.descr ?? ""}
+              onChange={(e) => setForm((p) => ({ ...p, descr: e.target.value }))}
+              className="rounded border border-gray-300 bg-white px-2.5 py-1.5 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+          </div>
+
+          {/* Preço + Unidade + Categoria + IVA */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="prod-preco" className="text-xs text-gray-500">
+                Preço Unitário (CVE)
+              </label>
+              <input
+                id="prod-preco"
+                type="number"
+                min={0}
+                step={0.01}
+                value={form.preco ?? 0}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, preco: Number(e.target.value) }))
+                }
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="prod-iva" className="text-xs text-gray-500">
+                IVA (%)
+              </label>
+              <input
+                id="prod-iva"
+                type="number"
+                min={0}
+                max={100}
+                step={0.01}
+                value={form.percentagemIva ?? 15}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, percentagemIva: Number(e.target.value) }))
+                }
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="prod-unidade" className="text-xs text-gray-500">
+                Unidade
+              </label>
+              <input
+                id="prod-unidade"
+                placeholder="Ex: un, kg, m²"
+                value={form.unidade ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, unidade: e.target.value }))}
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs placeholder:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="prod-categoria" className="text-xs text-gray-500">
+                Categoria
+              </label>
+              <input
+                id="prod-categoria"
+                value={form.categoria ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, categoria: e.target.value }))}
+                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+          </div>
+
+          {/* Ativo toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              id="prod-ativo"
+              type="checkbox"
+              checked={form.ativo}
+              onChange={(e) => setForm((p) => ({ ...p, ativo: e.target.checked }))}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-400"
+            />
+            <label htmlFor="prod-ativo" className="text-xs text-gray-600">
+              Produto / Serviço ativo
+            </label>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 border-t border-gray-200 px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-gray-300 px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !form.desig.trim()}
+            className="rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {saving ? "A guardar…" : isEditing ? "Guardar" : "Criar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Produtos Table ────────────────────────────────────────────
+
+function ProdutosTab() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data, isLoading } = useProdutos(0, 50, debouncedSearch || undefined);
+  const produtos = data?.content ?? [];
+  const [modal, setModal] = useState<Produto | null | "new">(null);
+
+  function handleSearch(v: string) {
+    setSearch(v);
+    // simple debounce via timeout
+    clearTimeout((handleSearch as { _t?: ReturnType<typeof setTimeout> })._t);
+    (handleSearch as { _t?: ReturnType<typeof setTimeout> })._t = setTimeout(
+      () => setDebouncedSearch(v),
+      400,
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {modal !== null && (
+        <ProdutoModal
+          produto={modal === "new" ? null : modal}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-gray-700">
+          Produtos / Serviços
+        </h2>
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="5" />
+              <path d="M18 18l-4-4" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Pesquisar…"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="h-7 rounded-full border border-gray-300 bg-white pl-7 pr-3 text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setModal("new")}
+            className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+          >
+            <span className="text-base leading-none">+</span> Novo Produto
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-gray-200">
+        {isLoading ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            A carregar…
+          </div>
+        ) : produtos.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            {debouncedSearch
+              ? `Nenhum produto encontrado para "${debouncedSearch}"`
+              : "Nenhum produto encontrado"}
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="w-10 px-3 py-2.5 text-center font-medium text-gray-500">
+                  #
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-gray-600">
+                  Código
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-gray-600">
+                  Designação
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-gray-600">
+                  Categoria
+                </th>
+                <th className="px-3 py-2.5 text-right font-medium text-gray-600">
+                  Preço
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  IVA
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  Unidade
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  Estado
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-gray-600">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {produtos.map((p, idx) => (
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-2.5 text-center text-xs text-gray-400">
+                    {idx + 1}
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-gray-700">
+                    {p.codigo || "—"}
+                  </td>
+                  <td className="px-3 py-2.5 font-medium text-gray-800">
+                    {p.desig}
+                    {p.descr && (
+                      <p className="text-[11px] font-normal text-gray-400 truncate max-w-[200px]">
+                        {p.descr}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-gray-600">
+                    {p.categoria || "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-xs text-gray-700 tabular-nums">
+                    {formatCVE(p.preco)}
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-xs text-gray-600">
+                    {p.percentagemIva != null ? `${p.percentagemIva}%` : "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-xs text-gray-600">
+                    {p.unidade || "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        p.ativo
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {p.ativo ? "Ativo" : "Inativo"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setModal(p)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────
 
 export default function CadastroPage() {
@@ -991,9 +1374,10 @@ export default function CadastroPage() {
 
           {/* Tabs */}
           <div className="flex border-b border-gray-200 bg-gray-50 px-5">
-            {(["clientes", "fornecedores"] as Tab[]).map((t) => (
+            {(["clientes", "fornecedores", "produtos"] as Tab[]).map((t) => (
               <button
                 key={t}
+                type="button"
                 onClick={() => setTab(t)}
                 className={`px-5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                   tab === t
@@ -1001,13 +1385,23 @@ export default function CadastroPage() {
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {t === "clientes" ? "Clientes" : "Fornecedores"}
+                {t === "clientes"
+                  ? "Clientes"
+                  : t === "fornecedores"
+                    ? "Fornecedores"
+                    : "Produtos / Serviços"}
               </button>
             ))}
           </div>
 
           <div className="p-5">
-            {tab === "clientes" ? <ClientesTab /> : <FornecedoresTab />}
+            {tab === "clientes" ? (
+              <ClientesTab />
+            ) : tab === "fornecedores" ? (
+              <FornecedoresTab />
+            ) : (
+              <ProdutosTab />
+            )}
           </div>
         </div>
       </div>

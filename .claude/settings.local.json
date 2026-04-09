@@ -1,5 +1,9 @@
 {
   "permissions": {
-    "allow": ["Bash(npx tsc:*)", "Bash(node -e ':*)"]
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(node -e ':*)",
+      "Bash(pnpm tsc:*)"
+    ]
   }
 }
