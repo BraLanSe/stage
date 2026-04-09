@@ -8,6 +8,7 @@ import type { Metadata, Viewport } from "next";
 
 import { configLayout } from "@/actions/igrp/layout";
 import { createConfig } from "@/igrp.template.config";
+import { IGRPQueryProvider } from "@/providers/query-client";
 
 export const metadata: Metadata = {
   title: "IGRP | Centro de Aplicações",
@@ -25,5 +26,9 @@ export default async function RootLayout({
   const layoutConfig = await configLayout();
   const config = await createConfig(layoutConfig as IGRPLayoutConfigArgs);
 
-  return <IGRPRootLayout config={config}>{children}</IGRPRootLayout>;
+  return (
+    <IGRPRootLayout config={config}>
+      <IGRPQueryProvider>{children}</IGRPQueryProvider>
+    </IGRPRootLayout>
+  );
 }
