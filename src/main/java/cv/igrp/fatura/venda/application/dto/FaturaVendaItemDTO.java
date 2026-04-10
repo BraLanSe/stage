@@ -1,7 +1,6 @@
 package cv.igrp.fatura.venda.application.dto;
 
 import cv.igrp.framework.stereotype.IgrpDTO;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -22,7 +21,7 @@ public class FaturaVendaItemDTO {
 
     private String codigoArtigo;
 
-    @NotBlank
+    // Optionnel si produtoId est fourni — le handler copie depuis le produit
     private String desig;
 
     private String descr;
@@ -32,7 +31,7 @@ public class FaturaVendaItemDTO {
 
     private Integer prUnidadeId;
 
-    @NotNull
+    // Optionnel si produtoId est fourni — le handler copie depuis le produit
     private BigDecimal precoUnitario;
 
     private BigDecimal descontoComercialPerc;

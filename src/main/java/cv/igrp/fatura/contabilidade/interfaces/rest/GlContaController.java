@@ -8,14 +8,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @IgrpController
 @RestController
-@RequestMapping("api/v1/contabilidade/contas")
+@RequestMapping(value = "api/v1/contabilidade/contas", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Contabilidade", description = "Gestão de contas do plano de contas")
 public class GlContaController {
@@ -24,8 +25,8 @@ public class GlContaController {
 
     @GetMapping
     @Operation(summary = "Listar todas as contas")
-    public ResponseEntity<List<GlContaEntity>> listAll() {
-        return ResponseEntity.ok(glContaRepo.findAll());
+    public ResponseEntity<Page<GlContaEntity>> listAll(Pageable pageable) {
+        return ResponseEntity.ok(glContaRepo.findAll(pageable));
     }
 
     @PostMapping

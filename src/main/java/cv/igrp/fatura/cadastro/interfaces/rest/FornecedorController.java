@@ -9,14 +9,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @IgrpController
 @RestController
-@RequestMapping("api/v1/fornecedores")
+@RequestMapping(value = "api/v1/fornecedores", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Fornecedores", description = "Gestão de fornecedores")
 public class FornecedorController {
@@ -26,8 +27,8 @@ public class FornecedorController {
 
     @GetMapping
     @Operation(summary = "Listar todos os fornecedores")
-    public ResponseEntity<List<FornecedorEntity>> listAll() {
-        return ResponseEntity.ok(fornecedorRepo.findAll());
+    public ResponseEntity<Page<FornecedorEntity>> listAll(Pageable pageable) {
+        return ResponseEntity.ok(fornecedorRepo.findAll(pageable));
     }
 
     @PostMapping

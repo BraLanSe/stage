@@ -4,17 +4,22 @@ import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.FornecedorEntit
 import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.ProdutoEntity;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.FornecedorRepository;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ProdutoRepository;
+import cv.igrp.fatura.compra.application.dto.FaturaCompraCreateDTO;
+import cv.igrp.fatura.compra.application.dto.FaturaCompraItemDTO;
+import cv.igrp.fatura.compra.application.dto.FaturaCompraItemImpostoDTO;
+import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraEntity;
+import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemEntity;
+import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemImpostoEntity;
+import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraItemImpostoRepository;
+import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraItemRepository;
+import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrImpostoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrUnidadeEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrImpostoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrUnidadeRepository;
 import cv.igrp.fatura.shared.domain.exceptions.IgrpResponseStatusException;
-import cv.igrp.fatura.compra.application.dto.*;
-import cv.igrp.fatura.compra.infrastructure.persistence.entity.*;
-import cv.igrp.fatura.compra.infrastructure.persistence.repository.*;
 import cv.igrp.framework.core.domain.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -55,14 +60,13 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         var tipoFatura = tipoRepo.findById(dto.getTipoFaturaId())
                 .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Tipo de fatura não encontrado: " + dto.getTipoFaturaId()));
 
-        PrSerieEntity serie = serieRepo.findById(dto.getPrSerieId())
+        // Verrou pessimiste — évite la duplication de numéro en concurrence (spec §11)
+        PrSerieEntity serie = serieRepo.findByIdForUpdate(dto.getPrSerieId())
                 .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Série não encontrada: " + dto.getPrSerieId()));
 
-        // Increment serie counter
         serie.setContador(serie.getContador() + 1);
         serieRepo.save(serie);
 
-        // Create fatura
         FaturaCompraEntity fatura = new FaturaCompraEntity();
         fatura.setCodigo(serie.getCodigo() + "-" + serie.getContador());
         fatura.setCodigoReferencia(dto.getCodigoReferencia());
@@ -93,16 +97,38 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
             FaturaCompraItemEntity item = new FaturaCompraItemEntity();
             item.setFaturaCompra(fatura);
             item.setNumLinha(itemDto.getNumLinha());
-            item.setDesig(itemDto.getDesig());
             item.setDescr(itemDto.getDescr());
-            item.setQuantidade(itemDto.getQuantidade());
-            item.setPrecoUnitario(itemDto.getPrecoUnitario());
-            item.setCodigoArtigo(itemDto.getCodigoArtigo());
             item.setEstado("ATIVO");
 
+            // Snapshot (spec §4 + §6): copier desig, codigoArtigo, precoUnitario depuis le produit
             if (itemDto.getProdutoId() != null) {
-                produtoRepo.findById(itemDto.getProdutoId()).ifPresent(item::setProduto);
+                ProdutoEntity produto = produtoRepo.findById(itemDto.getProdutoId())
+                        .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Produto não encontrado: " + itemDto.getProdutoId()));
+                item.setProduto(produto);
+                item.setDesig(itemDto.getDesig() != null && !itemDto.getDesig().isBlank()
+                        ? itemDto.getDesig() : produto.getDesig());
+                item.setCodigoArtigo(itemDto.getCodigoArtigo() != null && !itemDto.getCodigoArtigo().isBlank()
+                        ? itemDto.getCodigoArtigo() : produto.getCodigo());
+                item.setPrecoUnitario(itemDto.getPrecoUnitario() != null
+                        ? itemDto.getPrecoUnitario() : produto.getPreco());
+
+                if (itemDto.getPrUnidadeId() == null && produto.getPrUnidade() != null) {
+                    item.setPrUnidade(produto.getPrUnidade());
+                }
+            } else {
+                if (itemDto.getDesig() == null || itemDto.getDesig().isBlank()) {
+                    throw IgrpResponseStatusException.of(HttpStatus.BAD_REQUEST,
+                            "Linha " + itemDto.getNumLinha() + ": 'desig' obrigatório quando 'produtoId' não é fornecido");
+                }
+                if (itemDto.getPrecoUnitario() == null) {
+                    throw IgrpResponseStatusException.of(HttpStatus.BAD_REQUEST,
+                            "Linha " + itemDto.getNumLinha() + ": 'precoUnitario' obrigatório quando 'produtoId' não é fornecido");
+                }
+                item.setDesig(itemDto.getDesig());
+                item.setCodigoArtigo(itemDto.getCodigoArtigo());
+                item.setPrecoUnitario(itemDto.getPrecoUnitario());
             }
+
             if (itemDto.getPrUnidadeId() != null) {
                 unidadeRepo.findById(itemDto.getPrUnidadeId()).ifPresent(item::setPrUnidade);
             }
@@ -110,8 +136,7 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
                 item.setContaGlId(itemDto.getContaGlId());
             }
 
-            // Calculate values
-            BigDecimal valorBruto = itemDto.getQuantidade().multiply(itemDto.getPrecoUnitario()).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal valorBruto = itemDto.getQuantidade().multiply(item.getPrecoUnitario()).setScale(4, RoundingMode.HALF_UP);
             item.setValorBruto(valorBruto);
 
             BigDecimal descontoComercialValor = BigDecimal.ZERO;
@@ -132,7 +157,6 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
             BigDecimal valorLiquido = valorBruto.subtract(descontoComercialValor).subtract(descontoFinanceiroValor).setScale(4, RoundingMode.HALF_UP);
             item.setValorLiquido(valorLiquido);
 
-            // Process taxes
             BigDecimal itemTotalImposto = BigDecimal.ZERO;
             item.setImpostos(new ArrayList<>());
 
@@ -173,6 +197,7 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         fatura.setValorPorPagar(valorFatura);
 
         FaturaCompraEntity saved = faturaCompraRepo.save(fatura);
+        LOGGER.info("FaturaCompra criada: {} ({})", saved.getCodigo(), saved.getId());
         return ResponseEntity.ok(saved);
     }
 }

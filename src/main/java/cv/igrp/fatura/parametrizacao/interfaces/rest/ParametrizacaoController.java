@@ -1,21 +1,43 @@
 package cv.igrp.fatura.parametrizacao.interfaces.rest;
 
 import cv.igrp.framework.stereotype.IgrpController;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.*;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.*;
-import cv.igrp.fatura.parametrizacao.application.dto.*;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrCategoriaEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrEnquadramentoEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaTipoEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrImpostoEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrMetodoPagamentoEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrMoedaEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrUnidadeEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrCategoriaRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrEnquadramentoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrImpostoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrMetodoPagamentoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrMoedaRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrUnidadeRepository;
+import cv.igrp.fatura.parametrizacao.application.dto.PrCategoriaDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrEnquadramentoDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrFaturaTipoDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrImpostoDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrMetodoPagamentoDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrMoedaDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrSerieDTO;
+import cv.igrp.fatura.parametrizacao.application.dto.PrUnidadeDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @IgrpController
 @RestController
-@RequestMapping("api/v1/parametrizacao")
+@RequestMapping(value = "api/v1/parametrizacao", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Parametrizacao", description = "Gestão de parametrizações")
 public class ParametrizacaoController {
@@ -29,11 +51,10 @@ public class ParametrizacaoController {
     private final PrMetodoPagamentoRepository prMetodoPagamentoRepo;
     private final PrImpostoRepository prImpostoRepo;
 
-    // pr_fatura_tipo endpoints
     @GetMapping("/tipos-fatura")
     @Operation(summary = "Listar tipos de fatura")
-    public ResponseEntity<List<PrFaturaTipoEntity>> listTiposFatura() {
-        return ResponseEntity.ok(prFaturaTipoRepo.findAll());
+    public ResponseEntity<Page<PrFaturaTipoEntity>> listTiposFatura(Pageable pageable) {
+        return ResponseEntity.ok(prFaturaTipoRepo.findAll(pageable));
     }
 
     @PostMapping("/tipos-fatura")
@@ -47,11 +68,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prFaturaTipoRepo.save(entity));
     }
 
-    // pr_serie endpoints
     @GetMapping("/series")
     @Operation(summary = "Listar séries")
-    public ResponseEntity<List<PrSerieEntity>> listSeries() {
-        return ResponseEntity.ok(prSerieRepo.findAll());
+    public ResponseEntity<Page<PrSerieEntity>> listSeries(Pageable pageable) {
+        return ResponseEntity.ok(prSerieRepo.findAll(pageable));
     }
 
     @PostMapping("/series")
@@ -68,11 +88,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prSerieRepo.save(entity));
     }
 
-    // pr_unidade endpoints
     @GetMapping("/unidades")
     @Operation(summary = "Listar unidades")
-    public ResponseEntity<List<PrUnidadeEntity>> listUnidades() {
-        return ResponseEntity.ok(prUnidadeRepo.findAll());
+    public ResponseEntity<Page<PrUnidadeEntity>> listUnidades(Pageable pageable) {
+        return ResponseEntity.ok(prUnidadeRepo.findAll(pageable));
     }
 
     @PostMapping("/unidades")
@@ -85,11 +104,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prUnidadeRepo.save(entity));
     }
 
-    // pr_categoria endpoints
     @GetMapping("/categorias")
     @Operation(summary = "Listar categorias")
-    public ResponseEntity<List<PrCategoriaEntity>> listCategorias() {
-        return ResponseEntity.ok(prCategoriaRepo.findAll());
+    public ResponseEntity<Page<PrCategoriaEntity>> listCategorias(Pageable pageable) {
+        return ResponseEntity.ok(prCategoriaRepo.findAll(pageable));
     }
 
     @PostMapping("/categorias")
@@ -103,11 +121,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prCategoriaRepo.save(entity));
     }
 
-    // pr_moeda endpoints
     @GetMapping("/moedas")
     @Operation(summary = "Listar moedas")
-    public ResponseEntity<List<PrMoedaEntity>> listMoedas() {
-        return ResponseEntity.ok(prMoedaRepo.findAll());
+    public ResponseEntity<Page<PrMoedaEntity>> listMoedas(Pageable pageable) {
+        return ResponseEntity.ok(prMoedaRepo.findAll(pageable));
     }
 
     @PostMapping("/moedas")
@@ -121,11 +138,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prMoedaRepo.save(entity));
     }
 
-    // pr_enquadramento endpoints
     @GetMapping("/enquadramentos")
     @Operation(summary = "Listar enquadramentos")
-    public ResponseEntity<List<PrEnquadramentoEntity>> listEnquadramentos() {
-        return ResponseEntity.ok(prEnquadramentoRepo.findAll());
+    public ResponseEntity<Page<PrEnquadramentoEntity>> listEnquadramentos(Pageable pageable) {
+        return ResponseEntity.ok(prEnquadramentoRepo.findAll(pageable));
     }
 
     @PostMapping("/enquadramentos")
@@ -139,11 +155,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prEnquadramentoRepo.save(entity));
     }
 
-    // pr_metodo_pagamento endpoints
     @GetMapping("/metodos-pagamento")
     @Operation(summary = "Listar métodos de pagamento")
-    public ResponseEntity<List<PrMetodoPagamentoEntity>> listMetodosPagamento() {
-        return ResponseEntity.ok(prMetodoPagamentoRepo.findAll());
+    public ResponseEntity<Page<PrMetodoPagamentoEntity>> listMetodosPagamento(Pageable pageable) {
+        return ResponseEntity.ok(prMetodoPagamentoRepo.findAll(pageable));
     }
 
     @PostMapping("/metodos-pagamento")
@@ -157,11 +172,10 @@ public class ParametrizacaoController {
         return ResponseEntity.ok(prMetodoPagamentoRepo.save(entity));
     }
 
-    // pr_imposto endpoints
     @GetMapping("/impostos")
     @Operation(summary = "Listar impostos")
-    public ResponseEntity<List<PrImpostoEntity>> listImpostos() {
-        return ResponseEntity.ok(prImpostoRepo.findAll());
+    public ResponseEntity<Page<PrImpostoEntity>> listImpostos(Pageable pageable) {
+        return ResponseEntity.ok(prImpostoRepo.findAll(pageable));
     }
 
     @PostMapping("/impostos")

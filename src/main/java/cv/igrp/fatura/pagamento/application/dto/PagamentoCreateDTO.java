@@ -7,6 +7,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -42,4 +44,7 @@ public class PagamentoCreateDTO {
     private String codigoReferencia;
 
     private String estado;
+
+    // Documents auxquels ce paiement est appliqué (spec RF-09, §8.11)
+    private List<PagamentoDocumentoDTO> documentos = new ArrayList<>();
 }

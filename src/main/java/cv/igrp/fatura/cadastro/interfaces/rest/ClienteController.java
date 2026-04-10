@@ -9,14 +9,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @IgrpController
 @RestController
-@RequestMapping("api/v1/clientes")
+@RequestMapping(value = "api/v1/clientes", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Clientes", description = "Gestão de clientes")
 public class ClienteController {
@@ -26,8 +27,8 @@ public class ClienteController {
 
     @GetMapping
     @Operation(summary = "Listar todos os clientes")
-    public ResponseEntity<List<ClienteEntity>> listAll() {
-        return ResponseEntity.ok(clienteRepo.findAll());
+    public ResponseEntity<Page<ClienteEntity>> listAll(Pageable pageable) {
+        return ResponseEntity.ok(clienteRepo.findAll(pageable));
     }
 
     @PostMapping

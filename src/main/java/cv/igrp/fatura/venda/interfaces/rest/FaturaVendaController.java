@@ -11,14 +11,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @IgrpController
 @RestController
-@RequestMapping("api/v1/faturas-venda")
+@RequestMapping(value = "api/v1/faturas-venda", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "FaturaVenda", description = "Gestão de faturas de venda")
 public class FaturaVendaController {
@@ -28,8 +29,8 @@ public class FaturaVendaController {
 
     @GetMapping
     @Operation(summary = "Listar faturas de venda")
-    public ResponseEntity<List<FaturaVendaEntity>> list() {
-        return ResponseEntity.ok(faturaVendaRepo.findAll());
+    public ResponseEntity<Page<FaturaVendaEntity>> list(Pageable pageable) {
+        return ResponseEntity.ok(faturaVendaRepo.findAll(pageable));
     }
 
     @PostMapping
