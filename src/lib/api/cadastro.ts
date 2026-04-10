@@ -73,6 +73,48 @@ function toClienteDTO(
   });
 }
 
+/**
+ * Maps the frontend `FornecedorWrite` shape → `FornecedorCreateDTO` (Spring Boot).
+ * Identical field structure to ClienteCreateDTO — same renames apply:
+ *   nome        → desig         (@NotBlank)
+ *   tipoEntidade → indColetivo  (Boolean: COLETIVO=true)
+ *   ativo        → estado       ("ATIVO" | "INATIVO")
+ *   descricao    → descr
+ *   morada       → endereco     (fallback)
+ *   nif          → digits only
+ *   codigo       → auto-generated "F-{8digits}" if blank (VARCHAR 10)
+ */
+function toFornecedorDTO(
+  data: FornecedorWrite | Partial<Fornecedor>,
+  isCreate = false,
+): Record<string, unknown> {
+  const d = data as Record<string, unknown>;
+  const rawNif = (d.nif as string | undefined) ?? "";
+  const nif = rawNif.replace(/\D/g, "") || undefined;
+
+  const codigoRaw = (d.codigo as string | undefined)?.trim();
+  const codigo = codigoRaw || (isCreate ? `F-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined);
+
+  return sanitize({
+    codigo,
+    desig: d.nome,
+    indColetivo: d.tipoEntidade === "COLETIVO"
+      ? true
+      : d.tipoEntidade === "SINGULAR"
+        ? false
+        : undefined,
+    descr: d.descricao,
+    nif,
+    email: d.email,
+    telefone: d.telefone,
+    pessoaContacto: d.pessoaContacto,
+    endereco: (d.endereco as string | undefined) || (d.morada as string | undefined),
+    aplicarImpostos: (d.aplicarImpostos as boolean | undefined) ?? true,
+    estado: d.ativo === true ? "ATIVO" : d.ativo === false ? "INATIVO" : undefined,
+    pais: "CPV",
+  });
+}
+
 // ── API ───────────────────────────────────────────────────────
 
 export const cadastroApi = {
@@ -105,12 +147,12 @@ export const cadastroApi = {
     criar: (data: FornecedorWrite) =>
       apiRequest<Fornecedor>("/fornecedores", {
         method: "POST",
-        body: JSON.stringify(sanitize(data as Record<string, unknown>)),
+        body: JSON.stringify(toFornecedorDTO(data, true)),
       }),
     atualizar: (id: number, data: Partial<Fornecedor>) =>
       apiRequest<Fornecedor>(`/fornecedores/${id}`, {
         method: "PUT",
-        body: JSON.stringify(sanitize(data as Record<string, unknown>)),
+        body: JSON.stringify(toFornecedorDTO(data)),
       }),
   },
 
