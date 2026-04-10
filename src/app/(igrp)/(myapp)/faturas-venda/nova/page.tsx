@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
-import type { TipoDocumento } from "@/app/(myapp)/types/efatura";
 import { useClientes } from "@/hooks/use-cadastro";
 import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
+import { parametrizacaoApi } from "@/lib/api/parametrizacao";
 
 // ── Schema ───────────────────────────────────────────────────
 
@@ -22,28 +23,16 @@ const itemSchema = z.object({
 
 const schema = z.object({
   clienteId: z.number({ error: "Selecione um cliente" }),
-  tipoDocumento: z.enum([
-    "FATURA",
-    "FATURA_RECIBO",
-    "NOTA_CREDITO",
-    "NOTA_DEBITO",
-    "RECIBO",
-  ] as const),
-  serie: z.string().optional(),
+  /** ID from GET /parametrizacao/tipos-fatura */
+  tipoFaturaId: z.number({ error: "Selecione o tipo de documento" }),
+  /** ID from GET /parametrizacao/series */
+  prSerieId: z.number({ error: "Selecione uma série" }),
   dataVencimento: z.string().optional(),
   observacoes: z.string().optional(),
   itens: z.array(itemSchema).min(1, "Adicione pelo menos um item"),
 });
 
 type FormValues = z.infer<typeof schema>;
-
-const TIPOS_DOCUMENTO: { value: TipoDocumento; label: string }[] = [
-  { value: "FATURA", label: "Fatura" },
-  { value: "FATURA_RECIBO", label: "Fatura-Recibo" },
-  { value: "NOTA_CREDITO", label: "Nota de Crédito" },
-  { value: "NOTA_DEBITO", label: "Nota de Débito" },
-  { value: "RECIBO", label: "Recibo" },
-];
 
 // ── Monetary helpers ─────────────────────────────────────────
 
@@ -91,6 +80,15 @@ export default function NovaFaturaVendaPage() {
   const { data: clientesPage } = useClientes();
   const clientes = clientesPage?.content ?? [];
 
+  const { data: tiposFatura = [] } = useQuery({
+    queryKey: ["parametrizacao", "tipos-fatura"],
+    queryFn: () => parametrizacaoApi.tiposFatura.listar(),
+  });
+  const { data: series = [] } = useQuery({
+    queryKey: ["parametrizacao", "series"],
+    queryFn: () => parametrizacaoApi.series.listar(),
+  });
+
   const {
     register,
     control,
@@ -100,7 +98,6 @@ export default function NovaFaturaVendaPage() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tipoDocumento: "FATURA",
       itens: [
         { descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 },
       ],
@@ -127,11 +124,14 @@ export default function NovaFaturaVendaPage() {
   async function onSubmit(values: FormValues) {
     try {
       const fatura = await criar({
-        ...values,
+        clienteId: values.clienteId,
+        tipoFaturaId: values.tipoFaturaId,
+        prSerieId: values.prSerieId,
+        dataVencimento: values.dataVencimento,
+        observacoes: values.observacoes,
         itens: values.itens.map(
           ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
             desig: descricao,
-            descricao,
             quantidade,
             precoUnitario,
             percentagemIva,
@@ -197,35 +197,48 @@ export default function NovaFaturaVendaPage() {
               )}
             </div>
 
-            {/* Tipo de Documento */}
+            {/* Tipo de Documento — loaded from /parametrizacao/tipos-fatura */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="tipoDocumento" className="text-sm font-medium text-foreground">
+              <label htmlFor="tipoFaturaId" className="text-sm font-medium text-foreground">
                 Tipo de Documento <span className="text-destructive">*</span>
               </label>
               <select
-                id="tipoDocumento"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...register("tipoDocumento")}
+                id="tipoFaturaId"
+                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.tipoFaturaId ? "border-destructive" : "border-input"}`}
+                {...register("tipoFaturaId", { valueAsNumber: true })}
               >
-                {TIPOS_DOCUMENTO.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                <option value="">Selecionar tipo…</option>
+                {tiposFatura.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.desig}
                   </option>
                 ))}
               </select>
+              {errors.tipoFaturaId && (
+                <p className="text-xs text-destructive">{errors.tipoFaturaId.message}</p>
+              )}
             </div>
 
-            {/* Série */}
+            {/* Série — loaded from /parametrizacao/series */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="serie" className="text-sm font-medium text-foreground">
-                Série
+              <label htmlFor="prSerieId" className="text-sm font-medium text-foreground">
+                Série <span className="text-destructive">*</span>
               </label>
-              <input
-                id="serie"
-                placeholder="Ex: FT-2025"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...register("serie")}
-              />
+              <select
+                id="prSerieId"
+                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.prSerieId ? "border-destructive" : "border-input"}`}
+                {...register("prSerieId", { valueAsNumber: true })}
+              >
+                <option value="">Selecionar série…</option>
+                {series.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.codigo}{s.desig ? ` — ${s.desig}` : ""}
+                  </option>
+                ))}
+              </select>
+              {errors.prSerieId && (
+                <p className="text-xs text-destructive">{errors.prSerieId.message}</p>
+              )}
             </div>
 
             {/* Data de Vencimento */}

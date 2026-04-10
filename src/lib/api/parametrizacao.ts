@@ -1,4 +1,4 @@
-import type { SerieDocumento, TaxaIva } from "@/app/(myapp)/types/efatura";
+import type { PrFaturaTipo, PrSerie, SerieDocumento, TaxaIva } from "@/app/(myapp)/types/efatura";
 import { apiRequest } from "./client";
 
 export const parametrizacaoApi = {
@@ -17,13 +17,19 @@ export const parametrizacaoApi = {
       }),
   },
 
+  // Raw backend series — endpoint is under /parametrizacao/series
   series: {
-    listar: () => apiRequest<SerieDocumento[]>("/series"),
-    obter: (id: number) => apiRequest<SerieDocumento>(`/series/${id}`),
+    listar: () => apiRequest<PrSerie[]>("/parametrizacao/series"),
+    obter: (id: number) => apiRequest<PrSerie>(`/parametrizacao/series/${id}`),
     criar: (data: Omit<SerieDocumento, "id">) =>
-      apiRequest<SerieDocumento>("/series", {
+      apiRequest<SerieDocumento>("/parametrizacao/series", {
         method: "POST",
         body: JSON.stringify(data),
       }),
+  },
+
+  // Tipos de fatura (FATURA, FATURA_RECIBO, etc.) with integer IDs
+  tiposFatura: {
+    listar: () => apiRequest<PrFaturaTipo[]>("/parametrizacao/tipos-fatura"),
   },
 };

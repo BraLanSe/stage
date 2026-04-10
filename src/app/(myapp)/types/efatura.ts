@@ -126,8 +126,10 @@ export interface FaturaVenda extends AuditFields {
 
 export interface CriarFaturaVendaRequest {
   clienteId: number;
-  tipoDocumento: TipoDocumento;
-  serie?: string;
+  /** Integer ID from GET /parametrizacao/tipos-fatura (@NotNull in DTO) */
+  tipoFaturaId: number;
+  /** Integer ID from GET /parametrizacao/series (@NotNull in DTO) */
+  prSerieId: number;
   dataVencimento?: string;
   condicoesPagamento?: string;
   observacoes?: string;
@@ -142,6 +144,22 @@ export interface CriarFaturaVendaRequest {
     | "valorImposto"
     | "valorTotal"
   >[];
+}
+
+// ── Parametrização raw backend types ─────────────────────────
+
+export interface PrFaturaTipo {
+  id: number;
+  codigo: string;
+  desig: string;
+  estado?: string;
+}
+
+export interface PrSerie {
+  id: number;
+  codigo: string;
+  desig?: string;
+  estado?: string;
 }
 
 // ── Compra ───────────────────────────────────────────────────

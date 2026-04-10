@@ -7,6 +7,51 @@ import { apiRequest } from "./client";
 
 const BASE = "/faturas-venda";
 
+/**
+ * Maps the frontend CriarFaturaVendaRequest → FaturaVendaCreateDTO (Spring Boot).
+ *
+ * Key differences vs. the frontend type:
+ *   tipoFaturaId  → tipoFaturaId  (Integer @NotNull — must come from /parametrizacao/tipos-fatura)
+ *   prSerieId     → prSerieId     (Integer @NotNull — must come from /parametrizacao/series)
+ *   dataVencimento→ dtVencimentoFatura (renamed)
+ *   observacoes   → nota          (renamed)
+ *   condicoesPagamento → termCondicoes (renamed)
+ *   itens[]       → items[]       (renamed; each item gets numLinha auto-assigned)
+ *   item.desig / item.descricao → desig (@NotBlank)
+ *   item.quantidade / precoUnitario → BigDecimal (parseFloat to avoid string coercion)
+ */
+function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown> {
+  const today = new Date().toISOString().split("T")[0];
+
+  const items = (data.itens ?? []).map((item, idx) => {
+    const row: Record<string, unknown> = {
+      numLinha: item.numLinha ?? idx + 1,
+      desig: item.desig || (item as Record<string, unknown>).descricao || "",
+      quantidade: parseFloat(String(item.quantidade)),
+      precoUnitario: parseFloat(String(item.precoUnitario)),
+      impostos: [],
+    };
+    if (item.produtoId) row.produtoId = item.produtoId;
+    if (item.codigoArtigo) row.codigoArtigo = item.codigoArtigo;
+    if (item.descr) row.descr = item.descr;
+    if (item.descontoComercialPerc) row.descontoComercialPerc = parseFloat(String(item.descontoComercialPerc));
+    if (item.descontoFinanceiroPerc) row.descontoFinanceiroPerc = parseFloat(String(item.descontoFinanceiroPerc));
+    return row;
+  });
+
+  const dto: Record<string, unknown> = {
+    tipoFaturaId: data.tipoFaturaId,
+    prSerieId: data.prSerieId,
+    dtFaturacao: today,
+    clienteId: data.clienteId,
+    items,
+  };
+  if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
+  if (data.condicoesPagamento) dto.termCondicoes = data.condicoesPagamento;
+  if (data.observacoes) dto.nota = data.observacoes;
+  return dto;
+}
+
 export const faturasVendaApi = {
   listar: (page = 0, size = 10, params?: Record<string, string>) => {
     const search = new URLSearchParams({
@@ -22,7 +67,7 @@ export const faturasVendaApi = {
   criar: (data: CriarFaturaVendaRequest) =>
     apiRequest<FaturaVenda>(BASE, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(toFaturaVendaDTO(data)),
     }),
 
   atualizar: (id: number, data: Partial<CriarFaturaVendaRequest>) =>
