@@ -6,6 +6,10 @@ import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.ProdutoEntity;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ClienteRepository;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.FornecedorRepository;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ProdutoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaTipoEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,20 +29,72 @@ public class DataInitializer implements ApplicationRunner {
     private final ClienteRepository clienteRepository;
     private final FornecedorRepository fornecedorRepository;
     private final ProdutoRepository produtoRepository;
+    private final PrFaturaTipoRepository prFaturaTipoRepository;
+    private final PrSerieRepository prSerieRepository;
 
     @Override
     public void run(ApplicationArguments args) {
         System.out.println("!!! SEEDER RUNNING !!!");
         log.info("🚀 [SEEDER] Démarrage du remplissage des données...");
 
+        seedTiposFatura();
+        seedSeries();
         seedClientes();
         seedFornecedores();
         seedProdutos();
 
         log.info("✅ [SEEDER] Données insérées avec succès");
-        System.out.println("!!! SEEDER DONE — clientes=" + clienteRepository.count()
+        System.out.println("!!! SEEDER DONE — tiposFatura=" + prFaturaTipoRepository.count()
+                + " series=" + prSerieRepository.count()
+                + " clientes=" + clienteRepository.count()
                 + " fornecedores=" + fornecedorRepository.count()
                 + " produtos=" + produtoRepository.count() + " !!!");
+    }
+
+    private void seedTiposFatura() {
+        try {
+            record Tipo(String codigo, String desig, String descr) {}
+            var tipos = List.of(
+                new Tipo("FAT", "Fatura", "Documento de faturação standard"),
+                new Tipo("FR",  "Fatura-Recibo", "Fatura com recibo incorporado"),
+                new Tipo("NC",  "Nota de Crédito", "Documento de regularização a crédito")
+            );
+            for (var t : tipos) {
+                if (prFaturaTipoRepository.findByCodigo(t.codigo()).isPresent()) continue;
+                var entity = new PrFaturaTipoEntity();
+                entity.setCodigo(t.codigo());
+                entity.setDesig(t.desig());
+                entity.setDescr(t.descr());
+                prFaturaTipoRepository.save(entity);
+            }
+            log.info("[SEEDER] tiposFatura OK — {} registos", prFaturaTipoRepository.count());
+        } catch (Exception e) {
+            log.error("[SEEDER] ERROR seedTiposFatura: {}", e.getMessage(), e);
+        }
+    }
+
+    private void seedSeries() {
+        try {
+            record SerieSpec(String codigo, String desig, String tipoFaturaCodigo) {}
+            var specs = List.of(
+                new SerieSpec("2026-FAT", "Série 2026 — Fatura",        "FAT"),
+                new SerieSpec("2026-FR",  "Série 2026 — Fatura-Recibo", "FR"),
+                new SerieSpec("2026-NC",  "Série 2026 — Nota Crédito",  "NC")
+            );
+            for (var s : specs) {
+                if (prSerieRepository.findByCodigo(s.codigo()).isPresent()) continue;
+                var tipo = prFaturaTipoRepository.findByCodigo(s.tipoFaturaCodigo()).orElse(null);
+                var entity = new PrSerieEntity();
+                entity.setCodigo(s.codigo());
+                entity.setDesig(s.desig());
+                entity.setPrFaturaTipo(tipo);
+                entity.setContador(0);
+                prSerieRepository.save(entity);
+            }
+            log.info("[SEEDER] series OK — {} registos", prSerieRepository.count());
+        } catch (Exception e) {
+            log.error("[SEEDER] ERROR seedSeries: {}", e.getMessage(), e);
+        }
     }
 
     private void seedClientes() {
