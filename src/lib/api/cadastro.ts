@@ -50,7 +50,7 @@ function toClienteDTO(
   const nif = rawNif.replace(/\D/g, "") || undefined;
 
   const codigoRaw = (d.codigo as string | undefined)?.trim();
-  const codigo = codigoRaw || (isCreate ? `CLI-${Date.now()}` : undefined);
+  const codigo = codigoRaw || (isCreate ? `C-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined);
 
   return sanitize({
     codigo,
