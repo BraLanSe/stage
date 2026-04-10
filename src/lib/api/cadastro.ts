@@ -115,15 +115,105 @@ function toFornecedorDTO(
   });
 }
 
+// ── Read mappers (GET response → frontend types) ──────────────
+
+/**
+ * Backend returns ClienteEntity fields (desig, indColetivo, estado, descr…).
+ * Map them back to the frontend Cliente shape (nome, tipoEntidade, ativo…).
+ */
+// biome-ignore lint/suspicious/noExplicitAny: raw backend DTO
+function fromClienteDTO(dto: any): Cliente {
+  return {
+    id: dto.id,
+    codigo: dto.codigo,
+    nome: dto.desig ?? "",
+    tipoEntidade: dto.indColetivo ? "COLETIVO" : "SINGULAR",
+    ativo: dto.estado === "ATIVO",
+    nif: dto.nif,
+    email: dto.email,
+    telefone: dto.telefone,
+    pessoaContacto: dto.pessoaContacto,
+    endereco: dto.endereco,
+    descricao: dto.descr,
+    aplicarImpostos: dto.aplicarImpostos ?? true,
+    // geographic fields not stored individually in backend
+    ilha: undefined,
+    conselho: undefined,
+    freguesia: undefined,
+    localidade: undefined,
+    morada: undefined,
+    enquadramento: undefined,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    createdBy: dto.createdBy,
+    lastModifiedBy: dto.lastModifiedBy,
+  };
+}
+
+/** Same inverse mapping for FornecedorEntity → Fornecedor. */
+// biome-ignore lint/suspicious/noExplicitAny: raw backend DTO
+function fromFornecedorDTO(dto: any): Fornecedor {
+  return {
+    id: dto.id,
+    codigo: dto.codigo,
+    nome: dto.desig ?? "",
+    tipoEntidade: dto.indColetivo ? "COLETIVO" : "SINGULAR",
+    ativo: dto.estado === "ATIVO",
+    nif: dto.nif,
+    email: dto.email,
+    telefone: dto.telefone,
+    morada: dto.endereco,
+    ilha: undefined,
+    conselho: undefined,
+    freguesia: undefined,
+    localidade: undefined,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    createdBy: dto.createdBy,
+    lastModifiedBy: dto.lastModifiedBy,
+  };
+}
+
+/**
+ * The backend list endpoints return a plain JSON array (List<Entity>),
+ * not a Spring Page object. Wrap it in a PaginatedResponse so the
+ * frontend hooks can consume it uniformly.
+ */
+function wrapList<T>(
+  raw: unknown,
+  // biome-ignore lint/suspicious/noExplicitAny: raw backend DTO
+  mapper: (dto: any) => T,
+): PaginatedResponse<T> {
+  if (Array.isArray(raw)) {
+    const content = raw.map(mapper);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      size: content.length,
+      number: 0,
+      first: true,
+      last: true,
+      empty: content.length === 0,
+    };
+  }
+  // Already paginated (future-proof if backend adds pagination)
+  const paged = raw as { content?: unknown[] } & Record<string, unknown>;
+  return { ...paged, content: (paged.content ?? []).map(mapper) } as PaginatedResponse<T>;
+}
+
 // ── API ───────────────────────────────────────────────────────
 
 export const cadastroApi = {
   clientes: {
-    listar: (page = 0, size = 50) =>
-      apiRequest<PaginatedResponse<Cliente>>(
-        `/clientes?page=${page}&size=${size}`,
-      ),
-    obter: (id: number) => apiRequest<Cliente>(`/clientes/${id}`),
+    listar: async (page = 0, size = 50) => {
+      const raw = await apiRequest<unknown>(`/clientes?page=${page}&size=${size}`);
+      return wrapList(raw, fromClienteDTO);
+    },
+    obter: async (id: number) => {
+      const raw = await apiRequest<unknown>(`/clientes/${id}`);
+      return fromClienteDTO(raw);
+    },
     criar: (data: ClienteWrite) =>
       apiRequest<Cliente>("/clientes", {
         method: "POST",
@@ -139,11 +229,14 @@ export const cadastroApi = {
   },
 
   fornecedores: {
-    listar: (page = 0, size = 50) =>
-      apiRequest<PaginatedResponse<Fornecedor>>(
-        `/fornecedores?page=${page}&size=${size}`,
-      ),
-    obter: (id: number) => apiRequest<Fornecedor>(`/fornecedores/${id}`),
+    listar: async (page = 0, size = 50) => {
+      const raw = await apiRequest<unknown>(`/fornecedores?page=${page}&size=${size}`);
+      return wrapList(raw, fromFornecedorDTO);
+    },
+    obter: async (id: number) => {
+      const raw = await apiRequest<unknown>(`/fornecedores/${id}`);
+      return fromFornecedorDTO(raw);
+    },
     criar: (data: FornecedorWrite) =>
       apiRequest<Fornecedor>("/fornecedores", {
         method: "POST",
