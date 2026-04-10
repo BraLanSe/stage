@@ -175,9 +175,10 @@ function fromFornecedorDTO(dto: any): Fornecedor {
 }
 
 /**
- * The backend list endpoints return a plain JSON array (List<Entity>),
- * not a Spring Page object. Wrap it in a PaginatedResponse so the
- * frontend hooks can consume it uniformly.
+ * Normalises backend list responses to PaginatedResponse<T>.
+ * - Spring Page<Entity> (object with `content[]`) → maps content through mapper
+ * - Legacy plain array (List<Entity>) → wraps in a synthetic PaginatedResponse
+ * Both paths apply the field-name mapper (desig→nome, etc.).
  */
 function wrapList<T>(
   raw: unknown,
