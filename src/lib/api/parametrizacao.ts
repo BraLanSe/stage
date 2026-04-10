@@ -1,4 +1,9 @@
-import type { SerieDocumento, TaxaIva } from "@/app/(myapp)/types/efatura";
+import type {
+  PrFaturaTipo,
+  PrSerie,
+  SerieDocumento,
+  TaxaIva,
+} from "@/app/(myapp)/types/efatura";
 import { apiRequest } from "./client";
 
 export const parametrizacaoApi = {
@@ -17,11 +22,16 @@ export const parametrizacaoApi = {
       }),
   },
 
+  tiposFatura: {
+    listar: () => apiRequest<PrFaturaTipo[]>("/parametrizacao/tipos-fatura"),
+  },
+
   series: {
-    listar: () => apiRequest<SerieDocumento[]>("/series"),
-    obter: (id: number) => apiRequest<SerieDocumento>(`/series/${id}`),
+    listar: () => apiRequest<PrSerie[]>("/parametrizacao/series"),
+    obterDocumento: (id: number) =>
+      apiRequest<SerieDocumento>(`/parametrizacao/series/${id}`),
     criar: (data: Omit<SerieDocumento, "id">) =>
-      apiRequest<SerieDocumento>("/series", {
+      apiRequest<SerieDocumento>("/parametrizacao/series", {
         method: "POST",
         body: JSON.stringify(data),
       }),

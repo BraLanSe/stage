@@ -23,6 +23,7 @@ export async function apiRequest<T>(
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       ...options?.headers,
     },
     ...options,

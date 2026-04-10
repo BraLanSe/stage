@@ -7,6 +7,26 @@ import { apiRequest } from "./client";
 
 const BASE = "/faturas-venda";
 
+function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown> {
+  const today = new Date().toISOString().split("T")[0];
+  return {
+    tipoFaturaId: data.tipoFaturaId,
+    prSerieId: data.prSerieId,
+    dtFaturacao: today,
+    clienteId: data.clienteId,
+    nota: data.observacoes,
+    termCondicoes: data.condicoesPagamento,
+    dtVencimentoFatura: data.dataVencimento,
+    items: data.itens.map((item, idx) => ({
+      numLinha: item.numLinha ?? idx + 1,
+      desig: item.desig || item.descricao || "",
+      quantidade: parseFloat(String(item.quantidade)),
+      precoUnitario: parseFloat(String(item.precoUnitario)),
+      impostos: [],
+    })),
+  };
+}
+
 export const faturasVendaApi = {
   listar: (page = 0, size = 10, params?: Record<string, string>) => {
     const search = new URLSearchParams({
@@ -22,7 +42,7 @@ export const faturasVendaApi = {
   criar: (data: CriarFaturaVendaRequest) =>
     apiRequest<FaturaVenda>(BASE, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(toFaturaVendaDTO(data)),
     }),
 
   atualizar: (id: number, data: Partial<CriarFaturaVendaRequest>) =>

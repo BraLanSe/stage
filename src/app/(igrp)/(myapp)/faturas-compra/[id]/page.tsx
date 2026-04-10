@@ -133,7 +133,7 @@ export default function FaturaCompraDetailPage() {
   }, [fatura]);
 
   const fornecedoresFiltrados = fornecedores.filter((f) =>
-    f.nome.toLowerCase().includes(fornecedorSearch.toLowerCase()),
+    f.desig.toLowerCase().includes(fornecedorSearch.toLowerCase()),
   );
   const fornecedorSelecionado = fornecedores.find(
     (f) => f.id === selectedFornecedorId,
@@ -346,7 +346,7 @@ export default function FaturaCompraDetailPage() {
                   id="fornecedorSearch"
                   value={
                     fornecedorSelecionado
-                      ? `${fornecedorSelecionado.nome} - ${fornecedorSelecionado.nif ?? ""} -`
+                      ? `${fornecedorSelecionado.desig} - ${fornecedorSelecionado.nif ?? ""} -`
                       : fornecedorSearch
                   }
                   onChange={(e) => {
@@ -385,12 +385,12 @@ export default function FaturaCompraDetailPage() {
                         type="button"
                         onClick={() => {
                           setSelectedFornecedorId(f.id);
-                          setFornecedorSearch(f.nome);
+                          setFornecedorSearch(f.desig);
                           setShowFornecedorDD(false);
                         }}
                         className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-gray-50"
                       >
-                        <span>{f.nome}</span>
+                        <span>{f.desig}</span>
                         <span className="text-gray-400">{f.nif}</span>
                       </button>
                     ))}

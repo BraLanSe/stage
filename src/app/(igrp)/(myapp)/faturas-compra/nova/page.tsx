@@ -149,7 +149,7 @@ export default function NovaFaturaCompraPage() {
                 <option value="">Selecionar fornecedor…</option>
                 {fornecedores.map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.nome}
+                    {f.desig}
                   </option>
                 ))}
               </select>

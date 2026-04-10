@@ -126,8 +126,10 @@ export interface FaturaVenda extends AuditFields {
 
 export interface CriarFaturaVendaRequest {
   clienteId: number;
-  tipoDocumento: TipoDocumento;
-  serie?: string;
+  /** Integer ID from GET /parametrizacao/tipos-fatura (@NotNull in DTO) */
+  tipoFaturaId: number;
+  /** Integer ID from GET /parametrizacao/series (@NotNull in DTO) */
+  prSerieId: number;
   dataVencimento?: string;
   condicoesPagamento?: string;
   observacoes?: string;
@@ -233,7 +235,8 @@ export type TipoEntidade = "SINGULAR" | "COLETIVO";
 export interface Cliente extends AuditFields {
   id?: number;
   codigo?: string;
-  nome: string;
+  /** Primary display name — matches backend field `desig` */
+  desig: string;
   nif?: string;
   tipoEntidade: TipoEntidade;
   email?: string;
@@ -254,7 +257,8 @@ export interface Cliente extends AuditFields {
 export interface Fornecedor extends AuditFields {
   id?: number;
   codigo?: string;
-  nome: string;
+  /** Primary display name — matches backend field `desig` */
+  desig: string;
   nif?: string;
   tipoEntidade: TipoEntidade;
   email?: string;
@@ -321,6 +325,42 @@ export interface EmitirDFEPayload {
   dataImposto: string;
   dataVencimento?: string;
   termosPagamento?: string;
+}
+
+// ── Parametrização raw backend types ─────────────────────────
+
+export interface PrFaturaTipo {
+  id: number;
+  codigo: string;
+  desig: string;
+  estado?: string;
+}
+
+export interface PrSerie {
+  id: number;
+  codigo: string;
+  desig?: string;
+  estado?: string;
+}
+
+// ── Pagamento ─────────────────────────────────────────────────
+
+export type MetodoPagamentoTipo =
+  | "NUMERARIO"
+  | "TRANSFERENCIA"
+  | "CHEQUE"
+  | "CARTAO"
+  | "CREDITO"
+  | "OUTRO";
+
+export interface PagamentoDocumento {
+  id?: number;
+  faturaId: number;
+  metodoPagamento: MetodoPagamentoTipo;
+  valor: CVE;
+  dataPagamento: string; // ISO date
+  referencia?: string;
+  notas?: string;
 }
 
 // ── Dashboard ────────────────────────────────────────────────

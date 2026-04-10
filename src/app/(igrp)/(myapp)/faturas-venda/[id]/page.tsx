@@ -226,7 +226,7 @@ export default function FaturaVendaDetailPage() {
   }, [fatura]);
 
   const clientesFiltrados = clientes.filter((c) =>
-    c.nome.toLowerCase().includes(clienteSearch.toLowerCase()),
+    c.desig.toLowerCase().includes(clienteSearch.toLowerCase()),
   );
 
   const clienteSelecionado = clientes.find((c) => c.id === selectedClienteId);
@@ -468,7 +468,7 @@ export default function FaturaVendaDetailPage() {
                   <input
                     value={
                       clienteSelecionado
-                        ? `${clienteSelecionado.nome} - ${clienteSelecionado.nif ?? ""} -`
+                        ? `${clienteSelecionado.desig} - ${clienteSelecionado.nif ?? ""} -`
                         : clienteSearch
                     }
                     onChange={(e) => {
@@ -516,12 +516,12 @@ export default function FaturaVendaDetailPage() {
                           key={c.id}
                           onClick={() => {
                             setSelectedClienteId(c.id);
-                            setClienteSearch(c.nome);
+                            setClienteSearch(c.desig);
                             setShowClienteDD(false);
                           }}
                           className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-gray-50"
                         >
-                          <span>{c.nome}</span>
+                          <span>{c.desig}</span>
                           <span className="text-gray-400">{c.nif}</span>
                         </button>
                       ))}

@@ -75,7 +75,7 @@ function emptyCliente(): Omit<
   "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
 > {
   return {
-    nome: "",
+    desig: "",
     tipoEntidade: "COLETIVO",
     ativo: true,
     codigo: "",
@@ -100,7 +100,7 @@ function emptyFornecedor(): Omit<
   "id" | "createdAt" | "updatedAt" | "createdBy" | "lastModifiedBy"
 > {
   return {
-    nome: "",
+    desig: "",
     tipoEntidade: "COLETIVO",
     ativo: true,
     codigo: "",
@@ -152,7 +152,7 @@ function ClienteModal({
   >(
     cliente
       ? {
-          nome: cliente.nome,
+          desig: cliente.desig,
           tipoEntidade: cliente.tipoEntidade,
           ativo: cliente.ativo,
           codigo: cliente.codigo ?? "",
@@ -192,7 +192,7 @@ function ClienteModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-sm font-semibold text-gray-800">
-            {isEditing ? `Editar #${cliente?.nome}` : "Novo Cliente"}
+            {isEditing ? `Editar #${cliente?.desig}` : "Novo Cliente"}
           </h2>
           <button
             onClick={onClose}
@@ -279,9 +279,9 @@ function ClienteModal({
                   Nome <span className="text-red-400">*</span>
                 </label>
                 <input
-                  value={form.nome}
+                  value={form.desig}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, nome: e.target.value }))
+                    setForm((p) => ({ ...p, desig: e.target.value }))
                   }
                   className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
                 />
@@ -476,7 +476,7 @@ function FornecedorModal({
   >(
     fornecedor
       ? {
-          nome: fornecedor.nome,
+          desig: fornecedor.desig,
           tipoEntidade: fornecedor.tipoEntidade,
           ativo: fornecedor.ativo,
           codigo: fornecedor.codigo ?? "",
@@ -510,7 +510,7 @@ function FornecedorModal({
       <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-sm font-semibold text-gray-800">
-            {isEditing ? `Editar #${fornecedor?.nome}` : "Novo Fornecedor"}
+            {isEditing ? `Editar #${fornecedor?.desig}` : "Novo Fornecedor"}
           </h2>
           <button
             onClick={onClose}
@@ -559,9 +559,9 @@ function FornecedorModal({
                   Nome <span className="text-red-400">*</span>
                 </label>
                 <input
-                  value={form.nome}
+                  value={form.desig}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, nome: e.target.value }))
+                    setForm((p) => ({ ...p, desig: e.target.value }))
                   }
                   className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
                 />
@@ -811,7 +811,7 @@ function ClientesTab() {
                     {c.codigo ?? "—"}
                   </td>
                   <td className="px-3 py-2.5 font-medium text-gray-800">
-                    {c.nome}
+                    {c.desig}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-gray-600">
                     {c.nif ?? "—"}
@@ -931,7 +931,7 @@ function FornecedoresTab() {
                     {f.codigo ?? "—"}
                   </td>
                   <td className="px-3 py-2.5 font-medium text-gray-800">
-                    {f.nome}
+                    {f.desig}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-gray-600">
                     {f.nif ?? "—"}
