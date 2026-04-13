@@ -9,22 +9,34 @@ const BASE = "/faturas-venda";
 
 function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown> {
   const today = new Date().toISOString().split("T")[0];
-  return {
+
+  const items = (data.itens ?? []).map((item, idx) => {
+    const row: Record<string, unknown> = {
+      numLinha: item.numLinha ?? idx + 1,
+      desig: item.desig || (item as Record<string, unknown>).descricao || "",
+      quantidade: parseFloat(String(item.quantidade)),
+      precoUnitario: parseFloat(String(item.precoUnitario)),
+      impostos: [],
+    };
+    if (item.produtoId) row.produtoId = item.produtoId;
+    if (item.codigoArtigo) row.codigoArtigo = item.codigoArtigo;
+    if (item.descr) row.descr = item.descr;
+    if (item.descontoComercialPerc) row.descontoComercialPerc = parseFloat(String(item.descontoComercialPerc));
+    if (item.descontoFinanceiroPerc) row.descontoFinanceiroPerc = parseFloat(String(item.descontoFinanceiroPerc));
+    return row;
+  });
+
+  const dto: Record<string, unknown> = {
     tipoFaturaId: data.tipoFaturaId,
     prSerieId: data.prSerieId,
     dtFaturacao: today,
     clienteId: data.clienteId,
-    nota: data.observacoes,
-    termCondicoes: data.condicoesPagamento,
-    dtVencimentoFatura: data.dataVencimento,
-    items: data.itens.map((item, idx) => ({
-      numLinha: item.numLinha ?? idx + 1,
-      desig: item.desig || item.descricao || "",
-      quantidade: parseFloat(String(item.quantidade)),
-      precoUnitario: parseFloat(String(item.precoUnitario)),
-      impostos: [],
-    })),
+    items,
   };
+  if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
+  if (data.condicoesPagamento) dto.termCondicoes = data.condicoesPagamento;
+  if (data.observacoes) dto.nota = data.observacoes;
+  return dto;
 }
 
 export const faturasVendaApi = {
