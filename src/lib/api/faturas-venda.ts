@@ -13,16 +13,16 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
   const items = (data.itens ?? []).map((item, idx) => {
     const row: Record<string, unknown> = {
       numLinha: item.numLinha ?? idx + 1,
-      desig: item.desig || (item as Record<string, unknown>).descricao || "",
+      desig: String(item.desig || (item as Record<string, unknown>).descricao || ""),
       quantidade: parseFloat(String(item.quantidade)),
       precoUnitario: parseFloat(String(item.precoUnitario)),
+      descontoComercialPerc: parseFloat(String(item.descontoComercialPerc ?? 0)),
+      descontoFinanceiroPerc: parseFloat(String(item.descontoFinanceiroPerc ?? 0)),
       impostos: [],
     };
     if (item.produtoId) row.produtoId = item.produtoId;
     if (item.codigoArtigo) row.codigoArtigo = item.codigoArtigo;
     if (item.descr) row.descr = item.descr;
-    if (item.descontoComercialPerc) row.descontoComercialPerc = parseFloat(String(item.descontoComercialPerc));
-    if (item.descontoFinanceiroPerc) row.descontoFinanceiroPerc = parseFloat(String(item.descontoFinanceiroPerc));
     return row;
   });
 
@@ -31,6 +31,7 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
     prSerieId: data.prSerieId,
     dtFaturacao: today,
     clienteId: data.clienteId,
+    utilizador: "admin",
     items,
   };
   if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
@@ -51,11 +52,14 @@ export const faturasVendaApi = {
 
   obter: (id: number) => apiRequest<FaturaVenda>(`${BASE}/${id}`),
 
-  criar: (data: CriarFaturaVendaRequest) =>
-    apiRequest<FaturaVenda>(BASE, {
+  criar: (data: CriarFaturaVendaRequest) => {
+    const dto = toFaturaVendaDTO(data);
+    console.log("SENDING JSON:", JSON.stringify(dto, null, 2));
+    return apiRequest<FaturaVenda>(BASE, {
       method: "POST",
-      body: JSON.stringify(toFaturaVendaDTO(data)),
-    }),
+      body: JSON.stringify(dto),
+    });
+  },
 
   atualizar: (id: number, data: Partial<CriarFaturaVendaRequest>) =>
     apiRequest<FaturaVenda>(`${BASE}/${id}`, {
