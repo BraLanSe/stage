@@ -20,6 +20,10 @@ const BASE = "/faturas-venda";
  *   item.desig / item.descricao → desig (@NotBlank)
  *   item.quantidade / precoUnitario → BigDecimal (parseFloat to avoid string coercion)
  */
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
 function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown> {
   const today = new Date().toISOString().split("T")[0];
 
@@ -39,11 +43,29 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
     return row;
   });
 
+  const valorIliquido = round2(
+    (data.itens ?? []).reduce((acc, item) => {
+      return acc + round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario)));
+    }, 0),
+  );
+  const valorImposto = round2(
+    (data.itens ?? []).reduce((acc, item) => {
+      const base = round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario)));
+      const iva = parseFloat(String((item as Record<string, unknown>).percentagemIva ?? 0));
+      return acc + round2(base * (iva / 100));
+    }, 0),
+  );
+  const valorFatura = round2(valorIliquido + valorImposto);
+
   const dto: Record<string, unknown> = {
     tipoFaturaId: data.tipoFaturaId,
     prSerieId: data.prSerieId,
     dtFaturacao: today,
     clienteId: data.clienteId,
+    utilizador: "admin",
+    valorIliquido,
+    valorImposto,
+    valorFatura,
     items,
   };
   if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
