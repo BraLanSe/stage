@@ -5,6 +5,7 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaT
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
 import cv.igrp.framework.stereotype.IgrpEntity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -103,8 +104,9 @@ public class FaturaVendaEntity extends AuditEntity {
 
     @NotBlank
     @Column(name = "utilizador", nullable = false, length = 100)
-    private String utilizador;
+    private String utilizador = "system";
 
+    @JsonIgnoreProperties("faturaVenda")
     @OneToMany(mappedBy = "faturaVenda", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaturaVendaItemEntity> items = new ArrayList<>();
 }
