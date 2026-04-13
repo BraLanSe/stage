@@ -81,7 +81,7 @@ export default function NovaFaturaVendaPage() {
   const clientes = clientesPage?.content ?? [];
 
   const {
-    data: tiposFatura = [],
+    data: tiposFaturaData,
     error: tiposFaturaError,
     isLoading: tiposFaturaLoading,
   } = useQuery({
@@ -89,13 +89,15 @@ export default function NovaFaturaVendaPage() {
     queryFn: () => parametrizacaoApi.tiposFatura.listar(),
   });
   const {
-    data: series = [],
+    data: seriesData,
     error: seriesError,
     isLoading: seriesLoading,
   } = useQuery({
     queryKey: ["parametrizacao", "series"],
     queryFn: () => parametrizacaoApi.series.listar(),
   });
+  const tiposFatura = tiposFaturaData?.content ?? [];
+  const series = seriesData?.content ?? [];
 
   // ── Debug logs — remove once parametrização is confirmed working ──
   if (tiposFaturaError) console.error("[nova-fatura] tiposFatura error:", tiposFaturaError);
