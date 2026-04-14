@@ -98,6 +98,7 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
             item.setFaturaVenda(fatura);
             item.setNumLinha(itemDto.getNumLinha());
             item.setDescr(itemDto.getDescr());
+            item.setQuantidade(itemDto.getQuantidade());
             item.setEstado("ATIVO");
 
             // Snapshot (spec §4 + §6): copier desig, codigoArtigo, precoUnitario depuis le produit
