@@ -11,10 +11,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @IgrpController
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "FaturaVenda", description = "Gestão de faturas de venda")
 public class FaturaVendaController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FaturaVendaController.class);
 
     private final CommandBus commandBus;
     private final FaturaVendaRepository faturaVendaRepo;
@@ -35,8 +40,22 @@ public class FaturaVendaController {
 
     @PostMapping
     @Operation(summary = "Criar fatura de venda")
-    public ResponseEntity<FaturaVendaEntity> create(@RequestBody @Valid FaturaVendaCreateDTO dto) {
-        return commandBus.send(new CreateFaturaVendaCommand(dto));
+    public ResponseEntity<FaturaVendaEntity> create(@RequestBody @Valid FaturaVendaCreateDTO dto, BindingResult result) {
+        LOGGER.info("[DEBUG] POST /faturas-venda — body recebido: {}", dto);
+        if (result.hasErrors()) {
+            result.getFieldErrors().forEach(e ->
+                LOGGER.error("[VALIDATION] campo='{}' valor='{}' erro='{}'",
+                        e.getField(), e.getRejectedValue(), e.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            return commandBus.send(new CreateFaturaVendaCommand(dto));
+        } catch (Exception e) {
+            LOGGER.error("ERROR_DETAIL: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}")
