@@ -159,6 +159,8 @@ export interface PrSerie {
   id: number;
   codigo: string;
   desig?: string;
+  prFaturaTipo?: { id: number; codigo: string; desig?: string };
+  contador?: number;
   estado?: string;
 }
 
@@ -356,6 +358,8 @@ export interface PrSerie {
   id: number;
   codigo: string;
   desig?: string;
+  prFaturaTipo?: { id: number; codigo: string; desig?: string };
+  contador?: number;
   estado?: string;
 }
 

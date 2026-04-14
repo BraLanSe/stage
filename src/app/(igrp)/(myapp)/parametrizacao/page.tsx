@@ -421,29 +421,29 @@ function SeriesTab() {
                     {serie.codigo}
                   </td>
                   <td className="px-4 py-2.5 text-gray-700">
-                    {serie.descricao}
+                    {serie.desig}
                   </td>
                   <td className="px-4 py-2.5 text-xs text-gray-600">
-                    {serie.tipoDocumento}
+                    {serie.prFaturaTipo?.codigo}
                   </td>
                   <td className="px-4 py-2.5 text-center font-mono text-xs text-gray-700">
-                    {serie.prefixo}
+                    —
                   </td>
                   <td className="px-4 py-2.5 text-center text-gray-700">
-                    {serie.anoFiscal}
+                    —
                   </td>
                   <td className="px-4 py-2.5 text-center font-medium text-gray-800">
-                    {serie.ultimoNumero}
+                    {serie.contador ?? 0}
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     <span
                       className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                        serie.ativo
+                        serie.estado === "ATIVO"
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-gray-100 text-gray-500"
                       }`}
                     >
-                      {serie.ativo ? "Ativo" : "Inativo"}
+                      {serie.estado === "ATIVO" ? "Ativo" : "Inativo"}
                     </span>
                   </td>
                 </tr>

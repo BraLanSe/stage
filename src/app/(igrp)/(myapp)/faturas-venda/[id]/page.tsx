@@ -284,8 +284,6 @@ export default function FaturaVendaDetailPage() {
     try {
       await faturasVendaApi.atualizar(id, {
         clienteId: selectedClienteId,
-        tipoDocumento: fatura?.tipoDocumento ?? "FATURA",
-        serie,
         condicoesPagamento: condicoes,
         observacoes: nota,
         itens: itens.map(
