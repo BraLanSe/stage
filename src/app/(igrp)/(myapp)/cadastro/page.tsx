@@ -1,5 +1,6 @@
 "use client";
 
+/* IGRP-CUSTOM-CODE-BEGIN(imports) */
 import {
   IGRPButton,
   IGRPCheckbox,
@@ -35,9 +36,9 @@ import {
   useFornecedores,
   useProdutos,
 } from "@/hooks/use-cadastro";
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Cape Verde geographic data ────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(constants) */
 const ILHAS = [
   "SANTIAGO",
   "SÃO VICENTE",
@@ -73,9 +74,9 @@ const TIPOS_ENTIDADE: { value: TipoEntidade; label: string }[] = [
   { value: "SINGULAR", label: "Singular" },
   { value: "COLETIVO", label: "Coletivo" },
 ];
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Helpers ───────────────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(helpers) */
 function formatCVE(v: CVE | undefined | null) {
   if (v == null || Number.isNaN(v)) return "—";
   return new Intl.NumberFormat("pt-CV", {
@@ -146,6 +147,7 @@ function emptyProduto(): Omit<
     ativo: true,
   };
 }
+/* IGRP-CUSTOM-CODE-END */
 
 // ── Cliente Modal ─────────────────────────────────────────────
 
@@ -156,6 +158,7 @@ function ClienteModal({
   cliente: Cliente | null;
   onClose: () => void;
 }) {
+  /* IGRP-CUSTOM-CODE-BEGIN(cliente-modal-hooks) */
   const criar = useCriarCliente();
   const atualizar = useAtualizarCliente();
   const isEditing = !!cliente?.id;
@@ -200,6 +203,7 @@ function ClienteModal({
     }
     onClose();
   }
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
@@ -214,12 +218,14 @@ function ClienteModal({
           <div className="grid grid-cols-3 gap-3">
             <IGRPInputText
               name="codigo"
+              tag="input-cliente-codigo"
               label="Código"
               disabled
               value={form.codigo ?? ""}
             />
             <IGRPInputText
               name="nif"
+              tag="input-cliente-nif"
               label="NIF"
               value={form.nif ?? ""}
               onChange={(e) =>
@@ -228,6 +234,7 @@ function ClienteModal({
             />
             <IGRPSelect
               name="tipoEntidade"
+              tag="select-cliente-tipoEntidade"
               label="Tipo Cliente"
               required
               options={TIPOS_ENTIDADE.map((t) => ({
@@ -242,6 +249,7 @@ function ClienteModal({
             <div className="col-span-2">
               <IGRPInputText
                 name="nome"
+                tag="input-cliente-nome"
                 label="Nome"
                 required
                 value={form.desig}
@@ -252,6 +260,7 @@ function ClienteModal({
             </div>
             <IGRPInputText
               name="telefone"
+              tag="input-cliente-telefone"
               label="Telemóvel"
               placeholder="Telefone..."
               value={form.telefone ?? ""}
@@ -263,6 +272,7 @@ function ClienteModal({
 
           <IGRPInputText
             name="email"
+            tag="input-cliente-email"
             label="Email"
             type="email"
             value={form.email ?? ""}
@@ -273,6 +283,7 @@ function ClienteModal({
 
           <IGRPInputText
             name="pessoaContacto"
+            tag="input-cliente-pessoaContacto"
             label="Pessoa de Contacto"
             placeholder="Informações de pessoa de contacto..."
             value={form.pessoaContacto ?? ""}
@@ -283,6 +294,7 @@ function ClienteModal({
 
           <IGRPTextarea
             name="descricao"
+            tag="textarea-cliente-descricao"
             label="Descrição"
             placeholder="Descr..."
             rows={2}
@@ -295,6 +307,7 @@ function ClienteModal({
           <div className="grid grid-cols-4 gap-3">
             <IGRPSelect
               name="ilha"
+              tag="select-cliente-ilha"
               label="Ilha"
               options={ILHAS.map((i) => ({ label: i, value: i }))}
               value={form.ilha ?? "SANTIAGO"}
@@ -304,6 +317,7 @@ function ClienteModal({
             />
             <IGRPSelect
               name="conselho"
+              tag="select-cliente-conselho"
               label="Conselho"
               options={[
                 { label: "—", value: "" },
@@ -316,6 +330,7 @@ function ClienteModal({
             />
             <IGRPInputText
               name="freguesia"
+              tag="input-cliente-freguesia"
               label="Freguesia"
               value={form.freguesia ?? ""}
               onChange={(e) =>
@@ -324,6 +339,7 @@ function ClienteModal({
             />
             <IGRPInputText
               name="localidade"
+              tag="input-cliente-localidade"
               label="Localidade"
               value={form.localidade ?? ""}
               onChange={(e) =>
@@ -334,6 +350,7 @@ function ClienteModal({
 
           <IGRPInputText
             name="endereco"
+            tag="input-cliente-endereco"
             label="Endereço"
             required
             value={form.endereco ?? ""}
@@ -346,6 +363,7 @@ function ClienteModal({
         <IGRPModalDialogFooter>
           <IGRPButton
             name="fechar-cliente"
+            tag="btn-fechar-cliente"
             variant="outline"
             onClick={onClose}
           >
@@ -353,6 +371,7 @@ function ClienteModal({
           </IGRPButton>
           <IGRPButton
             name="guardar-cliente"
+            tag="btn-guardar-cliente"
             loading={saving}
             loadingText="A guardar…"
             onClick={handleSave}
@@ -374,6 +393,7 @@ function FornecedorModal({
   fornecedor: Fornecedor | null;
   onClose: () => void;
 }) {
+  /* IGRP-CUSTOM-CODE-BEGIN(fornecedor-modal-hooks) */
   const criar = useCriarFornecedor();
   const atualizar = useAtualizarFornecedor();
   const isEditing = !!fornecedor?.id;
@@ -413,6 +433,7 @@ function FornecedorModal({
     }
     onClose();
   }
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
@@ -427,12 +448,14 @@ function FornecedorModal({
           <div className="grid grid-cols-2 gap-3">
             <IGRPInputText
               name="codigo"
+              tag="input-fornecedor-codigo"
               label="Código"
               disabled
               value={form.codigo ?? ""}
             />
             <IGRPInputText
               name="desig"
+              tag="input-fornecedor-nome"
               label="Nome"
               required
               value={form.desig}
@@ -442,6 +465,7 @@ function FornecedorModal({
             />
             <IGRPInputText
               name="email"
+              tag="input-fornecedor-email"
               label="Email"
               type="email"
               value={form.email ?? ""}
@@ -451,6 +475,7 @@ function FornecedorModal({
             />
             <IGRPInputText
               name="telefone"
+              tag="input-fornecedor-telefone"
               label="Telefone"
               value={form.telefone ?? ""}
               onChange={(e) =>
@@ -459,6 +484,7 @@ function FornecedorModal({
             />
             <IGRPInputText
               name="nif"
+              tag="input-fornecedor-nif"
               label="NIF"
               required
               value={form.nif ?? ""}
@@ -468,6 +494,7 @@ function FornecedorModal({
             />
             <IGRPSelect
               name="tipoEntidade"
+              tag="select-fornecedor-tipoEntidade"
               label="Tipo"
               options={TIPOS_ENTIDADE.map((t) => ({
                 label: t.label,
@@ -482,6 +509,7 @@ function FornecedorModal({
 
           <IGRPInputText
             name="morada"
+            tag="input-fornecedor-morada"
             label="Endereço"
             value={form.morada ?? ""}
             onChange={(e) =>
@@ -492,6 +520,7 @@ function FornecedorModal({
           <div className="grid grid-cols-4 gap-3">
             <IGRPSelect
               name="ilha"
+              tag="select-fornecedor-ilha"
               label="Ilha"
               options={ILHAS.map((i) => ({ label: i, value: i }))}
               value={form.ilha ?? "SANTIAGO"}
@@ -501,6 +530,7 @@ function FornecedorModal({
             />
             <IGRPSelect
               name="conselho"
+              tag="select-fornecedor-conselho"
               label="Conselho"
               options={[
                 { label: "—", value: "" },
@@ -513,6 +543,7 @@ function FornecedorModal({
             />
             <IGRPInputText
               name="freguesia"
+              tag="input-fornecedor-freguesia"
               label="Freguesia"
               value={form.freguesia ?? ""}
               onChange={(e) =>
@@ -521,6 +552,7 @@ function FornecedorModal({
             />
             <IGRPInputText
               name="localidade"
+              tag="input-fornecedor-localidade"
               label="Localidade"
               value={form.localidade ?? ""}
               onChange={(e) =>
@@ -533,6 +565,7 @@ function FornecedorModal({
         <IGRPModalDialogFooter>
           <IGRPButton
             name="fechar-fornecedor"
+            tag="btn-fechar-fornecedor"
             variant="outline"
             onClick={onClose}
           >
@@ -540,6 +573,7 @@ function FornecedorModal({
           </IGRPButton>
           <IGRPButton
             name="guardar-fornecedor"
+            tag="btn-guardar-fornecedor"
             loading={saving}
             loadingText="A guardar…"
             onClick={handleSave}
@@ -561,6 +595,7 @@ function ProdutoModal({
   produto: Produto | null;
   onClose: () => void;
 }) {
+  /* IGRP-CUSTOM-CODE-BEGIN(produto-modal-hooks) */
   const criar = useCriarProduto();
   const atualizar = useAtualizarProduto();
   const isEditing = !!produto?.id;
@@ -592,6 +627,7 @@ function ProdutoModal({
     }
     onClose();
   }
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
@@ -606,6 +642,7 @@ function ProdutoModal({
           <div className="grid grid-cols-3 gap-3">
             <IGRPInputText
               name="codigo"
+              tag="input-produto-codigo"
               label="Código"
               disabled
               value={form.codigo}
@@ -613,6 +650,7 @@ function ProdutoModal({
             <div className="col-span-2">
               <IGRPInputText
                 name="desig"
+                tag="input-produto-desig"
                 label="Designação"
                 required
                 value={form.desig}
@@ -625,6 +663,7 @@ function ProdutoModal({
 
           <IGRPTextarea
             name="descr"
+            tag="textarea-produto-descr"
             label="Descrição"
             rows={2}
             value={form.descr ?? ""}
@@ -636,6 +675,7 @@ function ProdutoModal({
           <div className="grid grid-cols-2 gap-3">
             <IGRPInputNumber
               name="preco"
+              tag="input-produto-preco"
               label="Preço Unitário (CVE)"
               min={0}
               step={0.01}
@@ -644,6 +684,7 @@ function ProdutoModal({
             />
             <IGRPInputNumber
               name="percentagemIva"
+              tag="input-produto-percentagemIva"
               label="IVA (%)"
               min={0}
               max={100}
@@ -655,6 +696,7 @@ function ProdutoModal({
             />
             <IGRPInputText
               name="unidade"
+              tag="input-produto-unidade"
               label="Unidade"
               placeholder="Ex: un, kg, m²"
               value={form.unidade ?? ""}
@@ -664,6 +706,7 @@ function ProdutoModal({
             />
             <IGRPInputText
               name="categoria"
+              tag="input-produto-categoria"
               label="Categoria"
               value={form.categoria ?? ""}
               onChange={(e) =>
@@ -674,6 +717,7 @@ function ProdutoModal({
 
           <IGRPCheckbox
             name="ativo"
+            tag="checkbox-produto-ativo"
             label="Produto / Serviço ativo"
             checked={form.ativo}
             onCheckedChange={(checked) =>
@@ -685,6 +729,7 @@ function ProdutoModal({
         <IGRPModalDialogFooter>
           <IGRPButton
             name="cancelar-produto"
+            tag="btn-cancelar-produto"
             variant="outline"
             onClick={onClose}
           >
@@ -692,6 +737,7 @@ function ProdutoModal({
           </IGRPButton>
           <IGRPButton
             name="guardar-produto"
+            tag="btn-guardar-produto"
             loading={saving}
             loadingText="A guardar…"
             disabled={!form.desig.trim()}
@@ -708,9 +754,11 @@ function ProdutoModal({
 // ── Clientes Tab ──────────────────────────────────────────────
 
 function ClientesTab() {
+  /* IGRP-CUSTOM-CODE-BEGIN(clientes-tab-hooks) */
   const { data, isLoading } = useClientes(0, 50);
   const clientes = data?.content ?? [];
   const [modal, setModal] = useState<Cliente | null | "new">(null);
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <div className="space-y-4">
@@ -725,6 +773,7 @@ function ClientesTab() {
         <h2 className="text-sm font-semibold">Clientes</h2>
         <IGRPButton
           name="novo-cliente"
+          tag="btn-novo-cliente"
           showIcon
           iconName="plus"
           onClick={() => setModal("new")}
@@ -740,6 +789,7 @@ function ClientesTab() {
       ) : (
         <IGRPTable
           id="clientes-table"
+          tag="table-clientes"
           content={clientes}
           columns={[
             {
@@ -778,6 +828,7 @@ function ClientesTab() {
           actions={(row) => (
             <IGRPButton
               name="editar-cliente"
+              tag="btn-editar-cliente"
               variant="ghost"
               size="sm"
               onClick={() => setModal(row.original)}
@@ -794,9 +845,11 @@ function ClientesTab() {
 // ── Fornecedores Tab ──────────────────────────────────────────
 
 function FornecedoresTab() {
+  /* IGRP-CUSTOM-CODE-BEGIN(fornecedores-tab-hooks) */
   const { data, isLoading } = useFornecedores(0, 50);
   const fornecedores = data?.content ?? [];
   const [modal, setModal] = useState<Fornecedor | null | "new">(null);
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <div className="space-y-4">
@@ -811,6 +864,7 @@ function FornecedoresTab() {
         <h2 className="text-sm font-semibold">Fornecedores</h2>
         <IGRPButton
           name="novo-fornecedor"
+          tag="btn-novo-fornecedor"
           showIcon
           iconName="plus"
           onClick={() => setModal("new")}
@@ -826,6 +880,7 @@ function FornecedoresTab() {
       ) : (
         <IGRPTable
           id="fornecedores-table"
+          tag="table-fornecedores"
           content={fornecedores}
           columns={[
             {
@@ -858,6 +913,7 @@ function FornecedoresTab() {
           actions={(row) => (
             <IGRPButton
               name="editar-fornecedor"
+              tag="btn-editar-fornecedor"
               variant="ghost"
               size="sm"
               onClick={() => setModal(row.original)}
@@ -874,6 +930,7 @@ function FornecedoresTab() {
 // ── Produtos Tab ──────────────────────────────────────────────
 
 function ProdutosTab() {
+  /* IGRP-CUSTOM-CODE-BEGIN(produtos-tab-hooks) */
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { data, isLoading } = useProdutos(0, 50, debouncedSearch || undefined);
@@ -888,6 +945,7 @@ function ProdutosTab() {
       400,
     );
   }
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <div className="space-y-4">
@@ -903,6 +961,7 @@ function ProdutosTab() {
         <div className="flex items-center gap-2">
           <IGRPInputText
             name="search-produto"
+            tag="input-search-produto"
             placeholder="Pesquisar…"
             showIcon
             iconName="search"
@@ -911,6 +970,7 @@ function ProdutosTab() {
           />
           <IGRPButton
             name="novo-produto"
+            tag="btn-novo-produto"
             showIcon
             iconName="plus"
             onClick={() => setModal("new")}
@@ -927,6 +987,7 @@ function ProdutosTab() {
       ) : (
         <IGRPTable
           id="produtos-table"
+          tag="table-produtos"
           content={produtos}
           columns={[
             {
@@ -965,6 +1026,7 @@ function ProdutosTab() {
           actions={(row) => (
             <IGRPButton
               name="editar-produto"
+              tag="btn-editar-produto"
               variant="ghost"
               size="sm"
               onClick={() => setModal(row.original)}
@@ -985,6 +1047,7 @@ export default function CadastroPage() {
     <div className="flex flex-col gap-0 p-0">
       <IGRPPageHeader
         name="cadastro-header"
+        tag="cadastro-header"
         title="Cadastro"
         description="Gestão de clientes, fornecedores e produtos"
         className="border-b px-6 py-3"
@@ -993,6 +1056,7 @@ export default function CadastroPage() {
       <div className="p-5">
         <IGRPTabs
           name="cadastro-tabs"
+          tag="tabs-cadastro"
           defaultValue="clientes"
           variant="underline"
           items={[

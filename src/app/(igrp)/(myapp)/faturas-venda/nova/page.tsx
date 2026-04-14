@@ -1,5 +1,6 @@
 "use client";
 
+/* IGRP-CUSTOM-CODE-BEGIN(imports) */
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IGRPButton,
@@ -25,9 +26,9 @@ import { z } from "zod/v4";
 import { useClientes } from "@/hooks/use-cadastro";
 import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
 import { parametrizacaoApi } from "@/lib/api/parametrizacao";
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Schema ────────────────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(schema) */
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
   quantidade: z
@@ -47,9 +48,9 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Monetary helpers ──────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(helpers) */
 function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -74,10 +75,10 @@ function formatCVE(v: number) {
     maximumFractionDigits: 2,
   }).format(v);
 }
-
-// ── Page ──────────────────────────────────────────────────────
+/* IGRP-CUSTOM-CODE-END */
 
 export default function NovaFaturaVendaPage() {
+  /* IGRP-CUSTOM-CODE-BEGIN(hooks) */
   const router = useRouter();
   const { mutateAsync: criar, isPending } = useCriarFaturaVenda();
   const { data: clientesPage } = useClientes();
@@ -152,11 +153,13 @@ export default function NovaFaturaVendaPage() {
       console.error("Erro ao criar fatura:", error);
     }
   }
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
     <div className="mx-auto max-w-5xl p-6">
       <IGRPPageHeader
         name="nova-fatura-header"
+        tag="nova-fatura-header"
         title="Nova Fatura de Venda"
         showBackButton
         urlBackButton="/faturas-venda"
@@ -176,6 +179,7 @@ export default function NovaFaturaVendaPage() {
                 render={({ field }) => (
                   <IGRPSelect
                     name="clienteId"
+                    tag="select-clienteId"
                     label="Cliente"
                     required
                     placeholder="Selecionar cliente…"
@@ -197,6 +201,7 @@ export default function NovaFaturaVendaPage() {
                 render={({ field }) => (
                   <IGRPSelect
                     name="tipoFaturaId"
+                    tag="select-tipoFaturaId"
                     label="Tipo de Documento"
                     required
                     placeholder={
@@ -221,6 +226,7 @@ export default function NovaFaturaVendaPage() {
                 render={({ field }) => (
                   <IGRPSelect
                     name="prSerieId"
+                    tag="select-prSerieId"
                     label="Série"
                     required
                     placeholder={
@@ -240,6 +246,7 @@ export default function NovaFaturaVendaPage() {
 
               {/* Data de Vencimento */}
               <IGRPInputText
+                tag="input-dataVencimento"
                 label="Data de Vencimento"
                 placeholder="AAAA-MM-DD"
                 {...register("dataVencimento")}
@@ -248,6 +255,7 @@ export default function NovaFaturaVendaPage() {
               {/* Observações */}
               <div className="col-span-full">
                 <IGRPTextarea
+                  tag="textarea-observacoes"
                   label="Observações"
                   placeholder="Observações adicionais…"
                   rows={2}
@@ -265,6 +273,7 @@ export default function NovaFaturaVendaPage() {
               <h2 className="text-base font-semibold">Itens da Fatura</h2>
               <IGRPButton
                 name="adicionar-linha"
+                tag="btn-adicionar-linha"
                 type="button"
                 variant="outline"
                 size="sm"
@@ -428,6 +437,7 @@ export default function NovaFaturaVendaPage() {
           <div className="flex items-center gap-3">
             <IGRPButton
               name="cancelar"
+              tag="btn-cancelar"
               type="button"
               variant="outline"
               onClick={() => router.push("/faturas-venda")}
@@ -436,6 +446,7 @@ export default function NovaFaturaVendaPage() {
             </IGRPButton>
             <IGRPButton
               name="confirmar-fatura"
+              tag="btn-confirmar-fatura"
               type="submit"
               loading={isPending}
               loadingText="A guardar…"
