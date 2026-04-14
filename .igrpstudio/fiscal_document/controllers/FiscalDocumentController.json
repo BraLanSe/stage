@@ -1,0 +1,28 @@
+{
+  "type": "controller",
+  "name": "FiscalDocument",
+  "module": "fiscal_document",
+  "description": "FiscalDocument",
+  "basePath": "api/v1/dfe",
+  "actions": [
+    {
+      "actionName": "submitDfe",
+      "method": "POST",
+      "responses": {
+        "200": {
+          "name": "OK",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "string",
+                "name": "data",
+                "collectionType": "none"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "id": "sv1oerojfe"
+}

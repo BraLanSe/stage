@@ -1,0 +1,132 @@
+name: 'efatura-api-service'
+
+networks:
+  default:
+    name: efatura
+    external: false
+
+services:
+  otel-collector-efatura-api-service:
+      image: otel/opentelemetry-collector-contrib:latest
+      container_name: otel-collector-efatura-api-service
+      restart: always
+      command:
+        - --config=/etc/otelcol-cont/otel-collector.yml
+      volumes:
+        - ./monitoring/collector/otel-collector.yml:/etc/otelcol-cont/otel-collector.yml
+      ports:
+        - ${OTEL_PPROF_EXTENSION}:${OTEL_PPROF_EXTENSION} # pprof extension
+        - ${OTEL_PROMETHEUS_METRICS_EXPORTER_PORT}:${OTEL_PROMETHEUS_METRICS_EXPORTER_PORT} # Prometheus' metrics exposed by the collector
+        - ${OTEL_PROMETHEUS_COLLECTOR_METRICS_EXPORTER_PORT}:${OTEL_PROMETHEUS_COLLECTOR_METRICS_EXPORTER_PORT} # Prometheus exporter metrics
+        - ${OTEL_HEALTH_CHECK_PORT}:${OTEL_HEALTH_CHECK_PORT} # health_check extension
+        - ${OTEL_GRPC_PORT}:${OTEL_GRPC_PORT} # OTLP gRPC receiver
+        - ${OTEL_HTTP_PORT}:${OTEL_HTTP_PORT} # OTLP http receiver
+        - ${OTEL_ZPAGES_PORT}:${OTEL_ZPAGES_PORT} # zpages extension
+  
+  prometheus-efatura-api-service:
+    image: prom/prometheus:latest
+    container_name: prometheus-efatura-api-service
+    ports:
+      - ${PROMETHEUS_SERVICE_PORT}:${PROMETHEUS_SERVICE_PORT}
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+  
+  promtail-efatura-api-service:
+    image: grafana/promtail:latest
+    container_name: promtail-efatura-api-service
+    environment:
+      - PROMTAIL_SERVICE_PORT=${PROMTAIL_SERVICE_PORT}
+      - LOKI_SERVICE_PORT=${LOKI_SERVICE_PORT}
+    volumes:
+      - ./monitoring/promtail/promtail-docker-config.yml:/etc/promtail/docker-config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "--config.expand-env=true --config.file=/etc/promtail/docker-config.yml"
+  
+  loki-efatura-api-service:
+    image: grafana/loki:latest
+    container_name: loki-efatura-api-service
+    command: "-config.expand-env=true -config.file=/etc/loki/local-config.yaml"
+    ports:
+      - ${LOKI_SERVICE_PORT}:${LOKI_SERVICE_PORT}
+    depends_on:
+      - promtail-efatura-api-service
+  
+  tempo-efatura-api-service:
+    image: grafana/tempo:latest
+    container_name: tempo-efatura-api-service
+    command: "-config.expand-env=true -config.file /etc/tempo-config.yml"
+    environment:
+      - TEMPO_SERVICE_HTTP_PORT=${TEMPO_SERVICE_HTTP_PORT}
+    ports:
+      - ${TEMPO_SERVICE_HTTP_PORT}:${TEMPO_SERVICE_HTTP_PORT} # Tempo
+      - ${TEMPO_SERVICE_ZIPKIN_PORT}:${TEMPO_SERVICE_ZIPKIN_PORT}     # Zipkin
+      - ${OTEL_GRPC_PORT}  # otlp grpc
+    volumes:
+      - ./monitoring/tempo/tempo.yml:/etc/tempo-config.yml
+  
+  grafana-efatura-api-service:
+    image: grafana/grafana:latest
+    container_name: grafana-efatura-api-service
+    ports:
+      - ${GRAFANA_SERVICE_PORT}:${GRAFANA_SERVICE_PORT}
+    volumes:
+      - grafana-data-efatura-api-service:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=${GRAFANA_ALLOW_SIGN_UP}
+
+  postgres-efatura-api-service:
+      image: postgres:17-alpine
+      container_name: postgres-efatura-api-service
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DATABASE}
+      ports:
+        - ${POSTGRES_PORT}:${POSTGRES_PORT}
+      volumes:
+        - postgres-data-17-efatura-api-service:/var/lib/postgresql/data
+      restart: unless-stopped
+
+  efatura-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: efatura-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres-efatura-api-service
+    environment:
+      - SERVER_PORT=${SERVICE_PORT}
+      - SERVICE_NAME=efatura-service
+      - SPRING_PROFILES_ACTIVE=${SERVICE_PROFILE}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER}
+      - OTEL_METRICS_EXPORTER=${OTEL_METRICS_EXPORTER}
+      - OTEL_LOGS_EXPORTER=${OTEL_LOGS_EXPORTER}
+      - OTEL_COLLECTOR_ENDPOINT=${OTEL_COLLECTOR_ENDPOINT}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - MANAGEMENT_TRACING_ENABLED=true
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://tempo:${TEMPO_SERVICE_ZIPKIN_PORT}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER}
+    ports:
+      - ${SERVICE_PORT}:${SERVICE_PORT}
+    #restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    labels:
+      logging: "promtail"
+
+volumes:
+  grafana-data-efatura-api-service:
+    driver: local
+  postgres-data-17-efatura-api-service:
+    driver: local

@@ -1,0 +1,13 @@
+{
+  "type": "springboot",
+  "name": "eFatura",
+  "group": "cv.igrp",
+  "artifact": "fatura",
+  "packageName": "fatura",
+  "database": "Postgresql",
+  "projectStructureStyle": "domain",
+  "enableObservability": true,
+  "enableEntityRevision": true,
+  "version": "0.2.0-beta.10",
+  "enableGraalVm": false
+}

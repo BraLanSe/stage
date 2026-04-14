@@ -146,6 +146,22 @@ export interface CriarFaturaVendaRequest {
   >[];
 }
 
+// ── Parametrização raw backend types ─────────────────────────
+
+export interface PrFaturaTipo {
+  id: number;
+  codigo: string;
+  desig: string;
+  estado?: string;
+}
+
+export interface PrSerie {
+  id: number;
+  codigo: string;
+  desig?: string;
+  estado?: string;
+}
+
 // ── Compra ───────────────────────────────────────────────────
 
 export interface ItemFaturaCompra {

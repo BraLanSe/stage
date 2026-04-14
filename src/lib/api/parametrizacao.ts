@@ -28,8 +28,7 @@ export const parametrizacaoApi = {
 
   series: {
     listar: () => apiRequest<PrSerie[]>("/parametrizacao/series"),
-    obterDocumento: (id: number) =>
-      apiRequest<SerieDocumento>(`/parametrizacao/series/${id}`),
+    obter: (id: number) => apiRequest<PrSerie>(`/parametrizacao/series/${id}`),
     criar: (data: Omit<SerieDocumento, "id">) =>
       apiRequest<SerieDocumento>("/parametrizacao/series", {
         method: "POST",

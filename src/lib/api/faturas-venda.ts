@@ -7,6 +7,19 @@ import { apiRequest } from "./client";
 
 const BASE = "/faturas-venda";
 
+/**
+ * Maps the frontend CriarFaturaVendaRequest → FaturaVendaCreateDTO (Spring Boot).
+ *
+ * Key differences vs. the frontend type:
+ *   tipoFaturaId  → tipoFaturaId  (Integer @NotNull — must come from /parametrizacao/tipos-fatura)
+ *   prSerieId     → prSerieId     (Integer @NotNull — must come from /parametrizacao/series)
+ *   dataVencimento→ dtVencimentoFatura (renamed)
+ *   observacoes   → nota          (renamed)
+ *   condicoesPagamento → termCondicoes (renamed)
+ *   itens[]       → items[]       (renamed; each item gets numLinha auto-assigned)
+ *   item.desig / item.descricao → desig (@NotBlank)
+ *   item.quantidade / precoUnitario → BigDecimal (parseFloat to avoid string coercion)
+ */
 function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown> {
   const today = new Date().toISOString().split("T")[0];
 
@@ -16,13 +29,13 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
       desig: String(item.desig || (item as Record<string, unknown>).descricao || ""),
       quantidade: parseFloat(String(item.quantidade)),
       precoUnitario: parseFloat(String(item.precoUnitario)),
-      descontoComercialPerc: parseFloat(String(item.descontoComercialPerc ?? 0)),
-      descontoFinanceiroPerc: parseFloat(String(item.descontoFinanceiroPerc ?? 0)),
       impostos: [],
     };
     if (item.produtoId) row.produtoId = item.produtoId;
     if (item.codigoArtigo) row.codigoArtigo = item.codigoArtigo;
     if (item.descr) row.descr = item.descr;
+    if (item.descontoComercialPerc) row.descontoComercialPerc = parseFloat(String(item.descontoComercialPerc));
+    if (item.descontoFinanceiroPerc) row.descontoFinanceiroPerc = parseFloat(String(item.descontoFinanceiroPerc));
     return row;
   });
 
@@ -31,7 +44,6 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
     prSerieId: data.prSerieId,
     dtFaturacao: today,
     clienteId: data.clienteId,
-    utilizador: "admin",
     items,
   };
   if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;

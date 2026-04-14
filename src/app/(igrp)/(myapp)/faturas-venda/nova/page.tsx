@@ -23,7 +23,9 @@ const itemSchema = z.object({
 
 const schema = z.object({
   clienteId: z.number({ error: "Selecione um cliente" }),
+  /** ID from GET /parametrizacao/tipos-fatura */
   tipoFaturaId: z.number({ error: "Selecione o tipo de documento" }),
+  /** ID from GET /parametrizacao/series */
   prSerieId: z.number({ error: "Selecione uma série" }),
   dataVencimento: z.string().optional(),
   observacoes: z.string().optional(),
@@ -78,15 +80,28 @@ export default function NovaFaturaVendaPage() {
   const { data: clientesPage } = useClientes();
   const clientes = clientesPage?.content ?? [];
 
-  const { data: tiposFatura = [] } = useQuery({
+  const {
+    data: tiposFatura = [],
+    error: tiposFaturaError,
+    isLoading: tiposFaturaLoading,
+  } = useQuery({
     queryKey: ["parametrizacao", "tipos-fatura"],
     queryFn: () => parametrizacaoApi.tiposFatura.listar(),
   });
-
-  const { data: series = [] } = useQuery({
+  const {
+    data: series = [],
+    error: seriesError,
+    isLoading: seriesLoading,
+  } = useQuery({
     queryKey: ["parametrizacao", "series"],
     queryFn: () => parametrizacaoApi.series.listar(),
   });
+
+  // ── Debug logs — remove once parametrização is confirmed working ──
+  if (tiposFaturaError) console.error("[nova-fatura] tiposFatura error:", tiposFaturaError);
+  if (seriesError) console.error("[nova-fatura] series error:", seriesError);
+  if (!tiposFaturaLoading && tiposFatura.length === 0) console.warn("[nova-fatura] tiposFatura vazio — vérifier seed backend (DataInitializer)");
+  if (!seriesLoading && series.length === 0) console.warn("[nova-fatura] series vazio — vérifier seed backend (DataInitializer)");
 
   const {
     register,
@@ -131,7 +146,6 @@ export default function NovaFaturaVendaPage() {
         itens: values.itens.map(
           ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
             desig: descricao,
-            descricao,
             quantidade,
             precoUnitario,
             percentagemIva,
@@ -197,17 +211,20 @@ export default function NovaFaturaVendaPage() {
               )}
             </div>
 
-            {/* Tipo de Documento */}
+            {/* Tipo de Documento — loaded from /parametrizacao/tipos-fatura */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="tipoFaturaId" className="text-sm font-medium text-foreground">
                 Tipo de Documento <span className="text-destructive">*</span>
               </label>
               <select
                 id="tipoFaturaId"
+                disabled={tiposFaturaLoading}
                 className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.tipoFaturaId ? "border-destructive" : "border-input"}`}
                 {...register("tipoFaturaId", { valueAsNumber: true })}
               >
-                <option value="">Selecionar tipo…</option>
+                <option value="">
+                  {tiposFaturaLoading ? "A carregar…" : tiposFatura.length === 0 ? "⚠ Sem dados — configure o backend" : "Selecionar tipo…"}
+                </option>
                 {tiposFatura.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.desig}
@@ -217,27 +234,36 @@ export default function NovaFaturaVendaPage() {
               {errors.tipoFaturaId && (
                 <p className="text-xs text-destructive">{errors.tipoFaturaId.message}</p>
               )}
+              {!tiposFaturaLoading && tiposFatura.length === 0 && (
+                <p className="text-xs text-amber-600">Aucune donnée trouvée — veuillez configurer les paramètres via POST /parametrizacao/tipos-fatura</p>
+              )}
             </div>
 
-            {/* Série */}
+            {/* Série — loaded from /parametrizacao/series */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="prSerieId" className="text-sm font-medium text-foreground">
                 Série <span className="text-destructive">*</span>
               </label>
               <select
                 id="prSerieId"
+                disabled={seriesLoading}
                 className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.prSerieId ? "border-destructive" : "border-input"}`}
                 {...register("prSerieId", { valueAsNumber: true })}
               >
-                <option value="">Selecionar série…</option>
+                <option value="">
+                  {seriesLoading ? "A carregar…" : series.length === 0 ? "⚠ Sem dados — configure o backend" : "Selecionar série…"}
+                </option>
                 {series.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.desig ?? s.codigo}
+                    {s.codigo}{s.desig ? ` — ${s.desig}` : ""}
                   </option>
                 ))}
               </select>
               {errors.prSerieId && (
                 <p className="text-xs text-destructive">{errors.prSerieId.message}</p>
+              )}
+              {!seriesLoading && series.length === 0 && (
+                <p className="text-xs text-amber-600">Aucune donnée trouvée — veuillez configurer les paramètres via POST /parametrizacao/series</p>
               )}
             </div>
 
