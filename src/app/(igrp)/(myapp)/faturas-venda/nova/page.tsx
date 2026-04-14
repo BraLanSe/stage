@@ -1,3 +1,4 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 /* IGRP-CUSTOM-CODE-BEGIN(imports) */
@@ -6,6 +7,7 @@ import {
   IGRPButton,
   IGRPCard,
   IGRPCardContent,
+  IGRPContainer,
   IGRPInputNumber,
   IGRPInputText,
   IGRPPageHeader,
@@ -156,7 +158,10 @@ export default function NovaFaturaVendaPage() {
   /* IGRP-CUSTOM-CODE-END */
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <IGRPContainer
+      id="page-nova-fatura"
+      className="mx-auto max-w-5xl p-6"
+    >
       <IGRPPageHeader
         name="nova-fatura-header"
         tag="nova-fatura-header"
@@ -168,7 +173,7 @@ export default function NovaFaturaVendaPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
         {/* Informações Gerais */}
-        <IGRPCard>
+        <IGRPCard name="card-info-gerais" tag="card-info-gerais">
           <IGRPCardContent className="p-6">
             <h2 className="mb-4 text-base font-semibold">Informações Gerais</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -267,7 +272,7 @@ export default function NovaFaturaVendaPage() {
         </IGRPCard>
 
         {/* Itens da Fatura */}
-        <IGRPCard>
+        <IGRPCard name="card-itens-fatura" tag="card-itens-fatura">
           <IGRPCardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold">Itens da Fatura</h2>
@@ -414,7 +419,7 @@ export default function NovaFaturaVendaPage() {
 
         {/* Totais + Ações */}
         <div className="flex items-end justify-between gap-6">
-          <IGRPCard className="w-80">
+          <IGRPCard name="card-totais" tag="card-totais" className="w-80">
             <IGRPCardContent className="p-5 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Valor Ilíquido</span>
@@ -456,6 +461,6 @@ export default function NovaFaturaVendaPage() {
           </div>
         </div>
       </form>
-    </div>
+    </IGRPContainer>
   );
 }

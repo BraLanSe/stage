@@ -44,11 +44,6 @@
 export default {
   types: ["types/efatura"],
   actions: [],
-  functions: [
-    "../../hooks/use-faturas-venda",
-    "../../hooks/use-faturas-compra",
-    "../../hooks/use-cadastro",
-    "../../hooks/use-dashboard",
-  ],
+  functions: [],
   components: [],
 };

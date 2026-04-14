@@ -1,9 +1,11 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 /* IGRP-CUSTOM-CODE-BEGIN(imports) */
 import {
   IGRPButton,
   IGRPCheckbox,
+  IGRPContainer,
   IGRPInputNumber,
   IGRPInputText,
   IGRPModalDialog,
@@ -209,7 +211,10 @@ function ClienteModal({
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
       <IGRPModalDialogContent size="lg">
         <IGRPModalDialogHeader>
-          <IGRPModalDialogTitle name="modal-cliente-title">
+          <IGRPModalDialogTitle
+            name="modal-cliente-title"
+            tag="modal-cliente-title"
+          >
             {isEditing ? `Editar — ${cliente?.desig}` : "Novo Cliente"}
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
@@ -439,7 +444,10 @@ function FornecedorModal({
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
       <IGRPModalDialogContent size="lg">
         <IGRPModalDialogHeader>
-          <IGRPModalDialogTitle name="modal-fornecedor-title">
+          <IGRPModalDialogTitle
+            name="modal-fornecedor-title"
+            tag="modal-fornecedor-title"
+          >
             {isEditing ? `Editar — ${fornecedor?.desig}` : "Novo Fornecedor"}
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
@@ -633,7 +641,10 @@ function ProdutoModal({
     <IGRPModalDialog open onOpenChange={(o) => !o && onClose()}>
       <IGRPModalDialogContent size="md">
         <IGRPModalDialogHeader>
-          <IGRPModalDialogTitle name="modal-produto-title">
+          <IGRPModalDialogTitle
+            name="modal-produto-title"
+            tag="modal-produto-title"
+          >
             {isEditing ? `Editar — ${produto?.desig}` : "Novo Produto / Serviço"}
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
@@ -1044,7 +1055,10 @@ function ProdutosTab() {
 
 export default function CadastroPage() {
   return (
-    <div className="flex flex-col gap-0 p-0">
+    <IGRPContainer
+      id="page-cadastro"
+      className="flex flex-col gap-0 p-0"
+    >
       <IGRPPageHeader
         name="cadastro-header"
         tag="cadastro-header"
@@ -1078,6 +1092,6 @@ export default function CadastroPage() {
           ]}
         />
       </div>
-    </div>
+    </IGRPContainer>
   );
 }
