@@ -4,6 +4,7 @@ import cv.igrp.framework.stereotype.IgrpController;
 import cv.igrp.framework.core.domain.CommandBus;
 import cv.igrp.fatura.venda.application.commands.ConfirmarFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.CreateFaturaVendaCommand;
+import cv.igrp.fatura.venda.application.commands.UpdateFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaCreateDTO;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaEntity;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
@@ -64,6 +65,27 @@ public class FaturaVendaController {
         return faturaVendaRepo.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar fatura de venda (apenas RASCUNHO)")
+    public ResponseEntity<FaturaVendaEntity> update(@PathVariable Integer id,
+                                                    @RequestBody @Valid FaturaVendaCreateDTO dto,
+                                                    BindingResult result) {
+        if (result.hasErrors()) {
+            result.getFieldErrors().forEach(e ->
+                LOGGER.error("[VALIDATION] campo='{}' valor='{}' erro='{}'",
+                        e.getField(), e.getRejectedValue(), e.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            return commandBus.send(new UpdateFaturaVendaCommand(id, dto));
+        } catch (Exception e) {
+            LOGGER.error("ERROR_DETAIL: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PutMapping("/{id}/confirmar")
