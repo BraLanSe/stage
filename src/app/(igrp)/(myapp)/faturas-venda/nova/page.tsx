@@ -1,16 +1,32 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  IGRPButton,
+  IGRPCard,
+  IGRPCardContent,
+  IGRPInputNumber,
+  IGRPInputText,
+  IGRPPageHeader,
+  IGRPSelect,
+  IGRPTableBodyPrimitive,
+  IGRPTableCellPrimitive,
+  IGRPTableHeadPrimitive,
+  IGRPTableHeaderPrimitive,
+  IGRPTablePrimitive,
+  IGRPTableRowPrimitive,
+  IGRPTextarea,
+} from "@igrp/igrp-framework-react-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 import { useClientes } from "@/hooks/use-cadastro";
 import { useCriarFaturaVenda } from "@/hooks/use-faturas-venda";
 import { parametrizacaoApi } from "@/lib/api/parametrizacao";
 
-// ── Schema ───────────────────────────────────────────────────
+// ── Schema ────────────────────────────────────────────────────
 
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
@@ -23,9 +39,7 @@ const itemSchema = z.object({
 
 const schema = z.object({
   clienteId: z.number({ error: "Selecione um cliente" }),
-  /** ID from GET /parametrizacao/tipos-fatura */
   tipoFaturaId: z.number({ error: "Selecione o tipo de documento" }),
-  /** ID from GET /parametrizacao/series */
   prSerieId: z.number({ error: "Selecione uma série" }),
   dataVencimento: z.string().optional(),
   observacoes: z.string().optional(),
@@ -34,28 +48,17 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ── Monetary helpers ─────────────────────────────────────────
+// ── Monetary helpers ──────────────────────────────────────────
 
-/** Round to 2 decimal places — mirrors Java BigDecimal(scale=2) on the server */
 function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-/** NaN-safe coerce: undefined / null / NaN → 0 */
 function n(v: number | undefined | null): number {
   const x = Number(v);
   return Number.isNaN(x) ? 0 : x;
 }
 
-/**
- * Per-line total with step-by-step rounding.
- * Each intermediate value is rounded before the next operation
- * to stay in sync with the server-side BigDecimal calculation.
- *
- * Formula: valorBruto = qty × price
- *          valorImposto = round2(valorBruto × iva%)
- *          totalLinha   = valorBruto + valorImposto
- */
 function calcLinha(qty: number, unit: number, iva: number): number {
   const valorBruto = round2(n(qty) * n(unit));
   const valorImposto = round2(valorBruto * (n(iva) / 100));
@@ -72,7 +75,7 @@ function formatCVE(v: number) {
   }).format(v);
 }
 
-// ── Page ─────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────
 
 export default function NovaFaturaVendaPage() {
   const router = useRouter();
@@ -80,30 +83,16 @@ export default function NovaFaturaVendaPage() {
   const { data: clientesPage } = useClientes();
   const clientes = clientesPage?.content ?? [];
 
-  const {
-    data: tiposFaturaData,
-    error: tiposFaturaError,
-    isLoading: tiposFaturaLoading,
-  } = useQuery({
+  const { data: tiposFaturaData, isLoading: tiposFaturaLoading } = useQuery({
     queryKey: ["parametrizacao", "tipos-fatura"],
     queryFn: () => parametrizacaoApi.tiposFatura.listar(),
   });
-  const {
-    data: seriesData,
-    error: seriesError,
-    isLoading: seriesLoading,
-  } = useQuery({
+  const { data: seriesData, isLoading: seriesLoading } = useQuery({
     queryKey: ["parametrizacao", "series"],
     queryFn: () => parametrizacaoApi.series.listar(),
   });
   const tiposFatura = tiposFaturaData?.content ?? [];
   const series = seriesData?.content ?? [];
-
-  // ── Debug logs — remove once parametrização is confirmed working ──
-  if (tiposFaturaError) console.error("[nova-fatura] tiposFatura error:", tiposFaturaError);
-  if (seriesError) console.error("[nova-fatura] series error:", seriesError);
-  if (!tiposFaturaLoading && tiposFatura.length === 0) console.warn("[nova-fatura] tiposFatura vazio — vérifier seed backend (DataInitializer)");
-  if (!seriesLoading && series.length === 0) console.warn("[nova-fatura] series vazio — vérifier seed backend (DataInitializer)");
 
   const {
     register,
@@ -165,306 +154,294 @@ export default function NovaFaturaVendaPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      {/* Breadcrumbs */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <a
-          href="/faturas-venda"
-          className="hover:text-foreground hover:underline"
-        >
-          Faturas de Venda
-        </a>
-        <span>/</span>
-        <span className="text-foreground font-medium">Nova Fatura</span>
-      </nav>
+    <div className="mx-auto max-w-5xl p-6">
+      <IGRPPageHeader
+        name="nova-fatura-header"
+        title="Nova Fatura de Venda"
+        showBackButton
+        urlBackButton="/faturas-venda"
+        backButtonText="Faturas de Venda"
+      />
 
-      <h1 className="mb-8 text-2xl font-bold text-foreground">
-        Nova Fatura de Venda
-      </h1>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+        {/* Informações Gerais */}
+        <IGRPCard>
+          <IGRPCardContent className="p-6">
+            <h2 className="mb-4 text-base font-semibold">Informações Gerais</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Cliente */}
+              <Controller
+                name="clienteId"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="clienteId"
+                    label="Cliente"
+                    required
+                    placeholder="Selecionar cliente…"
+                    options={clientes.map((c) => ({
+                      label: c.desig,
+                      value: String(c.id),
+                    }))}
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                    error={errors.clienteId?.message}
+                  />
+                )}
+              />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-        {/* Header fields */}
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-foreground">
-            Informações Gerais
-          </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* Cliente */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="clienteId" className="text-sm font-medium text-foreground">
-                Cliente <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="clienteId"
-                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.clienteId ? "border-destructive" : "border-input"}`}
-                {...register("clienteId", { valueAsNumber: true })}
-              >
-                <option value="">Selecionar cliente…</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.desig}
-                  </option>
-                ))}
-              </select>
-              {errors.clienteId && (
-                <p className="text-xs text-destructive">
-                  {errors.clienteId.message}
-                </p>
-              )}
-            </div>
+              {/* Tipo de Documento */}
+              <Controller
+                name="tipoFaturaId"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="tipoFaturaId"
+                    label="Tipo de Documento"
+                    required
+                    placeholder={
+                      tiposFaturaLoading ? "A carregar…" : "Selecionar tipo…"
+                    }
+                    disabled={tiposFaturaLoading}
+                    options={tiposFatura.map((t) => ({
+                      label: t.desig,
+                      value: String(t.id),
+                    }))}
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                    error={errors.tipoFaturaId?.message}
+                  />
+                )}
+              />
 
-            {/* Tipo de Documento — loaded from /parametrizacao/tipos-fatura */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="tipoFaturaId" className="text-sm font-medium text-foreground">
-                Tipo de Documento <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="tipoFaturaId"
-                disabled={tiposFaturaLoading}
-                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.tipoFaturaId ? "border-destructive" : "border-input"}`}
-                {...register("tipoFaturaId", { valueAsNumber: true })}
-              >
-                <option value="">
-                  {tiposFaturaLoading ? "A carregar…" : tiposFatura.length === 0 ? "⚠ Sem dados — configure o backend" : "Selecionar tipo…"}
-                </option>
-                {tiposFatura.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.desig}
-                  </option>
-                ))}
-              </select>
-              {errors.tipoFaturaId && (
-                <p className="text-xs text-destructive">{errors.tipoFaturaId.message}</p>
-              )}
-              {!tiposFaturaLoading && tiposFatura.length === 0 && (
-                <p className="text-xs text-amber-600">Aucune donnée trouvée — veuillez configurer les paramètres via POST /parametrizacao/tipos-fatura</p>
-              )}
-            </div>
+              {/* Série */}
+              <Controller
+                name="prSerieId"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="prSerieId"
+                    label="Série"
+                    required
+                    placeholder={
+                      seriesLoading ? "A carregar…" : "Selecionar série…"
+                    }
+                    disabled={seriesLoading}
+                    options={series.map((s) => ({
+                      label: `${s.codigo}${s.desig ? ` — ${s.desig}` : ""}`,
+                      value: String(s.id),
+                    }))}
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                    error={errors.prSerieId?.message}
+                  />
+                )}
+              />
 
-            {/* Série — loaded from /parametrizacao/series */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="prSerieId" className="text-sm font-medium text-foreground">
-                Série <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="prSerieId"
-                disabled={seriesLoading}
-                className={`h-10 rounded-full border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.prSerieId ? "border-destructive" : "border-input"}`}
-                {...register("prSerieId", { valueAsNumber: true })}
-              >
-                <option value="">
-                  {seriesLoading ? "A carregar…" : series.length === 0 ? "⚠ Sem dados — configure o backend" : "Selecionar série…"}
-                </option>
-                {series.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.codigo}{s.desig ? ` — ${s.desig}` : ""}
-                  </option>
-                ))}
-              </select>
-              {errors.prSerieId && (
-                <p className="text-xs text-destructive">{errors.prSerieId.message}</p>
-              )}
-              {!seriesLoading && series.length === 0 && (
-                <p className="text-xs text-amber-600">Aucune donnée trouvée — veuillez configurer les paramètres via POST /parametrizacao/series</p>
-              )}
-            </div>
-
-            {/* Data de Vencimento */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="dataVencimento" className="text-sm font-medium text-foreground">
-                Data de Vencimento
-              </label>
-              <input
-                id="dataVencimento"
-                type="date"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              {/* Data de Vencimento */}
+              <IGRPInputText
+                label="Data de Vencimento"
+                placeholder="AAAA-MM-DD"
                 {...register("dataVencimento")}
               />
+
+              {/* Observações */}
+              <div className="col-span-full">
+                <IGRPTextarea
+                  label="Observações"
+                  placeholder="Observações adicionais…"
+                  rows={2}
+                  {...register("observacoes")}
+                />
+              </div>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        {/* Itens da Fatura */}
+        <IGRPCard>
+          <IGRPCardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold">Itens da Fatura</h2>
+              <IGRPButton
+                name="adicionar-linha"
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  append({
+                    descricao: "",
+                    quantidade: 1,
+                    precoUnitario: 0,
+                    percentagemIva: 15,
+                  })
+                }
+              >
+                + Adicionar Linha
+              </IGRPButton>
             </div>
 
-            {/* Observações */}
-            <div className="col-span-full flex flex-col gap-1.5">
-              <label htmlFor="observacoes" className="text-sm font-medium text-foreground">
-                Observações
-              </label>
-              <textarea
-                id="observacoes"
-                rows={2}
-                placeholder="Observações adicionais…"
-                className="rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                {...register("observacoes")}
-              />
+            {errors.itens && !Array.isArray(errors.itens) && (
+              <p className="mb-3 text-sm text-destructive">
+                {errors.itens.message}
+              </p>
+            )}
+
+            <div className="overflow-x-auto">
+              <IGRPTablePrimitive>
+                <IGRPTableHeaderPrimitive>
+                  <IGRPTableRowPrimitive>
+                    <IGRPTableHeadPrimitive>
+                      Produto / Serviço
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-28">
+                      Qtd.
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-32">
+                      Preço Unit.
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-24">
+                      IVA %
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-36 text-right">
+                      Total Linha
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-10" />
+                  </IGRPTableRowPrimitive>
+                </IGRPTableHeaderPrimitive>
+                <IGRPTableBodyPrimitive>
+                  {fields.map((field, i) => {
+                    const item = watchedItens[i];
+                    const linhaTotal = item
+                      ? calcLinha(
+                          item.quantidade ?? 0,
+                          item.precoUnitario ?? 0,
+                          item.percentagemIva ?? 15,
+                        )
+                      : 0;
+                    const itemErrors = errors.itens?.[i];
+
+                    return (
+                      <IGRPTableRowPrimitive key={field.id}>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <IGRPInputText
+                            placeholder="Descrição do produto ou serviço"
+                            error={itemErrors?.descricao?.message}
+                            {...register(`itens.${i}.descricao`)}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.quantidade`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.quantidade`}
+                                min={0}
+                                step={0.01}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={itemErrors?.quantidade?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.precoUnitario`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.precoUnitario`}
+                                min={0}
+                                step={0.01}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={itemErrors?.precoUnitario?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.percentagemIva`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.percentagemIva`}
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={itemErrors?.percentagemIva?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="text-right font-medium align-top py-4">
+                          {formatCVE(linhaTotal)}
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <IGRPButton
+                            name={`remover-linha-${i}`}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={fields.length === 1}
+                            onClick={() => remove(i)}
+                          >
+                            ×
+                          </IGRPButton>
+                        </IGRPTableCellPrimitive>
+                      </IGRPTableRowPrimitive>
+                    );
+                  })}
+                </IGRPTableBodyPrimitive>
+              </IGRPTablePrimitive>
             </div>
-          </div>
-        </div>
+          </IGRPCardContent>
+        </IGRPCard>
 
-        {/* Items */}
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">
-              Itens da Fatura
-            </h2>
-            <button
-              type="button"
-              onClick={() =>
-                append({
-                  descricao: "",
-                  quantidade: 1,
-                  precoUnitario: 0,
-                  percentagemIva: 15,
-                })
-              }
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors"
-            >
-              + Adicionar Linha
-            </button>
-          </div>
-
-          {errors.itens && !Array.isArray(errors.itens) && (
-            <p className="mb-3 text-sm text-destructive">
-              {errors.itens.message}
-            </p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-2 text-left font-medium text-muted-foreground">
-                    Produto / Serviço
-                  </th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
-                    Qtd.
-                  </th>
-                  <th className="pb-2 w-32 text-right font-medium text-muted-foreground">
-                    Preço Unit.
-                  </th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
-                    IVA %
-                  </th>
-                  <th className="pb-2 w-36 text-right font-medium text-muted-foreground">
-                    Total Linha
-                  </th>
-                  <th className="pb-2 w-8" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {fields.map((field, i) => {
-                  const item = watchedItens[i];
-                  const linhaTotal = item
-                    ? calcLinha(
-                        item.quantidade ?? 0,
-                        item.precoUnitario ?? 0,
-                        item.percentagemIva ?? 15,
-                      )
-                    : 0;
-
-                  const itemErrors = errors.itens?.[i];
-
-                  return (
-                    <tr key={field.id}>
-                      <td className="py-2 pr-3 align-top">
-                        <input
-                          placeholder="Descrição do produto ou serviço"
-                          className={`w-full rounded border bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.descricao ? "border-destructive" : "border-input"}`}
-                          {...register(`itens.${i}.descricao`)}
-                        />
-                        {itemErrors?.descricao && (
-                          <p className="mt-1 text-xs text-destructive">
-                            {itemErrors.descricao.message}
-                          </p>
-                        )}
-                      </td>
-                      <td className="py-2 px-1 align-top">
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.quantidade ? "border-destructive" : "border-input"}`}
-                          {...register(`itens.${i}.quantidade`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 px-1 align-top">
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.precoUnitario ? "border-destructive" : "border-input"}`}
-                          {...register(`itens.${i}.precoUnitario`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 px-1 align-top">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step="0.1"
-                          className={`w-full rounded border bg-background px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary/40 ${itemErrors?.percentagemIva ? "border-destructive" : "border-input"}`}
-                          {...register(`itens.${i}.percentagemIva`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 pl-3 text-right font-medium align-top pt-3">
-                        {formatCVE(linhaTotal)}
-                      </td>
-                      <td className="py-2 pl-2 align-top pt-3">
-                        <button
-                          type="button"
-                          onClick={() => remove(i)}
-                          disabled={fields.length === 1}
-                          className="text-muted-foreground hover:text-destructive disabled:opacity-30 transition-colors"
-                          aria-label="Remover linha"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Summary + Actions */}
+        {/* Totais + Ações */}
         <div className="flex items-end justify-between gap-6">
-          {/* Financial summary */}
-          <div className="rounded-lg border border-border bg-card p-5 w-80 shadow-sm">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Valor Ilíquido</span>
-              <span>{formatCVE(valorIliquido)}</span>
-            </div>
-            <div className="flex justify-between text-sm mt-2">
-              <span className="text-muted-foreground">Valor Imposto (IVA)</span>
-              <span>{formatCVE(valorImposto)}</span>
-            </div>
-            <hr className="my-3 border-border" />
-            <div className="flex justify-between font-bold">
-              <span>Valor Total</span>
-              <span className="text-lg">{formatCVE(valorTotal)}</span>
-            </div>
-          </div>
+          <IGRPCard className="w-80">
+            <IGRPCardContent className="p-5 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Valor Ilíquido</span>
+                <span>{formatCVE(valorIliquido)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Valor Imposto (IVA)
+                </span>
+                <span>{formatCVE(valorImposto)}</span>
+              </div>
+              <hr className="border-border" />
+              <div className="flex justify-between font-bold">
+                <span>Valor Total</span>
+                <span className="text-lg">{formatCVE(valorTotal)}</span>
+              </div>
+            </IGRPCardContent>
+          </IGRPCard>
 
-          {/* Actions */}
           <div className="flex items-center gap-3">
-            <a
-              href="/faturas-venda"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-background px-5 text-sm font-medium hover:bg-muted transition-colors"
+            <IGRPButton
+              name="cancelar"
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/faturas-venda")}
             >
               Cancelar
-            </a>
-            <button
+            </IGRPButton>
+            <IGRPButton
+              name="confirmar-fatura"
               type="submit"
-              disabled={isPending}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              loading={isPending}
+              loadingText="A guardar…"
             >
-              {isPending ? "A guardar…" : "Confirmar Fatura"}
-            </button>
+              Confirmar Fatura
+            </IGRPButton>
           </div>
         </div>
       </form>
