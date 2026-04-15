@@ -1,24 +1,36 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
+/* IGRP-CUSTOM-CODE-BEGIN(imports) */
+import {
+  IGRPButton,
+  IGRPCard,
+  IGRPCardContent,
+  IGRPContainer,
+  IGRPPageHeader,
+} from "@igrp/igrp-framework-react-design-system";
+import { useRouter } from "next/navigation";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import type { DashboardStats } from "@/app/(myapp)/types/efatura";
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Formatters ───────────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(helpers) */
 function formatECV(value = 0) {
-  return new Intl.NumberFormat("pt-CV", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value) + " ECV";
+  return (
+    new Intl.NumberFormat("pt-CV", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + " ECV"
+  );
 }
 
 function formatPct(value = 0) {
   const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(0)}%`;
 }
+/* IGRP-CUSTOM-CODE-END */
 
-// ── Donut Chart ──────────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(charts) */
 function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
   const total = data.reduce((s, d) => s + d.valor, 0);
   if (total === 0) {
@@ -27,6 +39,7 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
         <svg viewBox="0 0 160 160" className="w-40 h-40">
           <circle cx="80" cy="80" r="55" fill="none" stroke="#e5e7eb" strokeWidth="28" />
         </svg>
+        <p className="ml-4 text-xs text-gray-400">Sem dados</p>
       </div>
     );
   }
@@ -60,10 +73,7 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
       <ul className="space-y-1.5 text-xs">
         {segments.map((seg, i) => (
           <li key={i} className="flex items-center gap-2">
-            <span
-              className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: seg.cor }}
-            />
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.cor }} />
             <span className="text-gray-600">{seg.meio}</span>
             <span className="font-medium">{(seg.pct * 100).toFixed(0)}%</span>
           </li>
@@ -72,8 +82,6 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
     </div>
   );
 }
-
-// ── Line Chart ───────────────────────────────────────────────
 
 function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
   const W = 520;
@@ -84,7 +92,6 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
 
   const allValues = data.flatMap((d) => [d.vendas, d.compras]);
   const maxVal = Math.max(...allValues, 1);
-
   const xStep = innerW / Math.max(data.length - 1, 1);
 
   function toPath(key: "vendas" | "compras") {
@@ -103,59 +110,39 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
   return (
     <div className="w-full overflow-x-auto">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 280 }}>
-        {/* Y grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map((t) => {
           const y = PAD.top + innerH * (1 - t);
           return (
             <g key={t}>
-              <line
-                x1={PAD.left} y1={y}
-                x2={PAD.left + innerW} y2={y}
-                stroke="#e5e7eb" strokeDasharray="3 3"
-              />
+              <line x1={PAD.left} y1={y} x2={PAD.left + innerW} y2={y} stroke="#e5e7eb" strokeDasharray="3 3" />
               <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#9ca3af">
                 {t === 0 ? "0" : `${(maxVal * t / 1000).toFixed(0)}k`}
               </text>
             </g>
           );
         })}
-
-        {/* X labels */}
         {months.map((m, i) => (
-          <text
-            key={i}
-            x={PAD.left + i * xStep}
-            y={H - 6}
-            textAnchor="middle"
-            fontSize="9"
-            fill="#9ca3af"
-          >
+          <text key={i} x={PAD.left + i * xStep} y={H - 6} textAnchor="middle" fontSize="9" fill="#9ca3af">
             {m}
           </text>
         ))}
-
-        {/* Lines */}
-        <path d={toPath("vendas")} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinejoin="round" />
+        <path d={toPath("vendas")} fill="none" stroke="#3579f6" strokeWidth="2" strokeLinejoin="round" />
         <path d={toPath("compras")} fill="none" stroke="#1e3a5f" strokeWidth="2" strokeLinejoin="round" strokeDasharray="4 2" />
-
-        {/* Dots */}
         {data.map((d, i) => {
           const x = PAD.left + i * xStep;
           const yV = PAD.top + innerH - (d.vendas / maxVal) * innerH;
           const yC = PAD.top + innerH - (d.compras / maxVal) * innerH;
           return (
             <g key={i}>
-              <circle cx={x} cy={yV} r="3" fill="#3b82f6" />
+              <circle cx={x} cy={yV} r="3" fill="#3579f6" />
               <circle cx={x} cy={yC} r="3" fill="#1e3a5f" />
             </g>
           );
         })}
       </svg>
-
-      {/* Legend */}
       <div className="mt-2 flex items-center justify-center gap-6 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
-          <span className="h-0.5 w-5 rounded bg-blue-500 inline-block" />
+          <span className="h-0.5 w-5 rounded bg-[#3579f6] inline-block" />
           Vendas
         </span>
         <span className="flex items-center gap-1.5">
@@ -166,60 +153,9 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
     </div>
   );
 }
+/* IGRP-CUSTOM-CODE-END */
 
-// ── KPI Card ─────────────────────────────────────────────────
-
-function KpiCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="flex items-center gap-5 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-3xl font-bold text-gray-800">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-// ── Stat Card ────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  variation,
-}: {
-  label: string;
-  value: number;
-  variation: number;
-}) {
-  const isPositive = variation >= 0;
-  return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <span
-        className={`text-xs font-medium ${isPositive ? "text-green-600" : "text-red-500"}`}
-      >
-        {formatPct(variation)}
-      </span>
-      <p className="mt-1 text-2xl font-bold text-gray-800">{formatECV(value)}</p>
-      <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-// ── Icons (inline SVG) ────────────────────────────────────────
-
+/* IGRP-CUSTOM-CODE-BEGIN(icons) */
 const IconPeople = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -248,8 +184,16 @@ const IconList = () => (
   </svg>
 );
 
-// ── Mock fallback (used when API is unavailable) ───────────────
+const IconChart = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+    <line x1="12" y1="20" x2="12" y2="10" />
+    <line x1="18" y1="20" x2="18" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="16" />
+  </svg>
+);
+/* IGRP-CUSTOM-CODE-END */
 
+/* IGRP-CUSTOM-CODE-BEGIN(mock) */
 const MOCK_STATS: DashboardStats = {
   totalClientes: 4,
   totalFornecedores: 0,
@@ -267,83 +211,233 @@ const MOCK_STATS: DashboardStats = {
   })),
   vendasPorMeio: [],
 };
-
-// ── Page ─────────────────────────────────────────────────────
+/* IGRP-CUSTOM-CODE-END */
 
 export default function PageHomeComponent() {
+  /* IGRP-CUSTOM-CODE-BEGIN(onLoad) */
+  const router = useRouter();
   const { data, isLoading } = useDashboardStats();
   const stats = data ?? MOCK_STATS;
+  /* IGRP-CUSTOM-CODE-END */
 
   return (
-    <div className="flex flex-col gap-5 p-6">
+    <IGRPContainer
+      id="page-home"
+      name="home"
+      tag="home"
+      className="flex flex-col gap-5 p-6 bg-[#f7f9fc] min-h-screen"
+    >
+      <IGRPPageHeader
+        name="home-header"
+        tag="home-header"
+        title="Dashboard"
+        description="Visão geral da actividade de facturação"
+      />
+
+      {/* IGRP-CUSTOM-CODE-BEGIN(loading-bar) */}
       {isLoading && (
         <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="h-full w-1/3 animate-[slide_1.5s_ease-in-out_infinite] bg-blue-400 rounded-full" />
+          <div className="h-full w-1/3 animate-[slide_1.5s_ease-in-out_infinite] bg-[#3579f6] rounded-full" />
         </div>
       )}
+      {/* IGRP-CUSTOM-CODE-END */}
+
+      {/* Summary Strip */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <IGRPCard
+          name="card-total-vendas"
+          tag="card-total-vendas"
+          className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5"
+        >
+          <IGRPCardContent className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#3579f6] flex items-center justify-center flex-shrink-0 text-white">
+              <IconChart />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-[#3579f6] uppercase tracking-wide mb-0.5">Total Vendas</p>
+              <p className="text-xl font-bold text-gray-800 truncate">{formatECV(stats.totalVendas)}</p>
+              <p className={`text-xs font-medium mt-0.5 ${stats.variacaoVendas >= 0 ? "text-green-600" : "text-red-500"}`}>
+                {formatPct(stats.variacaoVendas)} vs mês anterior
+              </p>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-pendentes"
+          tag="card-pendentes"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" className="h-7 w-7">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Pendentes</p>
+              <p className="text-3xl font-bold text-gray-800">0</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Faturas em rascunho</p>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-clientes-strip"
+          tag="card-clientes-strip"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[#3579f6]/10 flex items-center justify-center flex-shrink-0 text-[#3579f6]">
+                <IconPeople />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Clientes</p>
+                <p className="text-3xl font-bold text-gray-800">{stats.totalClientes}</p>
+              </div>
+            </div>
+            <IGRPButton
+              name="btn-ver-clientes"
+              tag="btn-ver-clientes"
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/cadastro")}
+            >
+              Ver
+            </IGRPButton>
+          </IGRPCardContent>
+        </IGRPCard>
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard icon={<IconPeople />} label="Clientes" value={stats.totalClientes} />
-        <KpiCard icon={<IconTruck />} label="Fornecedores" value={stats.totalFornecedores} />
-        <KpiCard icon={<IconList />} label="Produtos" value={stats.totalProdutos} />
+        <IGRPCard
+          name="card-kpi-clientes"
+          tag="card-kpi-clientes"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5 flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3579f6]/10 text-[#3579f6]">
+              <IconPeople />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Clientes</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.totalClientes}</p>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-kpi-fornecedores"
+          tag="card-kpi-fornecedores"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5 flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3579f6]/10 text-[#3579f6]">
+              <IconTruck />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Fornecedores</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.totalFornecedores}</p>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-kpi-produtos"
+          tag="card-kpi-produtos"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5 flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3579f6]/10 text-[#3579f6]">
+              <IconList />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Produtos</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.totalProdutos}</p>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">
-              Vendas por meios de pagamentos
+        <IGRPCard
+          name="card-chart-meios"
+          tag="card-chart-meios"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5">
+            <h2 className="mb-4 text-sm font-semibold text-gray-700 border-l-[3px] border-[#3579f6] pl-2">
+              Vendas por meios de pagamento
             </h2>
-            <button className="text-gray-400 hover:text-gray-600">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex min-h-[180px] items-center justify-center">
-            <DonutChart data={stats.vendasPorMeio} />
-          </div>
-        </div>
+            <div className="flex min-h-[180px] items-center justify-center">
+              <DonutChart data={stats.vendasPorMeio} />
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">
-              Compra/Venda mensalmente
+        <IGRPCard
+          name="card-chart-mensal"
+          tag="card-chart-mensal"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-5">
+            <h2 className="mb-4 text-sm font-semibold text-gray-700 border-l-[3px] border-[#3579f6] pl-2">
+              Compra / Venda mensalmente
             </h2>
-            <button className="text-gray-400 hover:text-gray-600">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-          </div>
-          <LineChart data={stats.vendasMensais} />
-        </div>
+            <LineChart data={stats.vendasMensais} />
+          </IGRPCardContent>
+        </IGRPCard>
       </div>
 
       {/* Financial Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Vendas"
-          value={stats.totalVendas}
-          variation={stats.variacaoVendas}
-        />
-        <StatCard
-          label="Despesas"
-          value={stats.totalDespesas}
-          variation={stats.variacaoDespesas}
-        />
-        <StatCard
-          label="Ganho/Lucro"
-          value={stats.ganhoLucro}
-          variation={stats.variacaoLucro}
-        />
+        <IGRPCard
+          name="card-stat-vendas"
+          tag="card-stat-vendas"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <span className={`text-xs font-medium ${stats.variacaoVendas >= 0 ? "text-green-600" : "text-red-500"}`}>
+              {formatPct(stats.variacaoVendas)}
+            </span>
+            <p className="mt-1 text-2xl font-bold text-gray-800">{formatECV(stats.totalVendas)}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-gray-400">Vendas</p>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-stat-despesas"
+          tag="card-stat-despesas"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
+        >
+          <IGRPCardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <span className={`text-xs font-medium ${stats.variacaoDespesas >= 0 ? "text-green-600" : "text-red-500"}`}>
+              {formatPct(stats.variacaoDespesas)}
+            </span>
+            <p className="mt-1 text-2xl font-bold text-gray-800">{formatECV(stats.totalDespesas)}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-gray-400">Despesas</p>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        <IGRPCard
+          name="card-stat-lucro"
+          tag="card-stat-lucro"
+          className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5"
+        >
+          <IGRPCardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <span className={`text-xs font-medium ${stats.variacaoLucro >= 0 ? "text-green-600" : "text-red-500"}`}>
+              {formatPct(stats.variacaoLucro)}
+            </span>
+            <p className="mt-1 text-2xl font-bold text-[#3579f6]">{formatECV(stats.ganhoLucro)}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-[#3579f6]">Ganho / Lucro</p>
+          </IGRPCardContent>
+        </IGRPCard>
       </div>
-    </div>
+    </IGRPContainer>
   );
 }
