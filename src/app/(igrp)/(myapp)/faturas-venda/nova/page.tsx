@@ -160,7 +160,7 @@ export default function NovaFaturaVendaPage() {
   return (
     <IGRPContainer
       id="page-nova-fatura"
-      className="mx-auto max-w-5xl p-6"
+      className="mx-auto max-w-5xl p-6 bg-[#f7f9fc] min-h-screen"
     >
       <IGRPPageHeader
         name="nova-fatura-header"
@@ -173,9 +173,9 @@ export default function NovaFaturaVendaPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
         {/* Informações Gerais */}
-        <IGRPCard name="card-info-gerais" tag="card-info-gerais">
+        <IGRPCard name="card-info-gerais" tag="card-info-gerais" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
           <IGRPCardContent className="p-6">
-            <h2 className="mb-4 text-base font-semibold">Informações Gerais</h2>
+            <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">Informações Gerais</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {/* Cliente */}
               <Controller
@@ -272,10 +272,10 @@ export default function NovaFaturaVendaPage() {
         </IGRPCard>
 
         {/* Itens da Fatura */}
-        <IGRPCard name="card-itens-fatura" tag="card-itens-fatura">
+        <IGRPCard name="card-itens-fatura" tag="card-itens-fatura" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
           <IGRPCardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold">Itens da Fatura</h2>
+              <h2 className="text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">Itens da Fatura</h2>
               <IGRPButton
                 name="adicionar-linha"
                 tag="btn-adicionar-linha"
@@ -417,29 +417,29 @@ export default function NovaFaturaVendaPage() {
           </IGRPCardContent>
         </IGRPCard>
 
-        {/* Totais + Ações */}
-        <div className="flex items-end justify-between gap-6">
-          <IGRPCard name="card-totais" tag="card-totais" className="w-80">
-            <IGRPCardContent className="p-5 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Valor Ilíquido</span>
-                <span>{formatCVE(valorIliquido)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Valor Imposto (IVA)
-                </span>
-                <span>{formatCVE(valorImposto)}</span>
-              </div>
-              <hr className="border-border" />
-              <div className="flex justify-between font-bold">
-                <span>Valor Total</span>
-                <span className="text-lg">{formatCVE(valorTotal)}</span>
-              </div>
-            </IGRPCardContent>
-          </IGRPCard>
-
-          <div className="flex items-center gap-3">
+        {/* Summary Strip + Ações */}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <IGRPCard name="card-valor-iliquido" tag="card-valor-iliquido" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Valor Ilíquido</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorIliquido)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+            <IGRPCard name="card-valor-imposto" tag="card-valor-imposto" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">IVA</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorImposto)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+            <IGRPCard name="card-valor-total" tag="card-valor-total" className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs font-medium mb-1 uppercase tracking-wide text-[#3579f6]">Valor Total</p>
+                <p className="text-2xl font-bold text-[#3579f6]">{formatCVE(valorTotal)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+          </div>
+          <div className="flex justify-end gap-3">
             <IGRPButton
               name="cancelar"
               tag="btn-cancelar"

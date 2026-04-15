@@ -4,6 +4,8 @@
 /* IGRP-CUSTOM-CODE-BEGIN(imports) */
 import {
   IGRPButton,
+  IGRPCard,
+  IGRPCardContent,
   IGRPCheckbox,
   IGRPContainer,
   IGRPInputNumber,
@@ -1054,43 +1056,93 @@ function ProdutosTab() {
 // ── Page ──────────────────────────────────────────────────────
 
 export default function CadastroPage() {
+  /* IGRP-CUSTOM-CODE-BEGIN(page-hooks) */
+  const { data: clientesData } = useClientes(0, 1);
+  const { data: fornecedoresData } = useFornecedores(0, 1);
+  const { data: produtosData } = useProdutos(0, 1);
+  const totalClientes = (clientesData as { totalElements?: number } | undefined)?.totalElements ?? clientesData?.content?.length ?? 0;
+  const totalFornecedores = (fornecedoresData as { totalElements?: number } | undefined)?.totalElements ?? fornecedoresData?.content?.length ?? 0;
+  const totalProdutos = (produtosData as { totalElements?: number } | undefined)?.totalElements ?? produtosData?.content?.length ?? 0;
+  /* IGRP-CUSTOM-CODE-END */
+
   return (
     <IGRPContainer
       id="page-cadastro"
-      className="flex flex-col gap-0 p-0"
+      className="flex flex-col gap-0 p-0 bg-[#f7f9fc]"
     >
       <IGRPPageHeader
         name="cadastro-header"
         tag="cadastro-header"
         title="Cadastro"
         description="Gestão de clientes, fornecedores e produtos"
-        className="border-b px-6 py-3"
+        className="border-b px-6 py-3 bg-white"
       />
 
-      <div className="p-5">
-        <IGRPTabs
-          name="cadastro-tabs"
-          tag="tabs-cadastro"
-          defaultValue="clientes"
-          variant="underline"
-          items={[
-            {
-              value: "clientes",
-              label: "Clientes",
-              content: <ClientesTab />,
-            },
-            {
-              value: "fornecedores",
-              label: "Fornecedores",
-              content: <FornecedoresTab />,
-            },
-            {
-              value: "produtos",
-              label: "Produtos / Serviços",
-              content: <ProdutosTab />,
-            },
-          ]}
-        />
+      <div className="p-5 flex flex-col gap-5">
+        {/* Summary Strip */}
+        <div className="grid grid-cols-3 gap-4">
+          <IGRPCard name="card-total-clientes" tag="card-total-clientes" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+            <IGRPCardContent className="p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[#3579f6]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-[#3579f6] text-sm font-bold">CLI</span>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Clientes</p>
+                <p className="text-2xl font-bold text-gray-800">{totalClientes}</p>
+              </div>
+            </IGRPCardContent>
+          </IGRPCard>
+          <IGRPCard name="card-total-fornecedores" tag="card-total-fornecedores" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+            <IGRPCardContent className="p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[#3579f6]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-[#3579f6] text-sm font-bold">FOR</span>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Fornecedores</p>
+                <p className="text-2xl font-bold text-gray-800">{totalFornecedores}</p>
+              </div>
+            </IGRPCardContent>
+          </IGRPCard>
+          <IGRPCard name="card-total-produtos" tag="card-total-produtos" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+            <IGRPCardContent className="p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[#3579f6]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-[#3579f6] text-sm font-bold">PRD</span>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Produtos</p>
+                <p className="text-2xl font-bold text-gray-800">{totalProdutos}</p>
+              </div>
+            </IGRPCardContent>
+          </IGRPCard>
+        </div>
+
+        <IGRPCard name="card-tabs-cadastro" tag="card-tabs-cadastro" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+          <IGRPCardContent className="p-5">
+            <IGRPTabs
+              name="cadastro-tabs"
+              tag="tabs-cadastro"
+              defaultValue="clientes"
+              variant="underline"
+              items={[
+                {
+                  value: "clientes",
+                  label: "Clientes",
+                  content: <ClientesTab />,
+                },
+                {
+                  value: "fornecedores",
+                  label: "Fornecedores",
+                  content: <FornecedoresTab />,
+                },
+                {
+                  value: "produtos",
+                  label: "Produtos / Serviços",
+                  content: <ProdutosTab />,
+                },
+              ]}
+            />
+          </IGRPCardContent>
+        </IGRPCard>
       </div>
     </IGRPContainer>
   );
