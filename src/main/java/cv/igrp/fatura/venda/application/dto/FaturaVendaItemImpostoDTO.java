@@ -1,7 +1,6 @@
 package cv.igrp.fatura.venda.application.dto;
 
 import cv.igrp.framework.stereotype.IgrpDTO;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -16,17 +15,19 @@ public class FaturaVendaItemImpostoDTO {
     @NotNull
     private Integer impostoId;
 
-    @NotBlank
+    // Optional — inherited from PrImpostoEntity.tipoCalculo when absent
     private String tipoCalculo; // PERCENTAGEM or VALOR_FIXO
 
+    // Optional — inherited from PrImpostoEntity.valor when absent
     private BigDecimal taxa;
 
+    // Optional — inherited from PrImpostoEntity.valor when absent
     private BigDecimal valorFixo;
 
-    @NotNull
+    // Optional — defaults to item valorLiquido when absent
     private BigDecimal baseCalculo;
 
-    @NotNull
+    // Optional — computed by backend when absent (PERCENTAGEM: base*taxa/100, VALOR_FIXO: valorFixo)
     private BigDecimal valorImposto;
 
     private String motivoNaoAplicarImposto;

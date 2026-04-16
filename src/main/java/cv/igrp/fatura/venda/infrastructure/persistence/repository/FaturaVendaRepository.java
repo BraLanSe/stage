@@ -15,7 +15,6 @@ import java.util.List;
 @Repository
 public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, Integer> {
     List<FaturaVendaEntity> findByCliente_Id(Integer clienteId);
-    List<FaturaVendaEntity> findByEstado(String estado);
     Page<FaturaVendaEntity> findByEstado(String estado, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(f.valorIliquido), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")

@@ -169,20 +169,45 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
                     PrImpostoEntity imposto = impostoRepo.findById(impostoDto.getImpostoId())
                             .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Imposto não encontrado: " + impostoDto.getImpostoId()));
 
+                    // Inherit tipoCalculo from master when not supplied in DTO
+                    String tipoCalculo = (impostoDto.getTipoCalculo() != null && !impostoDto.getTipoCalculo().isBlank())
+                            ? impostoDto.getTipoCalculo() : imposto.getTipoCalculo();
+
+                    // Base for calculation — DTO value or item valorLiquido
+                    BigDecimal base = impostoDto.getBaseCalculo() != null ? impostoDto.getBaseCalculo() : valorLiquido;
+
+                    BigDecimal taxa = null;
+                    BigDecimal valorFixo = null;
+                    BigDecimal valorImpostoCalc;
+
+                    if ("PERCENTAGEM".equals(tipoCalculo)) {
+                        taxa = impostoDto.getTaxa() != null ? impostoDto.getTaxa()
+                                : (imposto.getValor() != null ? imposto.getValor() : BigDecimal.ZERO);
+                        valorImpostoCalc = base.multiply(taxa).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                    } else { // VALOR_FIXO
+                        valorFixo = impostoDto.getValorFixo() != null ? impostoDto.getValorFixo()
+                                : (imposto.getValor() != null ? imposto.getValor() : BigDecimal.ZERO);
+                        valorImpostoCalc = valorFixo;
+                    }
+
+                    // Explicit DTO override takes final precedence
+                    BigDecimal valorImpostoFinal = impostoDto.getValorImposto() != null
+                            ? impostoDto.getValorImposto() : valorImpostoCalc;
+
                     FaturaVendaItemImpostoEntity itemImposto = new FaturaVendaItemImpostoEntity();
                     itemImposto.setFaturaVendaItem(item);
                     itemImposto.setImposto(imposto);
-                    itemImposto.setTipoCalculo(impostoDto.getTipoCalculo());
-                    itemImposto.setBaseCalculo(impostoDto.getBaseCalculo());
-                    itemImposto.setValorImposto(impostoDto.getValorImposto());
-                    itemImposto.setTaxa(impostoDto.getTaxa());
-                    itemImposto.setValorFixo(impostoDto.getValorFixo());
+                    itemImposto.setTipoCalculo(tipoCalculo);
+                    itemImposto.setBaseCalculo(base);
+                    itemImposto.setTaxa(taxa);
+                    itemImposto.setValorFixo(valorFixo);
+                    itemImposto.setValorImposto(valorImpostoFinal);
                     itemImposto.setMotivoNaoAplicarImposto(impostoDto.getMotivoNaoAplicarImposto());
                     itemImposto.setContaGlId(impostoDto.getContaGlId());
                     itemImposto.setOrdem(impostoDto.getOrdem());
 
                     item.getImpostos().add(itemImposto);
-                    itemTotalImposto = itemTotalImposto.add(impostoDto.getValorImposto());
+                    itemTotalImposto = itemTotalImposto.add(valorImpostoFinal);
                 }
             }
 
