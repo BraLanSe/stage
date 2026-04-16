@@ -32,7 +32,14 @@ function formatPct(value = 0) {
 
 /* IGRP-CUSTOM-CODE-BEGIN(charts) */
 function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
-  const total = data.reduce((s, d) => s + d.valor, 0);
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center">
+        <p className="text-xs text-gray-400">Sem dados para exibir</p>
+      </div>
+    );
+  }
+  const total = data?.reduce((s, d) => s + d.valor, 0) ?? 0;
   if (total === 0) {
     return (
       <div className="flex items-center justify-center">
@@ -377,7 +384,7 @@ export default function PageHomeComponent() {
               Vendas por meios de pagamento
             </h2>
             <div className="flex min-h-[180px] items-center justify-center">
-              <DonutChart data={stats.vendasPorMeio} />
+              <DonutChart data={stats?.vendasPorMeio || []} />
             </div>
           </IGRPCardContent>
         </IGRPCard>
