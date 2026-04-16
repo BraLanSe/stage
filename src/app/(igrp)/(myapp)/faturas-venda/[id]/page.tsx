@@ -426,7 +426,7 @@ export default function FaturaVendaDetailPage() {
                 label: `${c.desig}${c.nif ? ` — ${c.nif}` : ""}`,
                 value: String(c.id),
               }))}
-              value={selectedClienteId ? String(selectedClienteId) : ""}
+              value={selectedClienteId ? String(selectedClienteId) : undefined}
               onValueChange={(v) => setSelectedClienteId(Number(v))}
             />
           </section>

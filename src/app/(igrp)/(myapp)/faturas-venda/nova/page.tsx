@@ -195,7 +195,7 @@ export default function NovaFaturaVendaPage() {
                       label: c.desig,
                       value: String(c.id),
                     }))}
-                    value={field.value ? String(field.value) : ""}
+                    value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.clienteId?.message}
                   />
@@ -220,7 +220,7 @@ export default function NovaFaturaVendaPage() {
                       label: t.desig,
                       value: String(t.id),
                     }))}
-                    value={field.value ? String(field.value) : ""}
+                    value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.tipoFaturaId?.message}
                   />
@@ -245,7 +245,7 @@ export default function NovaFaturaVendaPage() {
                       label: `${s.codigo}${s.desig ? ` — ${s.desig}` : ""}`,
                       value: String(s.id),
                     }))}
-                    value={field.value ? String(field.value) : ""}
+                    value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.prSerieId?.message}
                   />

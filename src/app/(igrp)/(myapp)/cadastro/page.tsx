@@ -319,18 +319,16 @@ function ClienteModal({
               options={ILHAS.map((i) => ({ label: i, value: i }))}
               value={form.ilha ?? "SANTIAGO"}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, ilha: v, conselho: "" }))
+                setForm((p) => ({ ...p, ilha: v, conselho: undefined }))
               }
             />
             <IGRPSelect
               name="conselho"
               tag="select-cliente-conselho"
               label="Conselho"
-              options={[
-                { label: "—", value: "" },
-                ...conselhos.map((c) => ({ label: c, value: c })),
-              ]}
-              value={form.conselho ?? ""}
+              placeholder="Selecionar conselho…"
+              options={conselhos.map((c) => ({ label: c, value: c }))}
+              value={form.conselho || undefined}
               onValueChange={(v) =>
                 setForm((p) => ({ ...p, conselho: v }))
               }
@@ -535,18 +533,16 @@ function FornecedorModal({
               options={ILHAS.map((i) => ({ label: i, value: i }))}
               value={form.ilha ?? "SANTIAGO"}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, ilha: v, conselho: "" }))
+                setForm((p) => ({ ...p, ilha: v, conselho: undefined }))
               }
             />
             <IGRPSelect
               name="conselho"
               tag="select-fornecedor-conselho"
               label="Conselho"
-              options={[
-                { label: "—", value: "" },
-                ...conselhos.map((c) => ({ label: c, value: c })),
-              ]}
-              value={form.conselho ?? ""}
+              placeholder="Selecionar conselho…"
+              options={conselhos.map((c) => ({ label: c, value: c }))}
+              value={form.conselho || undefined}
               onValueChange={(v) =>
                 setForm((p) => ({ ...p, conselho: v }))
               }
