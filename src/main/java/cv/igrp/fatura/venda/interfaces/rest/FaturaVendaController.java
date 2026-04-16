@@ -35,7 +35,12 @@ public class FaturaVendaController {
 
     @GetMapping
     @Operation(summary = "Listar faturas de venda")
-    public ResponseEntity<Page<FaturaVendaEntity>> list(Pageable pageable) {
+    public ResponseEntity<Page<FaturaVendaEntity>> list(
+            @RequestParam(required = false) String estado,
+            Pageable pageable) {
+        if (estado != null && !estado.isBlank()) {
+            return ResponseEntity.ok(faturaVendaRepo.findByEstado(estado, pageable));
+        }
         return ResponseEntity.ok(faturaVendaRepo.findAll(pageable));
     }
 
