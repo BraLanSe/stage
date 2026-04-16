@@ -91,13 +91,21 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
 }
 
 function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex min-h-[180px] items-center justify-center">
+        <p className="text-xs text-gray-400">Dados indisponíveis</p>
+      </div>
+    );
+  }
+
   const W = 520;
   const H = 180;
   const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const allValues = data.flatMap((d) => [d.vendas, d.compras]);
+  const allValues = data?.flatMap((d) => [d.vendas, d.compras]) ?? [];
   const maxVal = Math.max(...allValues, 1);
   const xStep = innerW / Math.max(data.length - 1, 1);
 
@@ -398,7 +406,7 @@ export default function PageHomeComponent() {
             <h2 className="mb-4 text-sm font-semibold text-gray-700 border-l-[3px] border-[#3579f6] pl-2">
               Compra / Venda mensalmente
             </h2>
-            <LineChart data={stats.vendasMensais} />
+            <LineChart data={stats?.vendasMensais || []} />
           </IGRPCardContent>
         </IGRPCard>
       </div>
