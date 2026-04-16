@@ -222,11 +222,12 @@ export default function PageHomeComponent() {
 
   return (
     <IGRPContainer
-      id="page-home"
+      id="home"
       name="home"
       tag="home"
       className="flex flex-col gap-5 p-6 bg-[#f7f9fc] min-h-screen"
     >
+      <IGRPButton name="trigger-btn" tag="trigger-btn" variant="ghost" size="sm" className="sr-only">refresh</IGRPButton>
       <IGRPPageHeader
         name="home-header"
         tag="home-header"

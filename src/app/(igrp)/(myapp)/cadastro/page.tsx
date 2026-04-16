@@ -1067,7 +1067,9 @@ export default function CadastroPage() {
 
   return (
     <IGRPContainer
-      id="page-cadastro"
+      id="cadastro"
+      name="cadastro"
+      tag="cadastro"
       className="flex flex-col gap-0 p-0 bg-[#f7f9fc]"
     >
       <IGRPPageHeader

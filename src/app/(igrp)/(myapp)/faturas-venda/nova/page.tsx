@@ -159,7 +159,9 @@ export default function NovaFaturaVendaPage() {
 
   return (
     <IGRPContainer
-      id="page-nova-fatura"
+      id="nova-fatura"
+      name="nova-fatura"
+      tag="nova-fatura"
       className="mx-auto max-w-5xl p-6 bg-[#f7f9fc] min-h-screen"
     >
       <IGRPPageHeader
