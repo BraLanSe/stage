@@ -5,6 +5,7 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaT
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
 import cv.igrp.framework.stereotype.IgrpEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -82,6 +83,7 @@ public class FaturaVendaEntity extends AuditEntity {
     @Column(name = "valor_por_pagar", nullable = false, precision = 18, scale = 2)
     private BigDecimal valorPorPagar = BigDecimal.ZERO;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fatura_venda_id")
     private FaturaVendaEntity faturaVendaOrigem;
