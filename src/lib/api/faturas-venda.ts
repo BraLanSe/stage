@@ -98,17 +98,20 @@ export const faturasVendaApi = {
   atualizar: (
     id: number,
     data: {
-      clienteId?: number;
+      tipoFaturaId: number;
+      dtFaturacao: string;
+      clienteId: number;
+      prSerieId: number;
       nota?: string;
       termCondicoes?: string;
-      items?: {
+      items: {
+        numLinha: number;
         desig: string;
         descr?: string;
         quantidade: number;
         precoUnitario: number;
         descontoComercialPerc?: number;
-        percentagemIva?: number;
-        unidade?: string;
+        descontoFinanceiroPerc?: number;
         produtoId?: number;
         codigoArtigo?: string;
       }[];

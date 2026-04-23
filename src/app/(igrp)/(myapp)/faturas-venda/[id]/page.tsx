@@ -239,11 +239,12 @@ export default function FaturaVendaDetailPage() {
 
   useEffect(() => {
     if (fatura) {
-      setItens(fatura.itens ?? []);
-      setSelectedClienteId(fatura.clienteId);
-      setSerie(fatura.serie ?? "2022A");
-      setData_(fatura.dataEmissao?.split("T")[0] ?? "");
-      setCondicoes(fatura.condicoesPagamento ?? "3 dias");
+      const raw = fatura as any;
+      setItens(raw.items ?? fatura.itens ?? []);
+      setSelectedClienteId(fatura.clienteId ?? raw.cliente?.id);
+      setSerie(fatura.serie ?? raw.prSerie?.codigo ?? "2022A");
+      setData_((fatura.dataEmissao ?? raw.dtFaturacao)?.split("T")[0] ?? "");
+      setCondicoes(fatura.condicoesPagamento ?? raw.termCondicoes ?? "3 dias");
       setRequisicao(fatura.requisicao ?? "");
       setNota(fatura.nota ?? "");
     }
@@ -302,34 +303,53 @@ export default function FaturaVendaDetailPage() {
     if (!selectedClienteId) return;
     setSaving(true);
     try {
-      await faturasVendaApi.atualizar(id, {
-        clienteId: selectedClienteId,
+      const raw = fatura as any;
+      const tipoFaturaId = Number(raw.tipoFatura?.id);
+      const prSerieId = Number(raw.prSerie?.id);
+      const dtFaturacao =
+        data_ || raw.dtFaturacao || new Date().toISOString().split("T")[0];
+
+      const payload = {
+        tipoFaturaId,
+        dtFaturacao,
+        clienteId: Number(selectedClienteId),
+        prSerieId,
         termCondicoes: condicoes,
         nota,
         items: itens.map(
-          ({
-            desig,
-            descricao,
-            quantidade,
-            precoUnitario,
-            descontoComercialPerc,
-            percentagemIva,
-            unidade,
-            produtoId,
-            codigoArtigo,
-          }) => ({
+          (
+            {
+              desig,
+              descricao,
+              descr,
+              quantidade,
+              precoUnitario,
+              descontoComercialPerc,
+              descontoFinanceiroPerc,
+              produtoId,
+              codigoArtigo,
+            },
+            index,
+          ) => ({
+            numLinha: index + 1,
             desig: desig ?? descricao ?? "",
-            descr: descricao,
-            quantidade: quantidade ?? 1,
-            precoUnitario: precoUnitario ?? 0,
-            descontoComercialPerc,
-            percentagemIva: percentagemIva ?? 0,
-            unidade,
-            produtoId,
-            codigoArtigo,
+            ...(descr && { descr }),
+            quantidade: Number(quantidade ?? 1),
+            precoUnitario: Number(precoUnitario ?? 0),
+            ...(descontoComercialPerc != null && {
+              descontoComercialPerc: Number(descontoComercialPerc),
+            }),
+            ...(descontoFinanceiroPerc != null && {
+              descontoFinanceiroPerc: Number(descontoFinanceiroPerc),
+            }),
+            ...(produtoId != null && { produtoId: Number(produtoId) }),
+            ...(codigoArtigo && { codigoArtigo }),
           }),
         ),
-      });
+      };
+
+      console.log("Payload JSON:", JSON.stringify(payload, null, 2));
+      await faturasVendaApi.atualizar(id, payload);
       toast.success("Fatura guardada com sucesso!");
     } catch (err) {
       const body = (err as { body?: { message?: string; error?: string } })?.body;
