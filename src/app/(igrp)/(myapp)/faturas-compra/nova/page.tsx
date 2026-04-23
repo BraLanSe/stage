@@ -1,12 +1,27 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 import {
   IGRPButton,
+  IGRPCard,
+  IGRPCardContent,
   IGRPContainer,
+  IGRPInputNumber,
+  IGRPInputText,
+  IGRPPageHeader,
+  IGRPSelect,
+  IGRPTableBodyPrimitive,
+  IGRPTableCellPrimitive,
+  IGRPTableHeadPrimitive,
+  IGRPTableHeaderPrimitive,
+  IGRPTablePrimitive,
+  IGRPTableRowPrimitive,
+  IGRPTextarea,
 } from "@igrp/igrp-framework-react-design-system";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 import type { TipoDocumento } from "@/app/(myapp)/types/efatura";
 import { useFornecedores } from "@/hooks/use-cadastro";
@@ -111,287 +126,281 @@ export default function NovaFaturaCompraPage() {
   const valorTotal = round2(valorIliquido + valorImposto);
 
   async function onSubmit(values: FormValues) {
-    const fatura = await criar(values);
-    router.push(`/faturas-compra/${fatura.id}`);
+    try {
+      const fatura = await criar(values);
+      toast.success("Fatura de compra criada com sucesso!");
+      router.push(`/faturas-compra/${fatura.id}`);
+    } catch (err) {
+      toast.error("Erro ao criar fatura. Verifique os dados e tente novamente.");
+      console.error(err);
+    }
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <IGRPContainer id="nova-fatura-compra" name="nova-fatura-compra" tag="nova-fatura-compra" className="hidden">
-        <IGRPButton name="force-studio" tag="force-studio" id="force-studio">FORCE</IGRPButton>
-      </IGRPContainer>
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <a
-          href="/faturas-compra"
-          className="hover:text-foreground hover:underline"
-        >
-          Faturas de Compra
-        </a>
-        <span>/</span>
-        <span className="text-foreground font-medium">Nova Fatura</span>
-      </nav>
+    <IGRPContainer id="nova-fatura-compra" name="nova-fatura-compra" tag="nova-fatura-compra" className="mx-auto max-w-5xl p-6 bg-[#f7f9fc] min-h-screen">
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
+      <IGRPPageHeader
+        name="nova-fatura-compra-header"
+        tag="nova-fatura-compra-header"
+        title="Nova Fatura de Compra"
+        showBackButton
+        urlBackButton="/faturas-compra"
+        backButtonText="Faturas de Compra"
+      />
 
-      <h1 className="mb-8 text-2xl font-bold text-foreground">
-        Nova Fatura de Compra
-      </h1>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
+        {/* Informações Gerais */}
+        <IGRPCard name="card-info-gerais" tag="card-info-gerais" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+          <IGRPCardContent className="p-6">
+            <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">Informações Gerais</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Controller
+                name="fornecedorId"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="fornecedorId"
+                    tag="select-fornecedorId"
+                    label="Fornecedor"
+                    required
+                    placeholder="Selecionar fornecedor…"
+                    options={fornecedores.map((f) => ({
+                      label: f.desig,
+                      value: String(f.id),
+                    }))}
+                    value={field.value ? String(field.value) : undefined}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                    error={errors.fornecedorId?.message}
+                  />
+                )}
+              />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-foreground">
-            Informações Gerais
-          </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="fornecedorId"
-                className="text-sm font-medium text-foreground"
-              >
-                Fornecedor <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="fornecedorId"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...register("fornecedorId", { valueAsNumber: true })}
-              >
-                <option value="">Selecionar fornecedor…</option>
-                {fornecedores.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.desig}
-                  </option>
-                ))}
-              </select>
-              {errors.fornecedorId && (
-                <p className="text-xs text-destructive">
-                  {errors.fornecedorId.message}
-                </p>
-              )}
-            </div>
+              <Controller
+                name="tipoDocumento"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="tipoDocumento"
+                    tag="select-tipoDocumento"
+                    label="Tipo de Documento"
+                    required
+                    options={TIPOS_DOCUMENTO.map((t) => ({
+                      label: t.label,
+                      value: t.value,
+                    }))}
+                    value={field.value}
+                    onValueChange={(v) => field.onChange(v)}
+                  />
+                )}
+              />
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="tipoDocumento"
-                className="text-sm font-medium text-foreground"
-              >
-                Tipo de Documento <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="tipoDocumento"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...register("tipoDocumento")}
-              >
-                {TIPOS_DOCUMENTO.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="serie"
-                className="text-sm font-medium text-foreground"
-              >
-                Série
-              </label>
-              <input
-                id="serie"
+              <IGRPInputText
+                tag="input-serie"
+                label="Série"
                 placeholder="Ex: FC-2025"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...register("serie")}
               />
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="dataVencimento"
-                className="text-sm font-medium text-foreground"
-              >
-                Data de Vencimento
-              </label>
-              <input
-                id="dataVencimento"
+              <IGRPInputText
+                tag="input-dataVencimento"
+                label="Data de Vencimento"
                 type="date"
-                className="h-10 rounded-full border border-input bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...register("dataVencimento")}
               />
-            </div>
 
-            <div className="col-span-full flex flex-col gap-1.5">
-              <label
-                htmlFor="observacoes"
-                className="text-sm font-medium text-foreground"
+              <div className="col-span-full">
+                <IGRPTextarea
+                  tag="textarea-observacoes"
+                  label="Observações"
+                  placeholder="Observações adicionais…"
+                  rows={2}
+                  {...register("observacoes")}
+                />
+              </div>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        {/* Itens da Fatura */}
+        <IGRPCard name="card-itens-fatura" tag="card-itens-fatura" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+          <IGRPCardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">Itens da Fatura</h2>
+              <IGRPButton
+                name="adicionar-linha"
+                tag="btn-adicionar-linha"
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  append({
+                    descricao: "",
+                    quantidade: 1,
+                    precoUnitario: 0,
+                    percentagemIva: 15,
+                  })
+                }
               >
-                Observações
-              </label>
-              <textarea
-                id="observacoes"
-                rows={2}
-                placeholder="Observações adicionais…"
-                className="rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                {...register("observacoes")}
-              />
+                + Adicionar Linha
+              </IGRPButton>
             </div>
-          </div>
-        </div>
 
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">
-              Itens da Fatura
-            </h2>
-            <button
+            {errors.itens && !Array.isArray(errors.itens) && (
+              <p className="mb-3 text-sm text-destructive">
+                {errors.itens.message}
+              </p>
+            )}
+
+            <div className="overflow-x-auto">
+              <IGRPTablePrimitive>
+                <IGRPTableHeaderPrimitive>
+                  <IGRPTableRowPrimitive>
+                    <IGRPTableHeadPrimitive>Produto / Serviço</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-28">Qtd.</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-32">Preço Unit.</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-24">IVA %</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-36 text-right">Total Linha</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-10" />
+                  </IGRPTableRowPrimitive>
+                </IGRPTableHeaderPrimitive>
+                <IGRPTableBodyPrimitive>
+                  {fields.map((field, i) => {
+                    const item = itens[i];
+                    const linhaTotal = item
+                      ? calcLinha(
+                          item.quantidade ?? 0,
+                          item.precoUnitario ?? 0,
+                          item.percentagemIva ?? 15,
+                        )
+                      : 0;
+                    return (
+                      <IGRPTableRowPrimitive key={field.id}>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <IGRPInputText
+                            placeholder="Descrição do produto ou serviço"
+                            error={errors.itens?.[i]?.descricao?.message}
+                            {...register(`itens.${i}.descricao`)}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.quantidade`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.quantidade`}
+                                min={0}
+                                step={0.01}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={errors.itens?.[i]?.quantidade?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.precoUnitario`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.precoUnitario`}
+                                min={0}
+                                step={0.01}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={errors.itens?.[i]?.precoUnitario?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.percentagemIva`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.percentagemIva`}
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                value={f.value}
+                                onChange={f.onChange}
+                                error={errors.itens?.[i]?.percentagemIva?.message}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="text-right font-medium align-top py-4">
+                          {formatCVE(linhaTotal)}
+                        </IGRPTableCellPrimitive>
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <IGRPButton
+                            name={`remover-linha-${i}`}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={fields.length === 1}
+                            onClick={() => remove(i)}
+                          >
+                            ×
+                          </IGRPButton>
+                        </IGRPTableCellPrimitive>
+                      </IGRPTableRowPrimitive>
+                    );
+                  })}
+                </IGRPTableBodyPrimitive>
+              </IGRPTablePrimitive>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        {/* Summary + Ações */}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <IGRPCard name="card-valor-iliquido" tag="card-valor-iliquido" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Valor Ilíquido</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorIliquido)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+            <IGRPCard name="card-valor-imposto" tag="card-valor-imposto" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">IVA</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorImposto)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+            <IGRPCard name="card-valor-total" tag="card-valor-total" className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5">
+              <IGRPCardContent className="p-5 text-center">
+                <p className="text-xs font-medium mb-1 uppercase tracking-wide text-[#3579f6]">Valor Total</p>
+                <p className="text-2xl font-bold text-[#3579f6]">{formatCVE(valorTotal)}</p>
+              </IGRPCardContent>
+            </IGRPCard>
+          </div>
+          <div className="flex justify-end gap-3">
+            <IGRPButton
+              name="cancelar"
+              tag="btn-cancelar"
               type="button"
-              onClick={() =>
-                append({
-                  descricao: "",
-                  quantidade: 1,
-                  precoUnitario: 0,
-                  percentagemIva: 15,
-                })
-              }
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors"
-            >
-              + Adicionar Linha
-            </button>
-          </div>
-
-          {errors.itens && !Array.isArray(errors.itens) && (
-            <p className="mb-3 text-sm text-destructive">
-              {errors.itens.message}
-            </p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-2 text-left font-medium text-muted-foreground">
-                    Produto / Serviço
-                  </th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
-                    Qtd.
-                  </th>
-                  <th className="pb-2 w-32 text-right font-medium text-muted-foreground">
-                    Preço Unit.
-                  </th>
-                  <th className="pb-2 w-24 text-right font-medium text-muted-foreground">
-                    IVA %
-                  </th>
-                  <th className="pb-2 w-36 text-right font-medium text-muted-foreground">
-                    Total Linha
-                  </th>
-                  <th className="pb-2 w-8" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {fields.map((field, i) => {
-                  const item = itens[i];
-                  const linhaTotal = item
-                    ? calcLinha(
-                        item.quantidade ?? 0,
-                        item.precoUnitario ?? 0,
-                        item.percentagemIva ?? 15,
-                      )
-                    : 0;
-                  return (
-                    <tr key={field.id}>
-                      <td className="py-2 pr-3">
-                        <input
-                          placeholder="Descrição do produto ou serviço"
-                          className="w-full rounded border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
-                          {...register(`itens.${i}.descricao`)}
-                        />
-                      </td>
-                      <td className="py-2 px-1">
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.quantidade`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 px-1">
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.precoUnitario`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 px-1">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step="0.1"
-                          className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-right focus:outline-none"
-                          {...register(`itens.${i}.percentagemIva`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </td>
-                      <td className="py-2 pl-3 text-right font-medium">
-                        {formatCVE(linhaTotal)}
-                      </td>
-                      <td className="py-2 pl-2">
-                        <button
-                          type="button"
-                          onClick={() => remove(i)}
-                          disabled={fields.length === 1}
-                          className="text-muted-foreground hover:text-destructive disabled:opacity-30"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="flex items-end justify-between gap-6">
-          <div className="rounded-lg border border-border bg-card p-5 w-80 shadow-sm">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Valor Ilíquido</span>
-              <span>{formatCVE(valorIliquido)}</span>
-            </div>
-            <div className="flex justify-between text-sm mt-2">
-              <span className="text-muted-foreground">Valor Imposto (IVA)</span>
-              <span>{formatCVE(valorImposto)}</span>
-            </div>
-            <hr className="my-3 border-border" />
-            <div className="flex justify-between font-bold">
-              <span>Valor Total</span>
-              <span className="text-lg">{formatCVE(valorTotal)}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="/faturas-compra"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-background px-5 text-sm font-medium hover:bg-muted transition-colors"
+              variant="outline"
+              onClick={() => router.push("/faturas-compra")}
             >
               Cancelar
-            </a>
-            <button
+            </IGRPButton>
+            <IGRPButton
+              name="guardar-rascunho"
+              tag="btn-guardar-rascunho"
               type="submit"
-              disabled={isPending}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              showIcon
+              iconName="save"
+              loading={isPending}
+              loadingText="A guardar…"
             >
-              {isPending ? "A guardar…" : "Guardar Rascunho"}
-            </button>
+              Guardar Rascunho
+            </IGRPButton>
           </div>
         </div>
       </form>
-    </div>
+    </IGRPContainer>
   );
 }

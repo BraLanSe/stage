@@ -1,8 +1,14 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 import {
   IGRPButton,
+  IGRPCheckbox,
   IGRPContainer,
+  IGRPInputNumber,
+  IGRPInputText,
+  IGRPPageHeader,
+  IGRPSelect,
 } from "@igrp/igrp-framework-react-design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -58,12 +64,16 @@ function TaxasIvaTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-700">Taxas IVA</h2>
-        <button
+        <IGRPButton
+          name="nova-taxa"
+          tag="btn-nova-taxa"
+          size="sm"
+          showIcon
+          iconName="plus"
           onClick={openNew}
-          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
         >
-          <span className="text-base leading-none">+</span> Nova Taxa
-        </button>
+          Nova Taxa
+        </IGRPButton>
       </div>
 
       {showForm && (
@@ -72,82 +82,66 @@ function TaxasIvaTab() {
             {editId ? "Editar Taxa IVA" : "Nova Taxa IVA"}
           </h3>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Código <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.codigo ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, codigo: e.target.value }))
-                }
-                placeholder="Ex: IVA15"
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
-            </div>
-            <div className="flex flex-col gap-1 col-span-2">
-              <label className="text-xs text-gray-500">
-                Descrição <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.descricao ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, descricao: e.target.value }))
-                }
+            <IGRPInputText
+              name="codigo-taxa"
+              label="Código"
+              required
+              placeholder="Ex: IVA15"
+              value={form.codigo ?? ""}
+              onChange={(e) => setForm((p) => ({ ...p, codigo: e.target.value }))}
+            />
+            <div className="col-span-2">
+              <IGRPInputText
+                name="descricao-taxa"
+                label="Descrição"
+                required
                 placeholder="Ex: IVA Normal 15%"
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                value={form.descricao ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Percentagem (%) <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step="0.01"
-                value={form.percentagem ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    percentagem: parseFloat(e.target.value),
-                  }))
-                }
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
+            <IGRPInputNumber
+              name="percentagem-taxa"
+              label="Percentagem (%)"
+              required
+              min={0}
+              max={100}
+              step={0.01}
+              value={form.percentagem ?? 0}
+              onChange={(v) => setForm((p) => ({ ...p, percentagem: v }))}
+            />
+            <div className="flex items-end pb-1">
+              <IGRPCheckbox
+                name="ativo-taxa"
+                label="Ativo"
+                checked={form.ativo ?? true}
+                onCheckedChange={(checked) => setForm((p) => ({ ...p, ativo: !!checked }))}
               />
-            </div>
-            <div className="flex items-end gap-2">
-              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.ativo ?? true}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, ativo: e.target.checked }))
-                  }
-                  className="rounded border-gray-300"
-                />
-                Ativo
-              </label>
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <button
+            <IGRPButton
+              name="guardar-taxa"
+              tag="btn-guardar-taxa"
+              size="sm"
+              loading={save.isPending}
+              loadingText="A guardar…"
               onClick={() => save.mutate()}
-              disabled={save.isPending}
-              className="rounded bg-blue-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {save.isPending ? "A guardar…" : "Guardar"}
-            </button>
-            <button
+              Guardar
+            </IGRPButton>
+            <IGRPButton
+              name="cancelar-taxa"
+              tag="btn-cancelar-taxa"
+              size="sm"
+              variant="outline"
               onClick={() => {
                 setShowForm(false);
                 setEditId(null);
               }}
-              className="rounded border border-gray-300 px-5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
             >
               Cancelar
-            </button>
+            </IGRPButton>
           </div>
         </div>
       )}
@@ -206,12 +200,14 @@ function TaxasIvaTab() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-center">
-                    <button
+                    <IGRPButton
+                      name="editar-taxa"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEdit(taxa)}
-                      className="text-xs text-blue-600 hover:underline"
                     >
                       Editar
-                    </button>
+                    </IGRPButton>
                   </td>
                 </tr>
               ))}
@@ -271,12 +267,16 @@ function SeriesTab() {
         <h2 className="text-sm font-semibold text-gray-700">
           Séries de Documento
         </h2>
-        <button
+        <IGRPButton
+          name="nova-serie"
+          tag="btn-nova-serie"
+          size="sm"
+          showIcon
+          iconName="plus"
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
         >
-          <span className="text-base leading-none">+</span> Nova Série
-        </button>
+          Nova Série
+        </IGRPButton>
       </div>
 
       {showForm && (
@@ -285,99 +285,71 @@ function SeriesTab() {
             Nova Série
           </h3>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Código <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.codigo ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, codigo: e.target.value }))
-                }
-                placeholder="Ex: FT2025"
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
-            </div>
-            <div className="flex flex-col gap-1 col-span-2">
-              <label className="text-xs text-gray-500">
-                Descrição <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.descricao ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, descricao: e.target.value }))
-                }
+            <IGRPInputText
+              name="codigo-serie"
+              label="Código"
+              required
+              placeholder="Ex: FT2025"
+              value={form.codigo ?? ""}
+              onChange={(e) => setForm((p) => ({ ...p, codigo: e.target.value }))}
+            />
+            <div className="col-span-2">
+              <IGRPInputText
+                name="descricao-serie"
+                label="Descrição"
+                required
                 placeholder="Ex: Faturas 2025"
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                value={form.descricao ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Tipo de Documento <span className="text-red-400">*</span>
-              </label>
-              <select
-                value={form.tipoDocumento}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    tipoDocumento: e.target.value as TipoDocumento,
-                  }))
-                }
-                className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              >
-                {TIPOS_DOCUMENTO.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Prefixo <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.prefixo ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, prefixo: e.target.value }))
-                }
-                placeholder="Ex: FT"
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Ano Fiscal <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="number"
-                min={2020}
-                max={2099}
-                value={form.anoFiscal ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    anoFiscal: parseInt(e.target.value),
-                  }))
-                }
-                className="h-8 rounded border border-gray-300 bg-white px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
-            </div>
+            <IGRPSelect
+              name="tipoDocumento-serie"
+              label="Tipo de Documento"
+              required
+              options={TIPOS_DOCUMENTO.map((t) => ({ label: t.label, value: t.value }))}
+              value={form.tipoDocumento}
+              onValueChange={(v) => setForm((p) => ({ ...p, tipoDocumento: v as TipoDocumento }))}
+            />
+            <IGRPInputText
+              name="prefixo-serie"
+              label="Prefixo"
+              required
+              placeholder="Ex: FT"
+              value={form.prefixo ?? ""}
+              onChange={(e) => setForm((p) => ({ ...p, prefixo: e.target.value }))}
+            />
+            <IGRPInputNumber
+              name="anoFiscal-serie"
+              label="Ano Fiscal"
+              required
+              min={2020}
+              max={2099}
+              step={1}
+              value={form.anoFiscal ?? new Date().getFullYear()}
+              onChange={(v) => setForm((p) => ({ ...p, anoFiscal: v }))}
+            />
           </div>
           <div className="mt-4 flex gap-2">
-            <button
+            <IGRPButton
+              name="guardar-serie"
+              tag="btn-guardar-serie"
+              size="sm"
+              loading={save.isPending}
+              loadingText="A guardar…"
               onClick={() => save.mutate()}
-              disabled={save.isPending}
-              className="rounded bg-blue-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {save.isPending ? "A guardar…" : "Guardar"}
-            </button>
-            <button
+              Guardar
+            </IGRPButton>
+            <IGRPButton
+              name="cancelar-serie"
+              tag="btn-cancelar-serie"
+              size="sm"
+              variant="outline"
               onClick={() => setShowForm(false)}
-              className="rounded border border-gray-300 px-5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
             >
               Cancelar
-            </button>
+            </IGRPButton>
           </div>
         </div>
       )}
@@ -468,44 +440,24 @@ export default function ParametrizacaoPage() {
   const [tab, setTab] = useState<Tab>("taxas");
 
   return (
-    <div className="flex flex-col gap-0 p-0">
-      <IGRPContainer id="parametrizacao" name="parametrizacao" tag="parametrizacao" className="hidden">
-        <IGRPButton name="force-studio" tag="force-studio" id="force-studio">FORCE</IGRPButton>
-      </IGRPContainer>
-      <div className="border-b border-gray-200 bg-white px-6 py-2.5">
-        <nav className="flex items-center gap-1 text-xs text-gray-500">
-          <a href="/" className="hover:text-gray-700">
-            Página Inicial
-          </a>
-          <span>/</span>
-          <span className="text-gray-700 font-medium">Parametrização</span>
-        </nav>
-      </div>
+    <IGRPContainer id="parametrizacao" name="parametrizacao" tag="parametrizacao" className="flex flex-col gap-0 p-0">
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
+      <IGRPPageHeader
+        name="parametrizacao-header"
+        tag="parametrizacao-header"
+        title="Parametrização"
+        description="Configuração de taxas IVA e séries de documento"
+        className="border-b px-6 py-3 bg-white"
+      />
 
       <div className="p-5">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-5 py-3.5">
-            <div className="flex items-center gap-2">
-              <svg
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-4 w-4 text-blue-500"
-              >
-                <path d="M11.5 4a7.5 7.5 0 100 12 7.5 7.5 0 000-12zM2 10h2M16 10h2M10 2v2M10 16v2" />
-              </svg>
-              <h1 className="text-sm font-semibold text-gray-800">
-                Parametrização
-              </h1>
-            </div>
-          </div>
-
           {/* Tabs */}
           <div className="flex border-b border-gray-200 bg-gray-50 px-5">
             {(["taxas", "series"] as Tab[]).map((t) => (
               <button
                 key={t}
+                type="button"
                 onClick={() => setTab(t)}
                 className={`px-5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                   tab === t
@@ -523,6 +475,6 @@ export default function ParametrizacaoPage() {
           </div>
         </div>
       </div>
-    </div>
+    </IGRPContainer>
   );
 }

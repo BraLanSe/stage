@@ -1,6 +1,9 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 import {
+  IGRPAlert,
+  IGRPBadge,
   IGRPButton,
   IGRPContainer,
   IGRPInputNumber,
@@ -23,6 +26,7 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { ItemFaturaVenda, Produto } from "@/app/(myapp)/types/efatura";
 import { useClientes, useProdutos } from "@/hooks/use-cadastro";
 import {
@@ -326,6 +330,10 @@ export default function FaturaVendaDetailPage() {
           }),
         ),
       });
+      toast.success("Fatura guardada com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao guardar fatura. Verifique os dados e tente novamente.");
+      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -352,11 +360,11 @@ export default function FaturaVendaDetailPage() {
     );
   }
 
+  const isConfirmed = fatura.estado === "CONFIRMADO";
+
   return (
-    <div className="min-h-screen bg-background">
-      <IGRPContainer id="faturas-venda-detalhe" name="faturas-venda-detalhe" tag="faturas-venda-detalhe" className="hidden">
-        <IGRPButton name="force-studio" tag="force-studio" id="force-studio">FORCE</IGRPButton>
-      </IGRPContainer>
+    <IGRPContainer id="faturas-venda-detalhe" name="faturas-venda-detalhe" tag="faturas-venda-detalhe" className="min-h-screen bg-background">
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
       <ProdutoSearch
         open={showProdutos}
         onSelect={addProduto}
@@ -364,13 +372,25 @@ export default function FaturaVendaDetailPage() {
       />
 
       <div className="mx-auto max-w-5xl">
-        <IGRPPageHeader
-          name="fatura-detail-header"
-          title={`Editar #${fatura.numero ?? fatura.codigo ?? `FT${id}`}`}
-          showBackButton
-          urlBackButton="/faturas-venda"
-          backButtonText="Faturas de Venda"
-        />
+        <div className="flex items-center justify-between pr-6">
+          <IGRPPageHeader
+            name="fatura-detail-header"
+            title={`${isConfirmed ? "Ver" : "Editar"} #${fatura.numero ?? fatura.codigo ?? `FT${id}`}`}
+            showBackButton
+            urlBackButton="/faturas-venda"
+            backButtonText="Faturas de Venda"
+          />
+          <IGRPBadge color={isConfirmed ? "success" : "secondary"}>
+            {isConfirmed ? "Confirmado" : "Rascunho"}
+          </IGRPBadge>
+        </div>
+        {isConfirmed && (
+          <div className="mx-6 mb-2">
+            <IGRPAlert variant="soft" color="warning">
+              Esta fatura está confirmada e não pode ser editada.
+            </IGRPAlert>
+          </div>
+        )}
 
         <div className="p-6 space-y-6">
           {/* Dados de Venda */}
@@ -389,6 +409,7 @@ export default function FaturaVendaDetailPage() {
                 name="serie"
                 label="Série"
                 required
+                disabled={isConfirmed}
                 options={SERIE_OPTIONS}
                 value={serie}
                 onValueChange={setSerie}
@@ -397,6 +418,7 @@ export default function FaturaVendaDetailPage() {
                 name="data-emissao"
                 label="Data"
                 required
+                disabled={isConfirmed}
                 placeholder="AAAA-MM-DD"
                 value={data_}
                 onChange={(e) => setData_(e.target.value)}
@@ -405,6 +427,7 @@ export default function FaturaVendaDetailPage() {
                 name="condicoes-pagamento"
                 label="Condições pagamento"
                 required
+                disabled={isConfirmed}
                 options={CONDICOES_OPTIONS}
                 value={condicoes}
                 onValueChange={setCondicoes}
@@ -421,6 +444,7 @@ export default function FaturaVendaDetailPage() {
               name="clienteId"
               label="Cliente"
               showSearch
+              disabled={isConfirmed}
               placeholder="Selecionar cliente…"
               options={clientes.map((c) => ({
                 label: `${c.desig}${c.nif ? ` — ${c.nif}` : ""}`,
@@ -432,16 +456,18 @@ export default function FaturaVendaDetailPage() {
           </section>
 
           {/* Product search button */}
-          <IGRPButton
-            name="pesquisar-produtos"
-            type="button"
-            variant="outline"
-            showIcon
-            iconName="search"
-            onClick={() => setShowProdutos(true)}
-          >
-            Pesquisar produtos ou serviços…
-          </IGRPButton>
+          {!isConfirmed && (
+            <IGRPButton
+              name="pesquisar-produtos"
+              type="button"
+              variant="outline"
+              showIcon
+              iconName="search"
+              onClick={() => setShowProdutos(true)}
+            >
+              Pesquisar produtos ou serviços…
+            </IGRPButton>
+          )}
 
           {/* Produto / Serviço table */}
           <section>
@@ -538,6 +564,7 @@ export default function FaturaVendaDetailPage() {
             <IGRPInputText
               name="requisicao"
               label="Requisição"
+              disabled={isConfirmed}
               value={requisicao}
               onChange={(e) => setRequisicao(e.target.value)}
             />
@@ -545,6 +572,7 @@ export default function FaturaVendaDetailPage() {
               name="desc-financeiro"
               label="Desc. Financeiro (%)"
               required
+              disabled={isConfirmed}
               value={descFinanceiro}
               onChange={(e) => setDescFinanceiro(e.target.value)}
             />
@@ -555,6 +583,7 @@ export default function FaturaVendaDetailPage() {
             name="nota"
             label="Nota"
             rows={3}
+            disabled={isConfirmed}
             value={nota}
             onChange={(e) => setNota(e.target.value)}
           />
@@ -588,19 +617,23 @@ export default function FaturaVendaDetailPage() {
                   </Link>
                 </IGRPButton>
               )}
-              <IGRPButton
-                name="guardar"
-                type="button"
-                loading={saving}
-                loadingText="A guardar…"
-                onClick={handleSave}
-              >
-                Guardar
-              </IGRPButton>
+              {!isConfirmed && (
+                <IGRPButton
+                  name="guardar"
+                  type="button"
+                  showIcon
+                  iconName="save"
+                  loading={saving}
+                  loadingText="A guardar…"
+                  onClick={handleSave}
+                >
+                  Guardar
+                </IGRPButton>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </IGRPContainer>
   );
 }

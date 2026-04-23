@@ -1,6 +1,9 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 import {
+  IGRPAlert,
+  IGRPBadge,
   IGRPButton,
   IGRPContainer,
 } from "@igrp/igrp-framework-react-design-system";
@@ -8,6 +11,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type {
   DocFiscalStatus,
+  EstadoFatura,
   FaturaVenda,
   PagamentoStatus,
 } from "@/app/(myapp)/types/efatura";
@@ -68,6 +72,15 @@ function DocFiscalBadge({ status }: { status?: DocFiscalStatus }) {
     >
       {status.charAt(0) + status.slice(1).toLowerCase()}
     </span>
+  );
+}
+
+function EstadoBadge({ estado }: { estado?: EstadoFatura }) {
+  if (!estado) return null;
+  return (
+    <IGRPBadge color={estado === "CONFIRMADO" ? "success" : "secondary"}>
+      {estado === "CONFIRMADO" ? "Confirmado" : "Rascunho"}
+    </IGRPBadge>
   );
 }
 
@@ -174,7 +187,10 @@ function FaturasTable({ faturas }: { faturas: FaturaVenda[] }) {
               Pagamento
             </th>
             <th className="px-3 py-2 text-center font-medium text-gray-600">
-              Doc. Fiscais Eletronico
+              Estado
+            </th>
+            <th className="px-3 py-2 text-center font-medium text-gray-600">
+              Doc. Fiscais Eletrónico
             </th>
             <th className="px-3 py-2 text-center font-medium text-gray-600">
               Ações
@@ -225,6 +241,7 @@ function FaturasTable({ faturas }: { faturas: FaturaVenda[] }) {
                 <option value=""></option>
               </select>
             </td>
+            <td className="px-3 py-1" />
             <td className="px-3 py-1">
               <select className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none">
                 <option value=""></option>
@@ -237,7 +254,7 @@ function FaturasTable({ faturas }: { faturas: FaturaVenda[] }) {
           {faturas.map((f, idx) => (
             <tr
               key={f.id}
-              className="border-b border-red-100 bg-red-50/60 hover:bg-red-50"
+              className="border-b border-gray-100 hover:bg-gray-50"
             >
               <td className="px-3 py-2.5 text-center text-gray-500">
                 {idx + 1}
@@ -271,6 +288,9 @@ function FaturasTable({ faturas }: { faturas: FaturaVenda[] }) {
                 />
               </td>
               <td className="px-3 py-2.5 text-center">
+                <EstadoBadge estado={f.estado} />
+              </td>
+              <td className="px-3 py-2.5 text-center">
                 <DocFiscalBadge status={f.docFiscalStatus} />
               </td>
               <td className="px-3 py-2.5 text-center">
@@ -295,10 +315,8 @@ export default function FaturasVendaPage() {
   const to = Math.min(page * 10 + (data?.content.length ?? 0), totalElements);
 
   return (
-    <div className="flex flex-col gap-0 p-0">
-      <IGRPContainer id="faturas-venda" name="faturas-venda" tag="faturas-venda" className="hidden">
-        <IGRPButton name="force-studio" tag="force-studio" id="force-studio">FORCE</IGRPButton>
-      </IGRPContainer>
+    <IGRPContainer id="faturas-venda" name="faturas-venda" tag="faturas-venda" className="flex flex-col gap-0 p-0">
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
       {/* Breadcrumb */}
       <div className="border-b border-gray-200 bg-white px-6 py-2.5">
         <nav className="flex items-center gap-1 text-xs text-gray-500">
@@ -448,8 +466,10 @@ export default function FaturasVendaPage() {
           )}
 
           {isError && (
-            <div className="flex items-center justify-center py-12 text-sm text-red-500">
-              Erro: {(error as Error)?.message ?? "Falha ao carregar dados"}
+            <div className="px-5 pt-4">
+              <IGRPAlert variant="soft" color="destructive">
+                {(error as Error)?.message ?? "Falha ao carregar as faturas de venda"}
+              </IGRPAlert>
             </div>
           )}
 
@@ -485,6 +505,6 @@ export default function FaturasVendaPage() {
           )}
         </div>
       </div>
-    </div>
+    </IGRPContainer>
   );
 }

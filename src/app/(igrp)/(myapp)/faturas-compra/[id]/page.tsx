@@ -1,11 +1,20 @@
+/* IGRP-GENERATED-PAGE */
 "use client";
 
 import {
+  IGRPAlert,
+  IGRPBadge,
   IGRPButton,
   IGRPContainer,
+  IGRPInputNumber,
+  IGRPInputText,
+  IGRPPageHeader,
+  IGRPSelect,
+  IGRPTextarea,
 } from "@igrp/igrp-framework-react-design-system";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { ItemFaturaCompra } from "@/app/(myapp)/types/efatura";
 import { useFornecedores } from "@/hooks/use-cadastro";
 import {
@@ -194,6 +203,10 @@ export default function FaturaCompraDetailPage() {
           ),
         },
       });
+      toast.success("Fatura guardada com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao guardar fatura. Verifique os dados e tente novamente.");
+      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -224,102 +237,83 @@ export default function FaturaCompraDetailPage() {
     );
   }
 
+  const isConfirmed = fatura.estado === "CONFIRMADO";
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <IGRPContainer id="faturas-compra-detalhe" name="faturas-compra-detalhe" tag="faturas-compra-detalhe" className="hidden">
-        <IGRPButton name="force-studio" tag="force-studio" id="force-studio">FORCE</IGRPButton>
-      </IGRPContainer>
+    <IGRPContainer id="faturas-compra-detalhe" name="faturas-compra-detalhe" tag="faturas-compra-detalhe" className="min-h-screen bg-gray-50">
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
       <div className="mx-auto max-w-5xl bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h1 className="text-base font-semibold text-gray-800">
-            Editar #{fatura.numero ?? `FC${id}`}
-          </h1>
-          <span
-            className={`rounded-full px-3 py-0.5 text-xs font-medium ${
-              fatura.estado === "CONFIRMADO"
-                ? "bg-green-100 text-green-800"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {fatura.estado ?? "RASCUNHO"}
-          </span>
+          <IGRPPageHeader
+            name="compra-detail-header"
+            title={`Editar #${fatura.numero ?? `FC${id}`}`}
+            showBackButton
+            urlBackButton="/faturas-compra"
+            backButtonText="Faturas de Compra"
+            className="border-0 p-0"
+          />
+          <IGRPBadge color={isConfirmed ? "success" : "secondary"}>
+            {isConfirmed ? "Confirmado" : "Rascunho"}
+          </IGRPBadge>
         </div>
 
         <div className="p-6 space-y-6">
+          {isConfirmed && (
+            <IGRPAlert variant="soft" color="warning">
+              Esta fatura está confirmada e não pode ser editada.
+            </IGRPAlert>
+          )}
+
           {/* Dados de Compra */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <svg
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-4 w-4 text-gray-400"
-                aria-hidden="true"
-              >
-                <path d="M3 4h14M3 8h14M3 12h14M3 16h8" />
-              </svg>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Dados de Compra
-              </h2>
-            </div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+              Dados de Compra
+            </h2>
             <div className="grid grid-cols-4 gap-3">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="numDocumento" className="text-xs text-gray-500">
-                  Nº Documento
-                </label>
-                <input
-                  id="numDocumento"
-                  disabled
-                  value={fatura.numero ?? `FC${id}`}
-                  className="h-8 rounded border border-gray-200 bg-gray-50 px-2.5 text-xs text-gray-500"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="serie" className="text-xs text-gray-500">
-                  Série <span className="text-red-400">*</span>
-                </label>
-                <select
-                  id="serie"
-                  value={serie}
-                  onChange={(e) => setSerie(e.target.value)}
-                  className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                >
-                  <option>2023A</option>
-                  <option>2024A</option>
-                  <option>2025A</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="dataFatura" className="text-xs text-gray-500">
-                  Data <span className="text-red-400">*</span>
-                </label>
-                <input
-                  id="dataFatura"
-                  type="date"
-                  value={data_}
-                  onChange={(e) => setData_(e.target.value)}
-                  className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="condicoes" className="text-xs text-gray-500">
-                  Condições Pagamento <span className="text-red-400">*</span>
-                </label>
-                <select
-                  id="condicoes"
-                  value={condicoes}
-                  onChange={(e) => setCondicoes(e.target.value)}
-                  className="h-8 rounded border border-gray-300 bg-white px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                >
-                  <option>A pronto</option>
-                  <option>3 dias</option>
-                  <option>7 dias</option>
-                  <option>15 dias</option>
-                  <option>30 dias</option>
-                  <option>60 dias</option>
-                </select>
-              </div>
+              <IGRPInputText
+                name="numDocumento"
+                label="Nº Documento"
+                disabled
+                value={fatura.numero ?? `FC${id}`}
+              />
+              <IGRPSelect
+                name="serie"
+                label="Série"
+                required
+                disabled={isConfirmed}
+                options={[
+                  { label: "2023A", value: "2023A" },
+                  { label: "2024A", value: "2024A" },
+                  { label: "2025A", value: "2025A" },
+                ]}
+                value={serie}
+                onValueChange={setSerie}
+              />
+              <IGRPInputText
+                name="dataFatura"
+                label="Data"
+                type="date"
+                required
+                disabled={isConfirmed}
+                value={data_}
+                onChange={(e) => setData_(e.target.value)}
+              />
+              <IGRPSelect
+                name="condicoes"
+                label="Condições Pagamento"
+                required
+                disabled={isConfirmed}
+                options={[
+                  { label: "A pronto", value: "A pronto" },
+                  { label: "3 dias", value: "3 dias" },
+                  { label: "7 dias", value: "7 dias" },
+                  { label: "15 dias", value: "15 dias" },
+                  { label: "30 dias", value: "30 dias" },
+                  { label: "60 dias", value: "60 dias" },
+                ]}
+                value={condicoes}
+                onValueChange={setCondicoes}
+              />
             </div>
           </section>
 
@@ -425,13 +419,17 @@ export default function FaturaCompraDetailPage() {
                   Produto / Serviço
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={addLinha}
-                className="flex items-center gap-1.5 rounded border border-blue-400 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-              >
-                + Adicionar Linha
-              </button>
+              {!isConfirmed && (
+                <IGRPButton
+                  name="adicionar-linha"
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLinha}
+                >
+                  + Adicionar Linha
+                </IGRPButton>
+              )}
             </div>
 
             <div className="overflow-x-auto rounded border border-gray-200">
@@ -502,51 +500,54 @@ export default function FaturaCompraDetailPage() {
           </section>
 
           {/* Nota */}
-          <div className="flex flex-col gap-1">
-            <label htmlFor="nota" className="text-xs text-gray-500">
-              Nota
-            </label>
-            <textarea
-              id="nota"
-              value={nota}
-              onChange={(e) => setNota(e.target.value)}
-              rows={3}
-              className="rounded border border-gray-300 bg-white px-2.5 py-2 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
-            />
-          </div>
+          <IGRPTextarea
+            name="nota"
+            label="Nota"
+            rows={3}
+            disabled={isConfirmed}
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+          />
 
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-            <button
+            <IGRPButton
+              name="fechar"
               type="button"
+              variant="outline"
               onClick={() => router.push("/faturas-compra")}
-              className="rounded border border-gray-300 px-5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
             >
               Fechar
-            </button>
+            </IGRPButton>
             <div className="flex gap-2">
               {fatura.estado === "RASCUNHO" && (
-                <button
+                <IGRPButton
+                  name="confirmar"
                   type="button"
+                  loading={isConfirming}
+                  loadingText="A confirmar…"
                   onClick={() => confirmar(id)}
-                  disabled={isConfirming}
-                  className="rounded bg-green-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
                 >
-                  {isConfirming ? "A confirmar…" : "Confirmar"}
-                </button>
+                  Confirmar
+                </IGRPButton>
               )}
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="rounded bg-blue-600 px-5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-              >
-                {saving ? "A guardar…" : "Guardar"}
-              </button>
+              {!isConfirmed && (
+                <IGRPButton
+                  name="guardar"
+                  type="button"
+                  showIcon
+                  iconName="save"
+                  loading={saving}
+                  loadingText="A guardar…"
+                  onClick={handleSave}
+                >
+                  Guardar
+                </IGRPButton>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </IGRPContainer>
   );
 }
