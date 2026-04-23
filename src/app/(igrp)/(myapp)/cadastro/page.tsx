@@ -784,7 +784,7 @@ function ClientesTab() {
           name="novo-cliente"
           tag="btn-novo-cliente"
           showIcon
-          iconName="plus"
+          iconName="Plus"
           onClick={() => setModal("new")}
         >
           Novo Cliente
@@ -875,7 +875,7 @@ function FornecedoresTab() {
           name="novo-fornecedor"
           tag="btn-novo-fornecedor"
           showIcon
-          iconName="plus"
+          iconName="Plus"
           onClick={() => setModal("new")}
         >
           Novo Fornecedor
@@ -973,7 +973,7 @@ function ProdutosTab() {
             tag="input-search-produto"
             placeholder="Pesquisar…"
             showIcon
-            iconName="search"
+            iconName="Search"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -981,7 +981,7 @@ function ProdutosTab() {
             name="novo-produto"
             tag="btn-novo-produto"
             showIcon
-            iconName="plus"
+            iconName="Plus"
             onClick={() => setModal("new")}
           >
             Novo Produto

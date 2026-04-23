@@ -535,7 +535,7 @@ export default function FaturaCompraDetailPage() {
                   name="guardar"
                   type="button"
                   showIcon
-                  iconName="save"
+                  iconName="Save"
                   loading={saving}
                   loadingText="A guardar…"
                   onClick={handleSave}

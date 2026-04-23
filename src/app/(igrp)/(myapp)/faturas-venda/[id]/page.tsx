@@ -74,7 +74,7 @@ function ProdutoSearch({
             label="Pesquisar"
             placeholder="Pesquisar produtos ou serviços..."
             showIcon
-            iconName="search"
+            iconName="Search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -332,8 +332,10 @@ export default function FaturaVendaDetailPage() {
       });
       toast.success("Fatura guardada com sucesso!");
     } catch (err) {
-      toast.error("Erro ao guardar fatura. Verifique os dados e tente novamente.");
-      console.error(err);
+      const body = (err as { body?: { message?: string; error?: string } })?.body;
+      const detail = body?.message ?? body?.error ?? String(err);
+      console.error("[handleSave] PUT failed →", detail, err);
+      toast.error(`Erro ao guardar: ${detail}`);
     } finally {
       setSaving(false);
     }
@@ -462,7 +464,7 @@ export default function FaturaVendaDetailPage() {
               type="button"
               variant="outline"
               showIcon
-              iconName="search"
+              iconName="Search"
               onClick={() => setShowProdutos(true)}
             >
               Pesquisar produtos ou serviços…
@@ -622,7 +624,7 @@ export default function FaturaVendaDetailPage() {
                   name="guardar"
                   type="button"
                   showIcon
-                  iconName="save"
+                  iconName="Save"
                   loading={saving}
                   loadingText="A guardar…"
                   onClick={handleSave}

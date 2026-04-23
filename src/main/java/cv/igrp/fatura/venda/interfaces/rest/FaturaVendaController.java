@@ -16,9 +16,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class FaturaVendaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Transactional
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar fatura de venda (apenas RASCUNHO)")
     public ResponseEntity<FaturaVendaEntity> update(@PathVariable Integer id,
@@ -81,9 +84,9 @@ public class FaturaVendaController {
                     BigDecimal descPerc = itemDto.getDescontoComercialPerc() != null ? itemDto.getDescontoComercialPerc() : BigDecimal.ZERO;
                     BigDecimal iva = itemDto.getPercentagemIva() != null ? itemDto.getPercentagemIva() : BigDecimal.ZERO;
                     BigDecimal bruto = qty.multiply(preco);
-                    BigDecimal descValor = bruto.multiply(descPerc).divide(BigDecimal.valueOf(100));
+                    BigDecimal descValor = bruto.multiply(descPerc).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
                     BigDecimal liquido = bruto.subtract(descValor);
-                    BigDecimal imposto = liquido.multiply(iva).divide(BigDecimal.valueOf(100));
+                    BigDecimal imposto = liquido.multiply(iva).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
                     BigDecimal total = liquido.add(imposto);
                     item.setQuantidade(qty);
                     item.setPrecoUnitario(preco);

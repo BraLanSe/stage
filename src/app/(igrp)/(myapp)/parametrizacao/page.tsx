@@ -69,7 +69,7 @@ function TaxasIvaTab() {
           tag="btn-nova-taxa"
           size="sm"
           showIcon
-          iconName="plus"
+          iconName="Plus"
           onClick={openNew}
         >
           Nova Taxa
@@ -272,7 +272,7 @@ function SeriesTab() {
           tag="btn-nova-serie"
           size="sm"
           showIcon
-          iconName="plus"
+          iconName="Plus"
           onClick={() => setShowForm(true)}
         >
           Nova Série

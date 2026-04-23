@@ -392,7 +392,7 @@ export default function NovaFaturaCompraPage() {
               tag="btn-guardar-rascunho"
               type="submit"
               showIcon
-              iconName="save"
+              iconName="Save"
               loading={isPending}
               loadingText="A guardar…"
             >

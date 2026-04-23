@@ -1,5 +1,6 @@
 package cv.igrp.fatura.venda.infrastructure.persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.ClienteEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaTipoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
@@ -22,6 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "fatura_venda")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class FaturaVendaEntity extends AuditEntity {
 
     @Id
