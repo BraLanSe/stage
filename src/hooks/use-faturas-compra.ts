@@ -40,7 +40,7 @@ export function useAtualizarFaturaCompra() {
       data,
     }: {
       id: number;
-      data: Partial<CriarFaturaCompraRequest>;
+      data: Parameters<typeof faturasCompraApi.atualizar>[1];
     }) => faturasCompraApi.atualizar(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [FATURAS_COMPRA_KEY, "list"] });

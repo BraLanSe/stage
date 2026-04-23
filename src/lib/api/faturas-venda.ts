@@ -95,7 +95,25 @@ export const faturasVendaApi = {
     });
   },
 
-  atualizar: (id: number, data: Partial<CriarFaturaVendaRequest>) =>
+  atualizar: (
+    id: number,
+    data: {
+      clienteId?: number;
+      nota?: string;
+      termCondicoes?: string;
+      items?: {
+        desig: string;
+        descr?: string;
+        quantidade: number;
+        precoUnitario: number;
+        descontoComercialPerc?: number;
+        percentagemIva?: number;
+        unidade?: string;
+        produtoId?: number;
+        codigoArtigo?: string;
+      }[];
+    },
+  ) =>
     apiRequest<FaturaVenda>(`${BASE}/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

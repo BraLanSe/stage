@@ -304,9 +304,9 @@ export default function FaturaVendaDetailPage() {
     try {
       await faturasVendaApi.atualizar(id, {
         clienteId: selectedClienteId,
-        condicoesPagamento: condicoes,
-        observacoes: nota,
-        itens: itens.map(
+        termCondicoes: condicoes,
+        nota,
+        items: itens.map(
           ({
             desig,
             descricao,
@@ -319,7 +319,7 @@ export default function FaturaVendaDetailPage() {
             codigoArtigo,
           }) => ({
             desig: desig ?? descricao ?? "",
-            descricao: descricao ?? desig ?? "",
+            descr: descricao,
             quantidade: quantidade ?? 1,
             precoUnitario: precoUnitario ?? 0,
             descontoComercialPerc,

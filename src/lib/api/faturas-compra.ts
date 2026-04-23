@@ -21,7 +21,21 @@ export const faturasCompraApi = {
       body: JSON.stringify(data),
     }),
 
-  atualizar: (id: number, data: Partial<CriarFaturaCompraRequest>) =>
+  atualizar: (
+    id: number,
+    data: {
+      fornecedorId?: number;
+      nota?: string;
+      termCondicoes?: string;
+      items?: {
+        desig: string;
+        descr?: string;
+        quantidade: number;
+        precoUnitario: number;
+        percentagemIva?: number;
+      }[];
+    },
+  ) =>
     apiRequest<FaturaCompra>(`${BASE}/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

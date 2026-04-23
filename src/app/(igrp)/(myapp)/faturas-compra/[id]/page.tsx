@@ -191,11 +191,10 @@ export default function FaturaCompraDetailPage() {
         id,
         data: {
           fornecedorId: selectedFornecedorId,
-          tipoDocumento: fatura?.tipoDocumento ?? "FATURA",
-          observacoes: nota,
-          itens: itens.map(
-            ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
-              descricao: descricao ?? "",
+          nota,
+          items: itens.map(
+            ({ desig, descricao, quantidade, precoUnitario, percentagemIva }) => ({
+              desig: desig ?? descricao ?? "",
               quantidade: quantidade ?? 1,
               precoUnitario: precoUnitario ?? 0,
               percentagemIva: percentagemIva ?? 0,
