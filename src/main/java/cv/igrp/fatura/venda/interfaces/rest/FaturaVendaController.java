@@ -2,6 +2,7 @@ package cv.igrp.fatura.venda.interfaces.rest;
 
 import cv.igrp.framework.stereotype.IgrpController;
 import cv.igrp.framework.core.domain.CommandBus;
+import cv.igrp.fatura.venda.application.commands.AnularFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.ConfirmarFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.CreateFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.UpdateFaturaVendaCommand;
@@ -102,9 +103,6 @@ public class FaturaVendaController {
     @PutMapping("/{id}/anular")
     @Operation(summary = "Anular fatura de venda")
     public ResponseEntity<FaturaVendaEntity> anular(@PathVariable Integer id) {
-        return faturaVendaRepo.findById(id).map(f -> {
-            f.setEstado("ANULADO");
-            return ResponseEntity.ok(faturaVendaRepo.save(f));
-        }).orElse(ResponseEntity.notFound().build());
+        return commandBus.send(new AnularFaturaVendaCommand(id));
     }
 }

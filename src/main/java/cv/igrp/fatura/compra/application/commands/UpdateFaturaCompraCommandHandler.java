@@ -10,14 +10,10 @@ import cv.igrp.fatura.compra.application.dto.FaturaCompraItemImpostoDTO;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemImpostoEntity;
-import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraItemImpostoRepository;
-import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraItemRepository;
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrImpostoEntity;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrImpostoRepository;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrUnidadeRepository;
 import cv.igrp.fatura.shared.domain.exceptions.IgrpResponseStatusException;
 import cv.igrp.framework.core.domain.CommandHandler;
@@ -35,23 +31,30 @@ import java.util.ArrayList;
 
 @Component
 @RequiredArgsConstructor
-public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFaturaCompraCommand, ResponseEntity<FaturaCompraEntity>> {
+public class UpdateFaturaCompraCommandHandler implements CommandHandler<UpdateFaturaCompraCommand, ResponseEntity<FaturaCompraEntity>> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CreateFaturaCompraCommandHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateFaturaCompraCommandHandler.class);
 
     private final FaturaCompraRepository faturaCompraRepo;
-    private final FaturaCompraItemRepository itemRepo;
-    private final FaturaCompraItemImpostoRepository impostoItemRepo;
     private final FornecedorRepository fornecedorRepo;
     private final PrFaturaTipoRepository tipoRepo;
-    private final PrSerieRepository serieRepo;
     private final PrImpostoRepository impostoRepo;
     private final PrUnidadeRepository unidadeRepo;
     private final ProdutoRepository produtoRepo;
 
     @Override
     @Transactional
-    public ResponseEntity<FaturaCompraEntity> handle(CreateFaturaCompraCommand command) {
+    public ResponseEntity<FaturaCompraEntity> handle(UpdateFaturaCompraCommand command) {
+        FaturaCompraEntity fatura = faturaCompraRepo.findById(command.getId())
+                .orElseThrow(() -> IgrpResponseStatusException.of(
+                        HttpStatus.NOT_FOUND, "Fatura de compra não encontrada: " + command.getId()));
+
+        if (!"RASCUNHO".equals(fatura.getEstado())) {
+            throw IgrpResponseStatusException.of(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Apenas faturas em estado RASCUNHO podem ser editadas. Estado atual: " + fatura.getEstado());
+        }
+
         FaturaCompraCreateDTO dto = command.getDto();
 
         FornecedorEntity fornecedor = fornecedorRepo.findById(dto.getFornecedorId())
@@ -60,35 +63,16 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         var tipoFatura = tipoRepo.findById(dto.getTipoFaturaId())
                 .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Tipo de fatura não encontrado: " + dto.getTipoFaturaId()));
 
-        // Verrou pessimiste — évite la duplication de numéro en concurrence (spec §11)
-        PrSerieEntity serie = serieRepo.findByIdForUpdate(dto.getPrSerieId())
-                .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Série não encontrada: " + dto.getPrSerieId()));
-
-        serie.setContador(serie.getContador() + 1);
-        serieRepo.save(serie);
-
-        FaturaCompraEntity fatura = new FaturaCompraEntity();
-        fatura.setCodigo(serie.getCodigo() + "-" + serie.getContador());
         fatura.setCodigoReferencia(dto.getCodigoReferencia());
         fatura.setTipoFatura(tipoFatura);
         fatura.setDtFaturacao(dto.getDtFaturacao());
         fatura.setLimitFaturacao(dto.getLimitFaturacao());
         fatura.setDtVencimentoFatura(dto.getDtVencimentoFatura());
-        fatura.setEstado("RASCUNHO");
-        fatura.setPago(false);
         fatura.setFornecedor(fornecedor);
-        fatura.setPrSerie(serie);
         fatura.setTermCondicoes(dto.getTermCondicoes());
         fatura.setNota(dto.getNota());
-        fatura.setUtilizador("system");
-        fatura.setDescontoFinanceiro(BigDecimal.ZERO);
-        fatura.setDescontoComercial(BigDecimal.ZERO);
-        fatura.setValorIliquido(BigDecimal.ZERO);
-        fatura.setValorImposto(BigDecimal.ZERO);
-        fatura.setValorFatura(BigDecimal.ZERO);
-        fatura.setValorPago(BigDecimal.ZERO);
-        fatura.setValorPorPagar(BigDecimal.ZERO);
-        fatura.setItems(new ArrayList<>());
+
+        fatura.getItems().clear();
 
         BigDecimal totalIliquido = BigDecimal.ZERO;
         BigDecimal totalImposto = BigDecimal.ZERO;
@@ -101,7 +85,6 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
             item.setQuantidade(itemDto.getQuantidade());
             item.setEstado("ATIVO");
 
-            // Snapshot (spec §4 + §6): copier desig, codigoArtigo, precoUnitario depuis le produit
             if (itemDto.getProdutoId() != null) {
                 ProdutoEntity produto = produtoRepo.findById(itemDto.getProdutoId())
                         .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Produto não encontrado: " + itemDto.getProdutoId()));
@@ -112,7 +95,6 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
                         ? itemDto.getCodigoArtigo() : produto.getCodigo());
                 item.setPrecoUnitario(itemDto.getPrecoUnitario() != null
                         ? itemDto.getPrecoUnitario() : produto.getPreco());
-
                 if (itemDto.getPrUnidadeId() == null && produto.getPrUnidade() != null) {
                     item.setPrUnidade(produto.getPrUnidade());
                 }
@@ -219,7 +201,7 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         fatura.setValorPorPagar(valorFatura);
 
         FaturaCompraEntity saved = faturaCompraRepo.save(fatura);
-        LOGGER.info("FaturaCompra criada: {} ({})", saved.getCodigo(), saved.getId());
+        LOGGER.info("FaturaCompra atualizada: {} ({})", saved.getCodigo(), saved.getId());
         return ResponseEntity.ok(saved);
     }
 }
