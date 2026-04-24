@@ -23,7 +23,6 @@ import {
   IGRPTableRowPrimitive,
   IGRPTextarea,
 } from "@igrp/igrp-framework-react-design-system";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -387,11 +386,13 @@ export default function FaturaVendaDetailPage() {
   return (
     <IGRPContainer id="faturas-venda-detalhe" name="faturas-venda-detalhe" tag="faturas-venda-detalhe" className="min-h-screen bg-background">
       <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
-      <ProdutoSearch
-        open={showProdutos}
-        onSelect={addProduto}
-        onClose={() => setShowProdutos(false)}
-      />
+      {showProdutos && (
+        <ProdutoSearch
+          open={showProdutos}
+          onSelect={addProduto}
+          onClose={() => setShowProdutos(false)}
+        />
+      )}
 
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between pr-6">
@@ -633,10 +634,12 @@ export default function FaturaVendaDetailPage() {
                 </IGRPButton>
               )}
               {fatura.estado === "CONFIRMADO" && (
-                <IGRPButton name="emitir-dfe" type="button" asChild>
-                  <Link href={`/faturas-venda/${id}/emitir-dfe`}>
-                    Emitir DFE
-                  </Link>
+                <IGRPButton
+                  name="emitir-dfe"
+                  type="button"
+                  onClick={() => router.push(`/faturas-venda/${id}/emitir-dfe`)}
+                >
+                  Emitir DFE
                 </IGRPButton>
               )}
               {!isConfirmed && (
