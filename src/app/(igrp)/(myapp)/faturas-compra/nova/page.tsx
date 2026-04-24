@@ -20,11 +20,12 @@ import {
 } from "@igrp/igrp-framework-react-design-system";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 import type { TipoDocumento } from "@/app/(myapp)/types/efatura";
-import { useFornecedores } from "@/hooks/use-cadastro";
+import { useFornecedores, useProdutos } from "@/hooks/use-cadastro";
 import { useCriarFaturaCompra } from "@/hooks/use-faturas-compra";
 
 const itemSchema = z.object({
@@ -91,12 +92,16 @@ export default function NovaFaturaCompraPage() {
   const { mutateAsync: criar, isPending } = useCriarFaturaCompra();
   const { data: fornecedoresPage } = useFornecedores();
   const fornecedores = fornecedoresPage?.content ?? [];
+  const { data: produtosPage } = useProdutos(0, 100);
+  const produtos = produtosPage?.content ?? [];
+  const [selectedProdutos, setSelectedProdutos] = useState<Record<string, string>>({});
 
   const {
     register,
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -275,12 +280,32 @@ export default function NovaFaturaCompraPage() {
                       : 0;
                     return (
                       <IGRPTableRowPrimitive key={field.id}>
-                        <IGRPTableCellPrimitive className="align-top py-2">
-                          <IGRPInputText
-                            placeholder="Descrição do produto ou serviço"
-                            error={errors.itens?.[i]?.descricao?.message}
-                            {...register(`itens.${i}.descricao`)}
-                          />
+                        <IGRPTableCellPrimitive className="align-top py-2 min-w-[220px]">
+                          <div className="flex flex-col gap-1.5">
+                            <IGRPSelect
+                              name={`produto-select-${i}`}
+                              tag={`select-produto-${i}`}
+                              placeholder="Selecionar produto…"
+                              value={selectedProdutos[field.id] ?? ""}
+                              options={produtos.map((p) => ({
+                                label: `${p.codigo ? `[${p.codigo}] ` : ""}${p.desig}`,
+                                value: String(p.id),
+                              }))}
+                              onValueChange={(v) => {
+                                setSelectedProdutos((prev) => ({ ...prev, [field.id]: v }));
+                                const produto = produtos.find((p) => String(p.id) === v);
+                                if (produto) {
+                                  setValue(`itens.${i}.descricao`, produto.desig, { shouldValidate: true });
+                                  setValue(`itens.${i}.precoUnitario`, produto.preco ?? 0, { shouldValidate: true });
+                                }
+                              }}
+                            />
+                            <IGRPInputText
+                              placeholder="Ou descreva manualmente…"
+                              error={errors.itens?.[i]?.descricao?.message}
+                              {...register(`itens.${i}.descricao`)}
+                            />
+                          </div>
                         </IGRPTableCellPrimitive>
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller

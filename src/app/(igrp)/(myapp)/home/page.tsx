@@ -10,7 +10,9 @@ import {
   IGRPPageHeader,
 } from "@igrp/igrp-framework-react-design-system";
 import { useRouter } from "next/navigation";
+import { useClientes, useFornecedores, useProdutos } from "@/hooks/use-cadastro";
 import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useFaturasVenda } from "@/hooks/use-faturas-venda";
 import type { DashboardStats } from "@/app/(myapp)/types/efatura";
 /* IGRP-CUSTOM-CODE-END */
 
@@ -233,6 +235,16 @@ export default function PageHomeComponent() {
   const router = useRouter();
   const { data, isLoading } = useDashboardStats();
   const stats = data ?? MOCK_STATS;
+
+  const { data: clientesPage } = useClientes(0, 1);
+  const { data: fornecedoresPage } = useFornecedores(0, 1);
+  const { data: produtosPage } = useProdutos(0, 1);
+  const { data: faturasVendaPage } = useFaturasVenda(0, 100);
+
+  const totalClientes = clientesPage?.totalElements ?? stats.totalClientes;
+  const totalFornecedores = fornecedoresPage?.totalElements ?? stats.totalFornecedores;
+  const totalProdutos = produtosPage?.totalElements ?? stats.totalProdutos;
+  const pendentes = faturasVendaPage?.content?.filter((f) => f.estado === "RASCUNHO").length ?? 0;
   /* IGRP-CUSTOM-CODE-END */
 
   return (
@@ -295,7 +307,7 @@ export default function PageHomeComponent() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Pendentes</p>
-              <p className="text-3xl font-bold text-gray-800">0</p>
+              <p className="text-3xl font-bold text-gray-800">{pendentes}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Faturas em rascunho</p>
             </div>
           </IGRPCardContent>
@@ -313,7 +325,7 @@ export default function PageHomeComponent() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Clientes</p>
-                <p className="text-3xl font-bold text-gray-800">{stats.totalClientes}</p>
+                <p className="text-3xl font-bold text-gray-800">{totalClientes}</p>
               </div>
             </div>
             <IGRPButton
@@ -342,7 +354,7 @@ export default function PageHomeComponent() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Clientes</p>
-              <p className="text-3xl font-bold text-gray-800">{stats.totalClientes}</p>
+              <p className="text-3xl font-bold text-gray-800">{totalClientes}</p>
             </div>
           </IGRPCardContent>
         </IGRPCard>
@@ -358,7 +370,7 @@ export default function PageHomeComponent() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Fornecedores</p>
-              <p className="text-3xl font-bold text-gray-800">{stats.totalFornecedores}</p>
+              <p className="text-3xl font-bold text-gray-800">{totalFornecedores}</p>
             </div>
           </IGRPCardContent>
         </IGRPCard>
@@ -374,7 +386,7 @@ export default function PageHomeComponent() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Produtos</p>
-              <p className="text-3xl font-bold text-gray-800">{stats.totalProdutos}</p>
+              <p className="text-3xl font-bold text-gray-800">{totalProdutos}</p>
             </div>
           </IGRPCardContent>
         </IGRPCard>

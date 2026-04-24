@@ -21,7 +21,9 @@ import {
   IGRPTabs,
   IGRPTextarea,
 } from "@igrp/igrp-framework-react-design-system";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import type {
   Cliente,
   CVE,
@@ -163,6 +165,7 @@ function ClienteModal({
   onClose: () => void;
 }) {
   /* IGRP-CUSTOM-CODE-BEGIN(cliente-modal-hooks) */
+  const router = useRouter();
   const criar = useCriarCliente();
   const atualizar = useAtualizarCliente();
   const isEditing = !!cliente?.id;
@@ -202,10 +205,12 @@ function ClienteModal({
   async function handleSave() {
     if (isEditing && cliente?.id) {
       await atualizar.mutateAsync({ id: cliente.id, data: form });
+      onClose();
     } else {
       await criar.mutateAsync(form);
+      toast.success(`Cliente "${form.desig}" criado! A abrir nova fatura…`);
+      router.push("/faturas-venda/nova");
     }
-    onClose();
   }
   /* IGRP-CUSTOM-CODE-END */
 
