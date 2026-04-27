@@ -1,6 +1,7 @@
 package cv.igrp.fatura.compra.application.dto;
 
 import cv.igrp.framework.stereotype.IgrpDTO;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -13,31 +14,42 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @IgrpDTO
+@Schema(description = "Dados para criação ou atualização de uma fatura de compra")
 public class FaturaCompraCreateDTO {
 
+    @Schema(description = "Código de referência externo (ex: número da fatura do fornecedor)", example = "FAT-FORN-2024-001")
     private String codigoReferencia;
 
     @NotNull
+    @Schema(description = "ID do tipo de fatura (FT, FR, ND, NC...)", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer tipoFaturaId;
 
     @NotNull
+    @Schema(description = "Data de emissão da fatura", example = "2024-01-15", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDate dtFaturacao;
 
+    @Schema(description = "Data limite de validade da fatura", example = "2024-02-15")
     private LocalDate limitFaturacao;
 
+    @Schema(description = "Data de vencimento do pagamento (deve ser >= dtFaturacao)", example = "2024-02-15")
     private LocalDate dtVencimentoFatura;
 
     @NotNull
+    @Schema(description = "ID do fornecedor", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer fornecedorId;
 
     @NotNull
+    @Schema(description = "ID da série de numeração", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer prSerieId;
 
+    @Schema(description = "Termos e condições de pagamento", example = "Pagamento a 60 dias")
     private String termCondicoes;
 
+    @Schema(description = "Observações internas", example = "Recebido com danos parciais")
     private String nota;
 
     @NotNull
     @Size(min = 1)
+    @Schema(description = "Linhas de artigos da fatura (mínimo 1)", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<FaturaCompraItemDTO> items = new ArrayList<>();
 }
