@@ -385,6 +385,12 @@ export interface PagamentoDocumento {
 
 // ── Dashboard ────────────────────────────────────────────────
 
+export interface TopProduto {
+  desig: string;
+  totalVendido: CVE;
+  quantidade: number;
+}
+
 export interface DashboardStats {
   totalClientes: number;
   totalFornecedores: number;
@@ -396,5 +402,7 @@ export interface DashboardStats {
   variacaoDespesas: number; // percentage variation
   variacaoLucro: number; // percentage variation
   vendasMensais: Array<{ mes: string; vendas: CVE; compras: CVE }>;
+  /** Estado breakdown reused for the donut chart (Confirmado/Rascunho/Anulado). */
   vendasPorMeio: Array<{ meio: string; valor: CVE; cor: string }>;
+  topProdutos?: TopProduto[];
 }

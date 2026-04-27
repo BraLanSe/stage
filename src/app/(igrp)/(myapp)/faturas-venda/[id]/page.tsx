@@ -644,6 +644,18 @@ export default function FaturaVendaDetailPage() {
               Fechar
             </IGRPButton>
             <div className="flex gap-2">
+              <IGRPButton
+                name="imprimir-pdf"
+                tag="btn-imprimir-pdf"
+                id="btn-imprimir-pdf"
+                type="button"
+                variant="outline"
+                showIcon
+                iconName="Printer"
+                onClick={() => window.print()}
+              >
+                Exportar PDF
+              </IGRPButton>
               {fatura.estado === "RASCUNHO" && (
                 <IGRPButton
                   name="confirmar"
