@@ -37,8 +37,10 @@ import { faturasVendaApi } from "@/lib/api/faturas-venda";
 // ── Helpers ───────────────────────────────────────────────────
 
 function fmt(v?: number) {
-  if (v === undefined || v === null) return "0";
+  if (v === undefined || v === null) return "—";
   return new Intl.NumberFormat("pt-CV", {
+    style: "currency",
+    currency: "CVE",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(v);
@@ -347,7 +349,6 @@ export default function FaturaVendaDetailPage() {
         ),
       };
 
-      console.log("Payload JSON:", JSON.stringify(payload, null, 2));
       await faturasVendaApi.atualizar(id, payload);
       toast.success("Fatura guardada com sucesso!");
     } catch (err) {
