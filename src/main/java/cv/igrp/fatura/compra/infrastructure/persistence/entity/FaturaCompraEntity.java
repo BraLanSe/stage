@@ -37,7 +37,7 @@ public class FaturaCompraEntity extends AuditEntity {
     private String codigoReferencia;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_fatura_id", nullable = false)
     private PrFaturaTipoEntity tipoFatura;
 
@@ -93,12 +93,12 @@ public class FaturaCompraEntity extends AuditEntity {
     private String nota;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fornecedor_id", nullable = false)
     private FornecedorEntity fornecedor;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pr_serie_id", nullable = false)
     private PrSerieEntity prSerie;
 

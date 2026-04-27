@@ -14,8 +14,16 @@ import java.util.List;
 
 @Repository
 public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, Integer> {
-    List<FaturaVendaEntity> findByCliente_Id(Integer clienteId);
-    Page<FaturaVendaEntity> findByEstado(String estado, Pageable pageable);
+    @Query("SELECT f FROM FaturaVendaEntity f JOIN FETCH f.cliente JOIN FETCH f.tipoFatura JOIN FETCH f.prSerie WHERE f.cliente.id = :clienteId")
+    List<FaturaVendaEntity> findByCliente_Id(@Param("clienteId") Integer clienteId);
+
+    @Query(value = "SELECT DISTINCT f FROM FaturaVendaEntity f JOIN FETCH f.cliente JOIN FETCH f.tipoFatura JOIN FETCH f.prSerie WHERE f.estado = :estado",
+           countQuery = "SELECT COUNT(f) FROM FaturaVendaEntity f WHERE f.estado = :estado")
+    Page<FaturaVendaEntity> findByEstado(@Param("estado") String estado, Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT f FROM FaturaVendaEntity f JOIN FETCH f.cliente JOIN FETCH f.tipoFatura JOIN FETCH f.prSerie",
+           countQuery = "SELECT COUNT(f) FROM FaturaVendaEntity f")
+    Page<FaturaVendaEntity> findAllFetch(Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(f.valorIliquido), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
     BigDecimal sumValorIliquido();
