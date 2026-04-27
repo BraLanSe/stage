@@ -362,8 +362,29 @@ export default function FaturaVendaDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-32 text-sm text-muted-foreground">
-        A carregar fatura…
+      <div className="mx-auto max-w-5xl p-6 space-y-6 animate-pulse">
+        <div className="h-7 w-40 rounded bg-gray-200" />
+        <div className="space-y-3">
+          <div className="h-3.5 w-24 rounded bg-gray-200" />
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-9 rounded bg-gray-200" />)}
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="h-3.5 w-24 rounded bg-gray-200" />
+          <div className="h-9 rounded bg-gray-200" />
+        </div>
+        <div className="space-y-0 rounded border border-gray-100 overflow-hidden">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="flex gap-4 border-b border-gray-100 px-4 py-3 last:border-0">
+              <div className="h-3.5 flex-1 rounded bg-gray-200" />
+              <div className="h-3.5 w-12 rounded bg-gray-200" />
+              <div className="h-3.5 w-20 rounded bg-gray-200" />
+              <div className="h-3.5 w-16 rounded bg-gray-200" />
+            </div>
+          ))}
+        </div>
+        <div className="h-24 rounded bg-gray-200" />
       </div>
     );
   }

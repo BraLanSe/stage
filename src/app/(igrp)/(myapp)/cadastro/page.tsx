@@ -155,6 +155,27 @@ function emptyProduto(): Omit<
 }
 /* IGRP-CUSTOM-CODE-END */
 
+// ── Tab Skeleton ──────────────────────────────────────────────
+
+function TabSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="animate-pulse space-y-0 rounded border border-gray-100 overflow-hidden">
+      <div className="grid grid-cols-7 gap-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div key={i} className="h-3 rounded bg-gray-200" />
+        ))}
+      </div>
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="grid grid-cols-7 gap-3 border-b border-gray-100 px-4 py-3 last:border-0">
+          {Array.from({ length: 7 }, (_, j) => (
+            <div key={j} className="h-3 rounded bg-gray-200" style={{ opacity: 1 - i * 0.12 }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Cliente Modal ─────────────────────────────────────────────
 
 function ClienteModal({
@@ -797,9 +818,7 @@ function ClientesTab() {
       </div>
 
       {isLoading ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          A carregar…
-        </div>
+        <TabSkeleton />
       ) : (
         <IGRPTable
           id="clientes-table"
@@ -888,9 +907,7 @@ function FornecedoresTab() {
       </div>
 
       {isLoading ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          A carregar…
-        </div>
+        <TabSkeleton />
       ) : (
         <IGRPTable
           id="fornecedores-table"
@@ -995,9 +1012,7 @@ function ProdutosTab() {
       </div>
 
       {isLoading ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          A carregar…
-        </div>
+        <TabSkeleton />
       ) : (
         <IGRPTable
           id="produtos-table"

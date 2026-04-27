@@ -140,6 +140,32 @@ function AcoesMenu({ id }: { id?: number }) {
   );
 }
 
+function TableSkeleton() {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[900px] text-sm">
+        <tbody>
+          {Array.from({ length: 6 }, (_, i) => (
+            <tr key={i} className="border-b border-gray-100">
+              <td className="px-3 py-3"><div className="mx-auto h-3.5 w-6 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-2 py-3"><div className="h-3.5 w-4 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="h-3.5 w-24 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="h-3.5 w-36 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="h-3.5 w-20 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="ml-auto h-3.5 w-24 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="ml-auto h-3.5 w-16 animate-pulse rounded bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="mx-auto h-5 w-20 animate-pulse rounded-full bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="mx-auto h-5 w-16 animate-pulse rounded-full bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="mx-auto h-5 w-16 animate-pulse rounded-full bg-gray-200" /></td>
+              <td className="px-3 py-3"><div className="mx-auto h-6 w-14 animate-pulse rounded bg-gray-200" /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function FaturasTable({ faturas }: { faturas: FaturaCompra[] }) {
   if (faturas.length === 0) {
     return (
@@ -430,11 +456,7 @@ export default function FaturasCompraPage() {
             </div>
           </div>
 
-          {isLoading && (
-            <div className="flex items-center justify-center py-12 text-sm text-gray-400">
-              A carregar…
-            </div>
-          )}
+          {isLoading && <TableSkeleton />}
           {isError && (
             <div className="px-5 pt-4">
               <IGRPAlert variant="soft" color="destructive">
