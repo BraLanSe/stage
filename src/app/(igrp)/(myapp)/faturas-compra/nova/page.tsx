@@ -32,9 +32,9 @@ const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição obrigatória"),
   quantidade: z
     .number({ error: "Quantidade inválida" })
-    .positive("Deve ser > 0"),
-  precoUnitario: z.number({ error: "Preço inválido" }).positive("Deve ser > 0"),
-  percentagemIva: z.number().min(0).max(100),
+    .positive("A quantidade deve ser superior a 0"),
+  precoUnitario: z.number({ error: "Preço inválido" }).positive("O preço deve ser superior a 0"),
+  percentagemIva: z.number().min(0, "IVA não pode ser negativo").max(100, "IVA não pode exceder 100%"),
 });
 
 const schema = z.object({
@@ -200,6 +200,7 @@ export default function NovaFaturaCompraPage() {
               />
 
               <IGRPInputText
+                id="input-serie"
                 tag="input-serie"
                 label="Série"
                 placeholder="Ex: FC-2025"
@@ -207,6 +208,7 @@ export default function NovaFaturaCompraPage() {
               />
 
               <IGRPInputText
+                id="input-dataVencimento"
                 tag="input-dataVencimento"
                 label="Data de Vencimento"
                 type="date"
@@ -215,6 +217,7 @@ export default function NovaFaturaCompraPage() {
 
               <div className="col-span-full">
                 <IGRPTextarea
+                  id="textarea-observacoes"
                   tag="textarea-observacoes"
                   label="Observações"
                   placeholder="Observações adicionais…"

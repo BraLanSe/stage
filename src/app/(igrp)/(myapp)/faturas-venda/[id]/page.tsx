@@ -65,7 +65,7 @@ function ProdutoSearch({
     <IGRPModalDialog open={open} onOpenChange={(o) => !o && onClose()}>
       <IGRPModalDialogContent size="md">
         <IGRPModalDialogHeader>
-          <IGRPModalDialogTitle name="search-produtos-title">
+          <IGRPModalDialogTitle name="search-produtos-title" tag="search-produtos-title">
             Pesquisar Produtos / Serviços
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
