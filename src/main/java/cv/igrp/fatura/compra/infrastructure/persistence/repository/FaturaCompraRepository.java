@@ -42,4 +42,11 @@ public interface FaturaCompraRepository extends JpaRepository<FaturaCompraEntity
 
     @Query("SELECT COALESCE(SUM(f.valorPorPagar), 0) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO' AND f.pago = false")
     BigDecimal sumValorPorPagar();
+
+    @Query("SELECT extract(month from f.dtFaturacao), COALESCE(SUM(f.valorFatura), 0) " +
+           "FROM FaturaCompraEntity f " +
+           "WHERE f.estado = 'CONFIRMADO' AND extract(year from f.dtFaturacao) = :ano " +
+           "GROUP BY extract(month from f.dtFaturacao) " +
+           "ORDER BY extract(month from f.dtFaturacao)")
+    List<Object[]> sumValorFaturaByMonth(@Param("ano") int ano);
 }

@@ -22,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @IgrpController
 @RestController
 @RequestMapping(value = "api/v1/faturas-venda", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -35,13 +37,22 @@ public class FaturaVendaController {
     private final FaturaVendaRepository faturaVendaRepo;
 
     @GetMapping
-    @Operation(summary = "Listar faturas de venda")
+    @Operation(summary = "Listar faturas de venda com filtros opcionais")
     @ApiResponse(responseCode = "200", description = "Lista paginada de faturas")
     public ResponseEntity<Page<FaturaVendaEntity>> list(
             @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String dtInicio,
+            @RequestParam(required = false) String dtFim,
+            @RequestParam(required = false) Integer clienteId,
             Pageable pageable) {
-        if (estado != null && !estado.isBlank()) {
-            return ResponseEntity.ok(faturaVendaRepo.findByEstado(estado, pageable));
+        LocalDate inicio = (dtInicio != null && !dtInicio.isBlank()) ? LocalDate.parse(dtInicio) : null;
+        LocalDate fim    = (dtFim    != null && !dtFim.isBlank())    ? LocalDate.parse(dtFim)    : null;
+        String estadoFilter = (estado != null && !estado.isBlank()) ? estado : null;
+        if (inicio != null || fim != null || clienteId != null) {
+            return ResponseEntity.ok(faturaVendaRepo.findWithFilters(estadoFilter, inicio, fim, clienteId, pageable));
+        }
+        if (estadoFilter != null) {
+            return ResponseEntity.ok(faturaVendaRepo.findByEstado(estadoFilter, pageable));
         }
         return ResponseEntity.ok(faturaVendaRepo.findAllFetch(pageable));
     }

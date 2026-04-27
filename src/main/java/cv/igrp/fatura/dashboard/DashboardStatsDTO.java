@@ -1,7 +1,6 @@
 package cv.igrp.fatura.dashboard;
 
 import cv.igrp.framework.stereotype.IgrpDTO;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,25 +8,30 @@ import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @IgrpDTO
 public class DashboardStatsDTO {
 
-    // ── Venda KPIs ────────────────────────────────────────────────────────────
+    // ── Entity counts ────────────────────────────────────────────
+    private Long totalClientes;
+    private Long totalFornecedores;
+    private Long totalProdutos;
+
+    // ── Current-month financials ─────────────────────────────────
+    private BigDecimal totalVendas;
+    private BigDecimal totalDespesas;
+    private BigDecimal ganhoLucro;
+
+    // ── Month-over-month variations (%) ─────────────────────────
+    private BigDecimal variacaoVendas;
+    private BigDecimal variacaoDespesas;
+    private BigDecimal variacaoLucro;
+
+    // ── All-time KPIs ────────────────────────────────────────────
     private BigDecimal valorIliquido;
     private BigDecimal valorImposto;
     private BigDecimal valorTotal;
-
-    // ── Summary Strip — vendas ────────────────────────────────────────────────
-    private BigDecimal totalVendas;
-    private BigDecimal variacaoVendas;
-    private Long totalClientes;
     private Long totalFaturas;
     private BigDecimal totalValorPorPagar;
-
-    // ── Compra KPIs ───────────────────────────────────────────────────────────
-    private BigDecimal totalCompras;
-    private BigDecimal variacaoCompras;
     private Long totalFaturasFornecedor;
     private BigDecimal totalValorPorPagarCompras;
 }
