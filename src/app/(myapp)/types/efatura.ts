@@ -392,9 +392,36 @@ export interface DashboardStats {
   totalVendas: CVE;
   totalDespesas: CVE;
   ganhoLucro: CVE;
-  variacaoVendas: number; // percentage variation
-  variacaoDespesas: number; // percentage variation
-  variacaoLucro: number; // percentage variation
-  vendasMensais: Array<{ mes: string; vendas: CVE; compras: CVE }>;
-  vendasPorMeio: Array<{ meio: string; valor: CVE; cor: string }>;
+  variacaoVendas: number;
+  variacaoDespesas: number;
+  variacaoLucro: number;
+  valorIliquido?: CVE;
+  valorImposto?: CVE;
+  valorTotal?: CVE;
+  totalFaturas?: number;
+  totalValorPorPagar?: CVE;
+  totalFaturasFornecedor?: number;
+  totalValorPorPagarCompras?: CVE;
+}
+
+// ── Reports / Analytics ──────────────────────────────────────
+
+export interface MonthlyTotal {
+  mes: number;
+  mesLabel: string;
+  vendas: CVE;
+  compras: CVE;
+}
+
+export interface TopProduto {
+  desig: string;
+  codigoArtigo: string;
+  totalQuantidade: number;
+  totalValor: CVE;
+}
+
+export interface EstadoDistribuicao {
+  estado: string;
+  count: number;
+  valorTotal: CVE;
 }

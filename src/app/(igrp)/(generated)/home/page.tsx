@@ -1,15 +1,18 @@
 "use client";
 
 import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useEstadoDistribuicao, useMonthlyTotals } from "@/hooks/use-reports";
 import type { DashboardStats } from "@/app/(myapp)/types/efatura";
 
 // ── Formatters ───────────────────────────────────────────────
 
-function formatECV(value = 0) {
-  return new Intl.NumberFormat("pt-CV", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value) + " ECV";
+function formatCVE(value = 0) {
+  return (
+    new Intl.NumberFormat("pt-CV", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + " ECV"
+  );
 }
 
 function formatPct(value = 0) {
@@ -19,14 +22,19 @@ function formatPct(value = 0) {
 
 // ── Donut Chart ──────────────────────────────────────────────
 
-function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
+function DonutChart({
+  data,
+}: {
+  data: { meio: string; valor: number; cor: string }[];
+}) {
   const total = data.reduce((s, d) => s + d.valor, 0);
   if (total === 0) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center gap-4">
         <svg viewBox="0 0 160 160" className="w-40 h-40">
           <circle cx="80" cy="80" r="55" fill="none" stroke="#e5e7eb" strokeWidth="28" />
         </svg>
+        <p className="text-xs text-gray-400">Sem dados</p>
       </div>
     );
   }
@@ -65,7 +73,7 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
               style={{ backgroundColor: seg.cor }}
             />
             <span className="text-gray-600">{seg.meio}</span>
-            <span className="font-medium">{(seg.pct * 100).toFixed(0)}%</span>
+            <span className="font-medium">{seg.valor}</span>
           </li>
         ))}
       </ul>
@@ -75,7 +83,11 @@ function DonutChart({ data }: { data: DashboardStats["vendasPorMeio"] }) {
 
 // ── Line Chart ───────────────────────────────────────────────
 
-function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
+function LineChart({
+  data,
+}: {
+  data: { mes: string; vendas: number; compras: number }[];
+}) {
   const W = 520;
   const H = 180;
   const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
@@ -84,7 +96,6 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
 
   const allValues = data.flatMap((d) => [d.vendas, d.compras]);
   const maxVal = Math.max(...allValues, 1);
-
   const xStep = innerW / Math.max(data.length - 1, 1);
 
   function toPath(key: "vendas" | "compras") {
@@ -97,13 +108,9 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
       .join(" ");
   }
 
-  const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const months = data.length === 12 ? MONTHS : data.map((d) => d.mes);
-
   return (
     <div className="w-full overflow-x-auto">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 280 }}>
-        {/* Y grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map((t) => {
           const y = PAD.top + innerH * (1 - t);
           return (
@@ -120,8 +127,7 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
           );
         })}
 
-        {/* X labels */}
-        {months.map((m, i) => (
+        {data.map((d, i) => (
           <text
             key={i}
             x={PAD.left + i * xStep}
@@ -130,15 +136,13 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
             fontSize="9"
             fill="#9ca3af"
           >
-            {m}
+            {d.mes}
           </text>
         ))}
 
-        {/* Lines */}
         <path d={toPath("vendas")} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinejoin="round" />
         <path d={toPath("compras")} fill="none" stroke="#1e3a5f" strokeWidth="2" strokeLinejoin="round" strokeDasharray="4 2" />
 
-        {/* Dots */}
         {data.map((d, i) => {
           const x = PAD.left + i * xStep;
           const yV = PAD.top + innerH - (d.vendas / maxVal) * innerH;
@@ -152,7 +156,6 @@ function LineChart({ data }: { data: DashboardStats["vendasMensais"] }) {
         })}
       </svg>
 
-      {/* Legend */}
       <div className="mt-2 flex items-center justify-center gap-6 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-5 rounded bg-blue-500 inline-block" />
@@ -210,7 +213,7 @@ function StatCard({
       >
         {formatPct(variation)}
       </span>
-      <p className="mt-1 text-2xl font-bold text-gray-800">{formatECV(value)}</p>
+      <p className="mt-1 text-2xl font-bold text-gray-800">{formatCVE(value)}</p>
       <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
         {label}
       </p>
@@ -248,31 +251,55 @@ const IconList = () => (
   </svg>
 );
 
-// ── Mock fallback (used when API is unavailable) ───────────────
+// ── Constants ─────────────────────────────────────────────────
 
 const MOCK_STATS: DashboardStats = {
-  totalClientes: 4,
+  totalClientes: 0,
   totalFornecedores: 0,
-  totalProdutos: 9,
-  totalVendas: 850304,
+  totalProdutos: 0,
+  totalVendas: 0,
   totalDespesas: 0,
-  ganhoLucro: 850304,
+  ganhoLucro: 0,
   variacaoVendas: 0,
   variacaoDespesas: 0,
   variacaoLucro: 0,
-  vendasMensais: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((mes) => ({
-    mes,
-    vendas: 0,
-    compras: 0,
-  })),
-  vendasPorMeio: [],
 };
+
+const ESTADO_COLORS: Record<string, string> = {
+  CONFIRMADO: "#22c55e",
+  RASCUNHO: "#f59e0b",
+  ANULADO: "#ef4444",
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+  CONFIRMADO: "Confirmado",
+  RASCUNHO: "Rascunho",
+  ANULADO: "Anulado",
+};
+
+const EMPTY_MONTHLY = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map(
+  (mes) => ({ mes, vendas: 0, compras: 0 }),
+);
 
 // ── Page ─────────────────────────────────────────────────────
 
 export default function PageHomeComponent() {
-  const { data, isLoading } = useDashboardStats();
-  const stats = data ?? MOCK_STATS;
+  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: monthlyTotals, isLoading: isLoadingMonthly } = useMonthlyTotals();
+  const { data: estadoData, isLoading: isLoadingEstado } = useEstadoDistribuicao();
+
+  const stats = statsData ?? MOCK_STATS;
+  const isLoading = isLoadingStats || isLoadingMonthly || isLoadingEstado;
+
+  const lineChartData = monthlyTotals
+    ? monthlyTotals.map((m) => ({ mes: m.mesLabel, vendas: Number(m.vendas), compras: Number(m.compras) }))
+    : EMPTY_MONTHLY;
+
+  const donutData = (estadoData ?? []).map((e) => ({
+    meio: ESTADO_LABELS[e.estado] ?? e.estado,
+    valor: e.count,
+    cor: ESTADO_COLORS[e.estado] ?? "#9ca3af",
+  }));
 
   return (
     <div className="flex flex-col gap-5 p-6">
@@ -284,45 +311,31 @@ export default function PageHomeComponent() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard icon={<IconPeople />} label="Clientes" value={stats.totalClientes} />
-        <KpiCard icon={<IconTruck />} label="Fornecedores" value={stats.totalFornecedores} />
-        <KpiCard icon={<IconList />} label="Produtos" value={stats.totalProdutos} />
+        <KpiCard icon={<IconPeople />} label="Clientes" value={Number(stats.totalClientes ?? 0)} />
+        <KpiCard icon={<IconTruck />} label="Fornecedores" value={Number(stats.totalFornecedores ?? 0)} />
+        <KpiCard icon={<IconList />} label="Produtos" value={Number(stats.totalProdutos ?? 0)} />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h2 className="text-sm font-semibold text-gray-700">
-              Vendas por meios de pagamentos
+              Distribuição por Estado
             </h2>
-            <button className="text-gray-400 hover:text-gray-600">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
           </div>
           <div className="flex min-h-[180px] items-center justify-center">
-            <DonutChart data={stats.vendasPorMeio} />
+            <DonutChart data={donutData} />
           </div>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h2 className="text-sm font-semibold text-gray-700">
               Compra/Venda mensalmente
             </h2>
-            <button className="text-gray-400 hover:text-gray-600">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
           </div>
-          <LineChart data={stats.vendasMensais} />
+          <LineChart data={lineChartData} />
         </div>
       </div>
 
@@ -330,18 +343,18 @@ export default function PageHomeComponent() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           label="Vendas"
-          value={stats.totalVendas}
-          variation={stats.variacaoVendas}
+          value={Number(stats.totalVendas ?? 0)}
+          variation={Number(stats.variacaoVendas ?? 0)}
         />
         <StatCard
           label="Despesas"
-          value={stats.totalDespesas}
-          variation={stats.variacaoDespesas}
+          value={Number(stats.totalDespesas ?? 0)}
+          variation={Number(stats.variacaoDespesas ?? 0)}
         />
         <StatCard
           label="Ganho/Lucro"
-          value={stats.ganhoLucro}
-          variation={stats.variacaoLucro}
+          value={Number(stats.ganhoLucro ?? 0)}
+          variation={Number(stats.variacaoLucro ?? 0)}
         />
       </div>
     </div>

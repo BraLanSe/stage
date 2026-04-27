@@ -354,6 +354,17 @@ export default function FaturaVendaDetailPage() {
           <h1 className="text-base font-semibold text-gray-800">
             Editar #{fatura.numero ?? fatura.codigo ?? `FT${id}`}
           </h1>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 print:hidden"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Exportar PDF
+          </button>
         </div>
 
         <div className="p-6 space-y-6">
