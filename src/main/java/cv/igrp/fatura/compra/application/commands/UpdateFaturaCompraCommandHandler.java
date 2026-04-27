@@ -67,6 +67,10 @@ public class UpdateFaturaCompraCommandHandler implements CommandHandler<UpdateFa
         fatura.setTipoFatura(tipoFatura);
         fatura.setDtFaturacao(dto.getDtFaturacao());
         fatura.setLimitFaturacao(dto.getLimitFaturacao());
+        if (dto.getDtVencimentoFatura() != null && dto.getDtVencimentoFatura().isBefore(dto.getDtFaturacao())) {
+            throw IgrpResponseStatusException.of(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A data de vencimento não pode ser anterior à data de faturação.");
+        }
         fatura.setDtVencimentoFatura(dto.getDtVencimentoFatura());
         fatura.setFornecedor(fornecedor);
         fatura.setTermCondicoes(dto.getTermCondicoes());
