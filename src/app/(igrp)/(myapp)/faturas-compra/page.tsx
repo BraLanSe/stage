@@ -169,13 +169,27 @@ function TableSkeleton() {
 function FaturasTable({ faturas }: { faturas: FaturaCompra[] }) {
   if (faturas.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 py-16 text-center">
-        <p className="text-sm font-medium text-gray-700">
-          Nenhuma fatura encontrada
-        </p>
-        <p className="text-xs text-gray-400">
-          Crie a sua primeira fatura de compra.
-        </p>
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400" aria-hidden="true">
+            <rect x="8" y="4" width="32" height="40" rx="3" />
+            <path d="M16 16h16M16 22h16M16 28h10" />
+            <path d="M8 12l-4 4 4 4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-700">Nenhuma fatura de compra registada</p>
+          <p className="mt-1 text-xs text-gray-400">Comece por registar a sua primeira fatura de compra.</p>
+        </div>
+        <Link
+          href="/faturas-compra/nova"
+          className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
+        >
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden="true">
+            <line x1="10" y1="5" x2="10" y2="15" /><line x1="5" y1="10" x2="15" y2="10" />
+          </svg>
+          Nova Fatura de Compra
+        </Link>
       </div>
     );
   }
