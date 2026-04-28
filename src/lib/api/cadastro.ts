@@ -65,6 +65,51 @@ function toClienteDTO(
   });
 }
 
+/**
+ * Maps ProdutoWrite → ProdutoCreateDTO (Spring Boot).
+ * Key differences:
+ *   ativo (boolean)        → estado ("ATIVO" | "INATIVO")
+ *   codigo (empty on new)  → auto-generate "PRD-XXXXX" on creation
+ *   unidade/categoria/percentagemIva → frontend-only, ignored (no FK lookup available)
+ */
+function toProdutoDTO(
+  data: ProdutoWrite | Partial<Produto>,
+  isCreate = false,
+): Record<string, unknown> {
+  const d = data as Record<string, unknown>;
+  const codigoRaw = (d.codigo as string | undefined)?.trim();
+  const codigo =
+    codigoRaw || (isCreate ? `PRD-${Math.floor(10000 + Math.random() * 90000)}` : undefined);
+
+  return sanitize({
+    codigo,
+    desig: d.desig,
+    descr: d.descr,
+    preco: d.preco,
+    estado: d.ativo === true ? "ATIVO" : d.ativo === false ? "INATIVO" : undefined,
+  });
+}
+
+/** Maps ProdutoEntity JSON → frontend Produto type. */
+// biome-ignore lint/suspicious/noExplicitAny: raw backend DTO
+function fromProdutoDTO(dto: any): Produto {
+  return {
+    id: dto.id,
+    codigo: dto.codigo,
+    desig: dto.desig ?? "",
+    descr: dto.descr,
+    preco: dto.preco,
+    ativo: dto.estado === "ATIVO",
+    unidade: undefined,
+    categoria: undefined,
+    percentagemIva: undefined,
+    createdAt: dto.createdDate,
+    updatedAt: dto.lastModifiedDate,
+    createdBy: dto.createdBy,
+    lastModifiedBy: dto.lastModifiedBy,
+  };
+}
+
 /** Maps FornecedorWrite → FornecedorCreateDTO. Same field mapping as Cliente. */
 function toFornecedorDTO(
   data: FornecedorWrite | Partial<Fornecedor>,
@@ -201,21 +246,23 @@ export const cadastroApi = {
   },
 
   produtos: {
-    listar: (page = 0, size = 50, search?: string) => {
+    listar: async (page = 0, size = 50, search?: string) => {
       const params = new URLSearchParams({ page: String(page), size: String(size) });
       if (search) params.set("search", search);
-      return apiRequest<PaginatedResponse<Produto>>(`/produtos?${params}`);
+      const raw = await apiRequest<unknown>(`/produtos?${params}`);
+      return wrapList(raw, fromProdutoDTO) as PaginatedResponse<Produto>;
     },
-    obter: (id: number) => apiRequest<Produto>(`/produtos/${id}`),
+    obter: async (id: number) =>
+      fromProdutoDTO(await apiRequest<unknown>(`/produtos/${id}`)),
     criar: (data: ProdutoWrite) =>
       apiRequest<Produto>("/produtos", {
         method: "POST",
-        body: JSON.stringify(sanitize(data as Record<string, unknown>)),
+        body: JSON.stringify(toProdutoDTO(data, true)),
       }),
     atualizar: (id: number, data: Partial<Produto>) =>
       apiRequest<Produto>(`/produtos/${id}`, {
         method: "PUT",
-        body: JSON.stringify(sanitize(data as Record<string, unknown>)),
+        body: JSON.stringify(toProdutoDTO(data)),
       }),
   },
 

@@ -2,6 +2,7 @@
 "use client";
 
 /* IGRP-CUSTOM-CODE-BEGIN(imports) */
+import type React from "react";
 import {
   IGRPButton,
   IGRPCard,
@@ -220,17 +221,33 @@ function ClienteModal({
       : emptyCliente(),
   );
 
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const saving = criar.isPending || atualizar.isPending;
   const conselhos = CONSELHOS[form.ilha ?? "SANTIAGO"] ?? [];
 
+  function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setFotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
   async function handleSave() {
-    if (isEditing && cliente?.id) {
-      await atualizar.mutateAsync({ id: cliente.id, data: form });
-      onClose();
-    } else {
-      await criar.mutateAsync(form);
-      toast.success(`Cliente "${form.desig}" criado! A abrir nova fatura…`);
-      router.push("/faturas-venda/nova");
+    try {
+      if (isEditing && cliente?.id) {
+        await atualizar.mutateAsync({ id: cliente.id, data: form });
+        toast.success(`Cliente "${form.desig}" atualizado com sucesso!`);
+        onClose();
+      } else {
+        await criar.mutateAsync(form);
+        toast.success(`Cliente "${form.desig}" criado! A abrir nova fatura…`);
+        router.push("/faturas-venda/nova");
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Erro ao guardar cliente.";
+      toast.error(msg);
     }
   }
   /* IGRP-CUSTOM-CODE-END */
@@ -243,152 +260,201 @@ function ClienteModal({
             name="modal-cliente-title"
             tag="modal-cliente-title"
           >
-            {isEditing ? `Editar — ${cliente?.desig}` : "Novo Cliente"}
+            {isEditing ? `Editar #${cliente?.desig}` : "Novo Cliente"}
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
 
-        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-          <div className="grid grid-cols-3 gap-3">
-            <IGRPInputText
-              name="codigo"
-              tag="input-cliente-codigo"
-              label="Código"
-              disabled
-              value={form.codigo ?? ""}
-            />
-            <IGRPInputText
-              name="nif"
-              tag="input-cliente-nif"
-              label="NIF"
-              value={form.nif ?? ""}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, nif: e.target.value }))
-              }
-            />
-            <IGRPSelect
-              name="tipoEntidade"
-              tag="select-cliente-tipoEntidade"
-              label="Tipo Cliente"
-              required
-              options={TIPOS_ENTIDADE.map((t) => ({
-                label: t.label,
-                value: t.value,
-              }))}
-              value={form.tipoEntidade}
-              onValueChange={(v) =>
-                setForm((p) => ({ ...p, tipoEntidade: v as TipoEntidade }))
-              }
-            />
-            <div className="col-span-2">
+        <div className="p-6 max-h-[65vh] overflow-y-auto">
+          <div className="flex gap-6">
+            {/* Photo section */}
+            <div className="flex flex-col items-start gap-3 w-40 flex-shrink-0">
+              <p className="text-sm font-medium text-gray-700">Foto</p>
+              <div className="relative w-40 h-44 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                {fotoPreview ? (
+                  <>
+                    {/* biome-ignore lint/performance/noImgElement: local preview */}
+                    <img
+                      src={fotoPreview}
+                      alt="Foto"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full shadow text-xs text-gray-500 hover:text-red-500 flex items-center justify-center"
+                      onClick={() => setFotoPreview(null)}
+                    >
+                      ×
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-gray-400 text-xs font-medium">
+                    Foto
+                  </span>
+                )}
+              </div>
+              <label className="cursor-pointer w-full">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleFotoChange}
+                />
+                <span className="inline-flex items-center gap-1.5 w-full justify-center rounded-lg bg-[#3579f6] px-3 py-2 text-xs font-medium text-white hover:bg-[#2b65d4] transition-colors">
+                  📷 Selecione a Photo
+                </span>
+              </label>
+            </div>
+
+            {/* Form fields */}
+            <div className="flex-1 space-y-4 min-w-0">
+              <div className="grid grid-cols-3 gap-3">
+                <IGRPInputText
+                  name="codigo"
+                  tag="input-cliente-codigo"
+                  label="Código"
+                  disabled
+                  value={form.codigo ?? ""}
+                />
+                <IGRPInputText
+                  name="nif"
+                  tag="input-cliente-nif"
+                  label="NIF"
+                  value={form.nif ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, nif: e.target.value }))
+                  }
+                />
+                <IGRPSelect
+                  name="tipoEntidade"
+                  tag="select-cliente-tipoEntidade"
+                  label="Tipo Cliente"
+                  required
+                  options={TIPOS_ENTIDADE.map((t) => ({
+                    label: t.label,
+                    value: t.value,
+                  }))}
+                  value={form.tipoEntidade}
+                  onValueChange={(v) =>
+                    setForm((p) => ({ ...p, tipoEntidade: v as TipoEntidade }))
+                  }
+                />
+                <div className="col-span-2">
+                  <IGRPInputText
+                    name="nome"
+                    tag="input-cliente-nome"
+                    label="Nome"
+                    required
+                    value={form.desig}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, desig: e.target.value }))
+                    }
+                  />
+                </div>
+                <IGRPInputText
+                  name="telefone"
+                  tag="input-cliente-telefone"
+                  label="Telemóvel"
+                  placeholder="Telefone..."
+                  value={form.telefone ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, telefone: e.target.value }))
+                  }
+                />
+              </div>
+
               <IGRPInputText
-                name="nome"
-                tag="input-cliente-nome"
-                label="Nome"
-                required
-                value={form.desig}
+                name="email"
+                tag="input-cliente-email"
+                label="Email"
+                type="email"
+                value={form.email ?? ""}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, desig: e.target.value }))
+                  setForm((p) => ({ ...p, email: e.target.value }))
+                }
+              />
+
+              <IGRPInputText
+                name="pessoaContacto"
+                tag="input-cliente-pessoaContacto"
+                label="Pessoa de Contacto"
+                placeholder="Informações de pessoa de contacto..."
+                value={form.pessoaContacto ?? ""}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, pessoaContacto: e.target.value }))
+                }
+              />
+
+              <IGRPTextarea
+                name="descricao"
+                tag="textarea-cliente-descricao"
+                label="Descrição"
+                placeholder="Descr..."
+                rows={2}
+                value={form.descricao ?? ""}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, descricao: e.target.value }))
+                }
+              />
+
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
+                  📍 Localidade/Morada
+                </p>
+                <div className="grid grid-cols-4 gap-3">
+                  <IGRPSelect
+                    name="ilha"
+                    tag="select-cliente-ilha"
+                    label="Ilha"
+                    options={ILHAS.map((i) => ({ label: i, value: i }))}
+                    value={form.ilha ?? "SANTIAGO"}
+                    onValueChange={(v) =>
+                      setForm((p) => ({ ...p, ilha: v, conselho: undefined }))
+                    }
+                  />
+                  <IGRPSelect
+                    name="conselho"
+                    tag="select-cliente-conselho"
+                    label="Conselho"
+                    placeholder="Selecionar conselho…"
+                    options={conselhos.map((c) => ({ label: c, value: c }))}
+                    value={form.conselho || undefined}
+                    onValueChange={(v) =>
+                      setForm((p) => ({ ...p, conselho: v }))
+                    }
+                  />
+                  <IGRPInputText
+                    name="freguesia"
+                    tag="input-cliente-freguesia"
+                    label="Freguesia"
+                    value={form.freguesia ?? ""}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, freguesia: e.target.value }))
+                    }
+                  />
+                  <IGRPInputText
+                    name="localidade"
+                    tag="input-cliente-localidade"
+                    label="Localidade"
+                    value={form.localidade ?? ""}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, localidade: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <IGRPInputText
+                name="endereco"
+                tag="input-cliente-endereco"
+                label="Endereço"
+                required
+                value={form.endereco ?? ""}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, endereco: e.target.value }))
                 }
               />
             </div>
-            <IGRPInputText
-              name="telefone"
-              tag="input-cliente-telefone"
-              label="Telemóvel"
-              placeholder="Telefone..."
-              value={form.telefone ?? ""}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, telefone: e.target.value }))
-              }
-            />
           </div>
-
-          <IGRPInputText
-            name="email"
-            tag="input-cliente-email"
-            label="Email"
-            type="email"
-            value={form.email ?? ""}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, email: e.target.value }))
-            }
-          />
-
-          <IGRPInputText
-            name="pessoaContacto"
-            tag="input-cliente-pessoaContacto"
-            label="Pessoa de Contacto"
-            placeholder="Informações de pessoa de contacto..."
-            value={form.pessoaContacto ?? ""}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, pessoaContacto: e.target.value }))
-            }
-          />
-
-          <IGRPTextarea
-            name="descricao"
-            tag="textarea-cliente-descricao"
-            label="Descrição"
-            placeholder="Descr..."
-            rows={2}
-            value={form.descricao ?? ""}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, descricao: e.target.value }))
-            }
-          />
-
-          <div className="grid grid-cols-4 gap-3">
-            <IGRPSelect
-              name="ilha"
-              tag="select-cliente-ilha"
-              label="Ilha"
-              options={ILHAS.map((i) => ({ label: i, value: i }))}
-              value={form.ilha ?? "SANTIAGO"}
-              onValueChange={(v) =>
-                setForm((p) => ({ ...p, ilha: v, conselho: undefined }))
-              }
-            />
-            <IGRPSelect
-              name="conselho"
-              tag="select-cliente-conselho"
-              label="Conselho"
-              placeholder="Selecionar conselho…"
-              options={conselhos.map((c) => ({ label: c, value: c }))}
-              value={form.conselho || undefined}
-              onValueChange={(v) =>
-                setForm((p) => ({ ...p, conselho: v }))
-              }
-            />
-            <IGRPInputText
-              name="freguesia"
-              tag="input-cliente-freguesia"
-              label="Freguesia"
-              value={form.freguesia ?? ""}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, freguesia: e.target.value }))
-              }
-            />
-            <IGRPInputText
-              name="localidade"
-              tag="input-cliente-localidade"
-              label="Localidade"
-              value={form.localidade ?? ""}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, localidade: e.target.value }))
-              }
-            />
-          </div>
-
-          <IGRPInputText
-            name="endereco"
-            tag="input-cliente-endereco"
-            label="Endereço"
-            required
-            value={form.endereco ?? ""}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, endereco: e.target.value }))
-            }
-          />
         </div>
 
         <IGRPModalDialogFooter>
@@ -405,6 +471,7 @@ function ClienteModal({
             tag="btn-guardar-cliente"
             loading={saving}
             loadingText="A guardar…"
+            disabled={!form.desig.trim()}
             onClick={handleSave}
           >
             Guardar
@@ -457,12 +524,20 @@ function FornecedorModal({
   const conselhos = CONSELHOS[form.ilha ?? "SANTIAGO"] ?? [];
 
   async function handleSave() {
-    if (isEditing && fornecedor?.id) {
-      await atualizar.mutateAsync({ id: fornecedor.id, data: form });
-    } else {
-      await criar.mutateAsync(form);
+    try {
+      if (isEditing && fornecedor?.id) {
+        await atualizar.mutateAsync({ id: fornecedor.id, data: form });
+        toast.success(`Fornecedor "${form.desig}" atualizado com sucesso!`);
+      } else {
+        await criar.mutateAsync(form);
+        toast.success(`Fornecedor "${form.desig}" criado com sucesso!`);
+      }
+      onClose();
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Erro ao guardar fornecedor.";
+      toast.error(msg);
     }
-    onClose();
   }
   /* IGRP-CUSTOM-CODE-END */
 
@@ -474,7 +549,7 @@ function FornecedorModal({
             name="modal-fornecedor-title"
             tag="modal-fornecedor-title"
           >
-            {isEditing ? `Editar — ${fornecedor?.desig}` : "Novo Fornecedor"}
+            {isEditing ? `Editar #${fornecedor?.desig}` : "Novo Fornecedor"}
           </IGRPModalDialogTitle>
         </IGRPModalDialogHeader>
 
@@ -652,12 +727,20 @@ function ProdutoModal({
   const saving = criar.isPending || atualizar.isPending;
 
   async function handleSave() {
-    if (isEditing && produto?.id) {
-      await atualizar.mutateAsync({ id: produto.id, data: form });
-    } else {
-      await criar.mutateAsync(form);
+    try {
+      if (isEditing && produto?.id) {
+        await atualizar.mutateAsync({ id: produto.id, data: form });
+        toast.success(`Produto "${form.desig}" atualizado com sucesso!`);
+      } else {
+        await criar.mutateAsync(form);
+        toast.success(`Produto "${form.desig}" criado com sucesso!`);
+      }
+      onClose();
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Erro ao guardar produto.";
+      toast.error(msg);
     }
-    onClose();
   }
   /* IGRP-CUSTOM-CODE-END */
 
