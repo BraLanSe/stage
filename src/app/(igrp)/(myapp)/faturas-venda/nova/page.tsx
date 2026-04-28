@@ -97,8 +97,12 @@ export default function NovaFaturaVendaPage() {
     queryKey: ["parametrizacao", "series"],
     queryFn: () => parametrizacaoApi.series.listar(),
   });
-  const tiposFatura = tiposFaturaData?.content ?? [];
-  const series = seriesData?.content ?? [];
+  const tiposFatura = Array.isArray(tiposFaturaData)
+    ? tiposFaturaData
+    : ((tiposFaturaData as unknown as { content?: typeof tiposFaturaData })?.content ?? []);
+  const series = Array.isArray(seriesData)
+    ? seriesData
+    : ((seriesData as unknown as { content?: typeof seriesData })?.content ?? []);
 
   const [selectedProdutos, setSelectedProdutos] = useState<Record<string, string>>({});
 

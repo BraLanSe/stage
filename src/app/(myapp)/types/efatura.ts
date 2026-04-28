@@ -197,8 +197,10 @@ export interface FaturaCompra extends AuditFields {
 
 export interface CriarFaturaCompraRequest {
   fornecedorId: number;
-  tipoDocumento: TipoDocumento;
-  serie?: string;
+  /** Integer ID from GET /parametrizacao/tipos-fatura (@NotNull in DTO) */
+  tipoFaturaId: number;
+  /** Integer ID from GET /parametrizacao/series (@NotNull in DTO) */
+  prSerieId: number;
   dataVencimento?: string;
   observacoes?: string;
   itens: Omit<

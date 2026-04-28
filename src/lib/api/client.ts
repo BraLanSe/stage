@@ -1,9 +1,9 @@
 // ────────────────────────────────────────────────────────────
-// eFatura — Base API Client → localhost:8080/api/v1
+// eFatura — Base API Client → localhost:8082/api/v1
 // ────────────────────────────────────────────────────────────
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
 
 export class ApiError extends Error {
   constructor(
@@ -35,6 +35,13 @@ export async function apiRequest<T>(
       body = await res.json();
     } catch {
       body = { message: res.statusText };
+    }
+    if (res.status === 400) {
+      const b = body as Record<string, unknown> | undefined;
+      console.error(
+        `[API 400] ${options?.method ?? "GET"} ${path}`,
+        b?.message ?? b?.errors ?? b,
+      );
     }
     const message =
       (body as { message?: string })?.message ?? `HTTP ${res.status}`;
