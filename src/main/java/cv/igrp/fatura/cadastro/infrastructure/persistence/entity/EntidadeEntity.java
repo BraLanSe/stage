@@ -1,5 +1,7 @@
 package cv.igrp.fatura.cadastro.infrastructure.persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrEnquadramentoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrMoedaEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
@@ -14,6 +16,7 @@ import lombok.*;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "entidade")
 public class EntidadeEntity extends AuditEntity {
 
@@ -32,8 +35,13 @@ public class EntidadeEntity extends AuditEntity {
     @Column(name = "descr")
     private String descr;
 
-    @NotBlank
-    @Column(name = "nif", nullable = false, unique = true, length = 20)
+    @Column(name = "abreviacao", length = 50)
+    private String abreviacao;
+
+    @Column(name = "registo_comercial", length = 50)
+    private String registoComercial;
+
+    @Column(name = "nif", length = 20)
     private String nif;
 
     @Column(name = "email")
@@ -48,10 +56,12 @@ public class EntidadeEntity extends AuditEntity {
     @Column(name = "geografia_id")
     private Integer geografiaId;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pr_enquadramento_id")
     private PrEnquadramentoEntity prEnquadramento;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pr_moeda_id")
     private PrMoedaEntity prMoeda;

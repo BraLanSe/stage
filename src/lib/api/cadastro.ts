@@ -267,11 +267,75 @@ export const cadastroApi = {
   },
 
   entidade: {
-    obter: () => apiRequest<Entidade>("/entidade"),
+    /**
+     * GET /entidade now returns a single entity (204 = none yet).
+     * Backend was returning List<EntidadeEntity> — we handle both for safety.
+     */
+    obter: async (): Promise<Entidade | null> => {
+      const raw = await apiRequest<unknown>("/entidade");
+      if (!raw) return null;
+      // biome-ignore lint/suspicious/noExplicitAny: raw backend response
+      const dto: any = Array.isArray(raw) ? raw[0] : raw;
+      if (!dto) return null;
+      return fromEntidadeDTO(dto);
+    },
+
+    /**
+     * Backend EntidadeDTO expects `desig` (not `nome`).
+     * Always PUT — backend accepts both POST and PUT (create-or-update).
+     */
     atualizar: (data: Partial<Entidade>) =>
       apiRequest<Entidade>("/entidade", {
         method: "PUT",
-        body: JSON.stringify(sanitize(data as Record<string, unknown>)),
+        body: JSON.stringify(toEntidadeDTO(data)),
       }),
   },
 };
+
+// ── Entidade mappers ──────────────────────────────────────────
+
+/**
+ * Maps frontend Entidade → backend EntidadeDTO.
+ * Key cast: `nome` → `desig` (Spring @NotBlank field).
+ */
+function toEntidadeDTO(data: Partial<Entidade>): Record<string, unknown> {
+  const d = data as Record<string, unknown>;
+  return sanitize({
+    id: d.id,
+    desig: (d.nome as string | undefined) || (d.desig as string | undefined),
+    nif: d.nif,
+    email: d.email,
+    telefone: d.telefone,
+    endereco: d.endereco,
+    abreviacao: d.abreviacao,
+    registoComercial: d.registoComercial,
+    estado: "ATIVO",
+  });
+}
+
+/** Maps backend EntidadeEntity JSON → frontend Entidade. */
+// biome-ignore lint/suspicious/noExplicitAny: raw backend DTO
+function fromEntidadeDTO(dto: any): Entidade {
+  return {
+    id: dto.id,
+    codigo: dto.codigo,
+    nome: dto.desig ?? "",
+    abreviacao: dto.abreviacao,
+    nif: dto.nif,
+    email: dto.email,
+    telefone: dto.telefone,
+    registoComercial: dto.registoComercial,
+    endereco: dto.endereco,
+    enquadramento: dto.prEnquadramento?.codigo ?? dto.enquadramento,
+    pais: undefined,
+    logoUrl: undefined,
+    ilha: undefined,
+    conselho: undefined,
+    freguesia: undefined,
+    localidade: undefined,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    createdBy: dto.createdBy,
+    lastModifiedBy: dto.lastModifiedBy,
+  };
+}

@@ -120,6 +120,7 @@ export default function EmpresaPage() {
   useEffect(() => {
     if (entidade) {
       setForm({
+        id: entidade.id,
         nome: entidade.nome ?? "",
         abreviacao: entidade.abreviacao ?? "",
         nif: entidade.nif ?? "",

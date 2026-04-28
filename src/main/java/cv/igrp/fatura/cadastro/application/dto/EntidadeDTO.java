@@ -12,7 +12,7 @@ public class EntidadeDTO {
 
     private Integer id;
 
-    @NotBlank
+    /** Auto-generated if blank — do not mark @NotBlank here. */
     private String codigo;
 
     @NotBlank
@@ -20,7 +20,10 @@ public class EntidadeDTO {
 
     private String descr;
 
-    @NotBlank
+    private String abreviacao;
+
+    private String registoComercial;
+
     private String nif;
 
     private String email;
