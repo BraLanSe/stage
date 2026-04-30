@@ -63,9 +63,8 @@ function n(v: number | undefined | null): number {
   return Number.isNaN(x) ? 0 : x;
 }
 
-function calcLinha(qty: number, unit: number, iva: number): number {
-  const valorBruto = round2(n(qty) * n(unit));
-  return round2(valorBruto + round2(valorBruto * (n(iva) / 100)));
+function calcLinha(qty: number, priceTTC: number): number {
+  return round2(n(qty) * n(priceTTC));
 }
 
 function formatCVE(v: number) {
@@ -121,20 +120,19 @@ export default function NovaFaturaCompraPage() {
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
   const itens = watch("itens");
 
-  const valorIliquido = round2(
+  const valorTotal = round2(
     itens.reduce(
-      (acc, item) =>
-        acc + round2(n(item?.quantidade) * n(item?.precoUnitario)),
+      (acc, item) => acc + round2(n(item?.quantidade) * n(item?.precoUnitario)),
       0,
     ),
   );
-  const valorImposto = round2(
+  const valorIliquido = round2(
     itens.reduce((acc, item) => {
-      const base = round2(n(item?.quantidade) * n(item?.precoUnitario));
-      return acc + round2(base * (n(item?.percentagemIva) / 100));
+      const ttc = round2(n(item?.quantidade) * n(item?.precoUnitario));
+      return acc + round2(ttc / (1 + n(item?.percentagemIva) / 100));
     }, 0),
   );
-  const valorTotal = round2(valorIliquido + valorImposto);
+  const valorImposto = round2(valorTotal - valorIliquido);
 
   async function onSubmit(values: FormValues) {
     try {
@@ -149,7 +147,7 @@ export default function NovaFaturaCompraPage() {
             desig: descricao,
             descricao,
             quantidade,
-            precoUnitario,
+            precoUnitario: round2(precoUnitario / (1 + percentagemIva / 100)),
             percentagemIva,
           }),
         ),
@@ -344,7 +342,7 @@ export default function NovaFaturaCompraPage() {
                       Qtd.
                     </IGRPTableHeadPrimitive>
                     <IGRPTableHeadPrimitive className="w-32">
-                      Preço Unit.
+                      Preço Unit. (c/ IVA)
                     </IGRPTableHeadPrimitive>
                     <IGRPTableHeadPrimitive className="w-24">
                       IVA %
@@ -359,11 +357,7 @@ export default function NovaFaturaCompraPage() {
                   {fields.map((field, i) => {
                     const item = itens[i];
                     const linhaTotal = item
-                      ? calcLinha(
-                          item.quantidade ?? 0,
-                          item.precoUnitario ?? 0,
-                          item.percentagemIva ?? 15,
-                        )
+                      ? calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0)
                       : 0;
                     return (
                       <IGRPTableRowPrimitive key={field.id}>
