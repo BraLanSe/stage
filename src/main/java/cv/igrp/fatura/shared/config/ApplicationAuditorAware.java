@@ -4,10 +4,12 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Component;
 
+@Component("applicationAuditorAware")
 public class ApplicationAuditorAware implements AuditorAware<String> {
 
   @Value("${spring.profiles.active}")
@@ -28,7 +30,11 @@ public class ApplicationAuditorAware implements AuditorAware<String> {
     public String getPreferredUsername() {
 
     if ("development".equals(activeProfile) || "staging".equals(activeProfile)) {
-    return "";
+      var auth = SecurityContextHolder.getContext().getAuthentication();
+      if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+        return auth.getName();
+      }
+      return "dev";
     }
 
     var authentication = SecurityContextHolder.getContext().getAuthentication();

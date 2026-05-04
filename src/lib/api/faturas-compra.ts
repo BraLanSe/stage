@@ -75,7 +75,6 @@ export const faturasCompraApi = {
 
   criar: (data: CriarFaturaCompraRequest) => {
     const dto = toFaturaCompraDTO(data);
-    console.log("SENDING JSON (compra):", JSON.stringify(dto, null, 2));
     return apiRequest<FaturaCompra>(BASE, {
       method: "POST",
       body: JSON.stringify(dto),

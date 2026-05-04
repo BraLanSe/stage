@@ -62,7 +62,6 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
     prSerieId: data.prSerieId,
     dtFaturacao: today,
     clienteId: data.clienteId,
-    utilizador: "admin",
     valorIliquido,
     valorImposto,
     valorFatura,
@@ -88,7 +87,6 @@ export const faturasVendaApi = {
 
   criar: (data: CriarFaturaVendaRequest) => {
     const dto = toFaturaVendaDTO(data);
-    console.log("SENDING JSON:", JSON.stringify(dto, null, 2));
     return apiRequest<FaturaVenda>(BASE, {
       method: "POST",
       body: JSON.stringify(dto),

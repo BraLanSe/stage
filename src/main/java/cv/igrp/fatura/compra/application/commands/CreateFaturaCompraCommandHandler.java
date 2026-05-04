@@ -11,6 +11,7 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFat
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrImpostoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrUnidadeRepository;
+import cv.igrp.fatura.shared.config.ApplicationAuditorAware;
 import cv.igrp.fatura.shared.domain.exceptions.IgrpResponseStatusException;
 import cv.igrp.fatura.compra.application.dto.*;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.*;
@@ -43,6 +44,7 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
     private final PrImpostoRepository impostoRepo;
     private final PrUnidadeRepository unidadeRepo;
     private final ProdutoRepository produtoRepo;
+    private final ApplicationAuditorAware auditorAware;
 
     @Override
     @Transactional
@@ -75,7 +77,7 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         fatura.setPrSerie(serie);
         fatura.setTermCondicoes(dto.getTermCondicoes());
         fatura.setNota(dto.getNota());
-        fatura.setUtilizador("system");
+        fatura.setUtilizador(auditorAware.getPreferredUsername());
         fatura.setDescontoFinanceiro(BigDecimal.ZERO);
         fatura.setDescontoComercial(BigDecimal.ZERO);
         fatura.setValorIliquido(BigDecimal.ZERO);
