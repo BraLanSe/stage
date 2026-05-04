@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import cv.igrp.fatura.shared.util.FaturaItemCalculo;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -78,27 +80,28 @@ public class FaturaCompraController {
                     item.setDescr(itemDto.getDescr());
                     BigDecimal qty = itemDto.getQuantidade() != null ? itemDto.getQuantidade() : BigDecimal.ONE;
                     BigDecimal preco = itemDto.getPrecoUnitario() != null ? itemDto.getPrecoUnitario() : BigDecimal.ZERO;
-                    BigDecimal iva = itemDto.getPercentagemIva() != null ? itemDto.getPercentagemIva() : BigDecimal.ZERO;
-                    BigDecimal bruto = qty.multiply(preco);
-                    BigDecimal imposto = bruto.multiply(iva).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-                    BigDecimal total = bruto.add(imposto);
+                    var calc = FaturaItemCalculo.calcular(qty, preco, null, itemDto.getPercentagemIva());
                     item.setQuantidade(qty);
                     item.setPrecoUnitario(preco);
-                    item.setValorBruto(bruto);
-                    item.setValorLiquido(bruto);
-                    item.setValorImposto(imposto);
-                    item.setValorTotal(total);
+                    item.setValorBruto(calc.valorBruto());
+                    item.setValorLiquido(calc.valorLiquido());
+                    item.setValorImposto(calc.valorImposto());
+                    item.setValorTotal(calc.valorTotal());
                     fatura.getItems().add(item);
                 }
                 BigDecimal valorIliquido = fatura.getItems().stream()
                         .map(FaturaCompraItemEntity::getValorBruto)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
                 BigDecimal valorImposto = fatura.getItems().stream()
                         .map(FaturaCompraItemEntity::getValorImposto)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal valorFatura = valorIliquido.add(valorImposto);
                 fatura.setValorIliquido(valorIliquido);
                 fatura.setValorImposto(valorImposto);
-                fatura.setValorFatura(valorIliquido.add(valorImposto));
+                fatura.setValorFatura(valorFatura);
+                fatura.setValorPorPagar(valorFatura);
             }
             return ResponseEntity.ok(faturaCompraRepo.save(fatura));
         }).orElse(ResponseEntity.notFound().build());

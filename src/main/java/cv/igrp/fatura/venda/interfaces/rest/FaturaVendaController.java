@@ -19,9 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import cv.igrp.fatura.shared.util.FaturaItemCalculo;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import java.util.List;
 
 @IgrpController
@@ -81,32 +82,30 @@ public class FaturaVendaController {
                     item.setCodigoArtigo(itemDto.getCodigoArtigo());
                     BigDecimal qty = itemDto.getQuantidade() != null ? itemDto.getQuantidade() : BigDecimal.ONE;
                     BigDecimal preco = itemDto.getPrecoUnitario() != null ? itemDto.getPrecoUnitario() : BigDecimal.ZERO;
-                    BigDecimal descPerc = itemDto.getDescontoComercialPerc() != null ? itemDto.getDescontoComercialPerc() : BigDecimal.ZERO;
-                    BigDecimal iva = itemDto.getPercentagemIva() != null ? itemDto.getPercentagemIva() : BigDecimal.ZERO;
-                    BigDecimal bruto = qty.multiply(preco);
-                    BigDecimal descValor = bruto.multiply(descPerc).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-                    BigDecimal liquido = bruto.subtract(descValor);
-                    BigDecimal imposto = liquido.multiply(iva).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-                    BigDecimal total = liquido.add(imposto);
+                    var calc = FaturaItemCalculo.calcular(qty, preco, itemDto.getDescontoComercialPerc(), itemDto.getPercentagemIva());
                     item.setQuantidade(qty);
                     item.setPrecoUnitario(preco);
-                    item.setDescontoComercialPerc(descPerc.compareTo(BigDecimal.ZERO) > 0 ? descPerc : null);
-                    item.setDescontoComercialValor(descValor.compareTo(BigDecimal.ZERO) > 0 ? descValor : null);
-                    item.setValorBruto(bruto);
-                    item.setValorLiquido(liquido);
-                    item.setValorImposto(imposto);
-                    item.setValorTotal(total);
+                    item.setDescontoComercialPerc(calc.descontoComercialValor().compareTo(BigDecimal.ZERO) > 0 ? itemDto.getDescontoComercialPerc() : null);
+                    item.setDescontoComercialValor(calc.descontoComercialValor().compareTo(BigDecimal.ZERO) > 0 ? calc.descontoComercialValor() : null);
+                    item.setValorBruto(calc.valorBruto());
+                    item.setValorLiquido(calc.valorLiquido());
+                    item.setValorImposto(calc.valorImposto());
+                    item.setValorTotal(calc.valorTotal());
                     fatura.getItems().add(item);
                 }
                 BigDecimal valorIliquido = fatura.getItems().stream()
                         .map(FaturaVendaItemEntity::getValorBruto)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
                 BigDecimal valorImposto = fatura.getItems().stream()
                         .map(FaturaVendaItemEntity::getValorImposto)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal valorFatura = valorIliquido.add(valorImposto);
                 fatura.setValorIliquido(valorIliquido);
                 fatura.setValorImposto(valorImposto);
-                fatura.setValorFatura(valorIliquido.add(valorImposto));
+                fatura.setValorFatura(valorFatura);
+                fatura.setValorPorPagar(valorFatura);
             }
             return ResponseEntity.ok(faturaVendaRepo.save(fatura));
         }).orElse(ResponseEntity.notFound().build());
