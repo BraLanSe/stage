@@ -3,6 +3,7 @@ package cv.igrp.fatura.compra.interfaces.rest;
 import cv.igrp.framework.stereotype.IgrpController;
 import cv.igrp.framework.core.domain.CommandBus;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.FornecedorRepository;
+import cv.igrp.fatura.compra.application.commands.ConfirmarFaturaCompraCommand;
 import cv.igrp.fatura.compra.application.commands.CreateFaturaCompraCommand;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraAtualizarDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraCreateDTO;
@@ -110,10 +111,7 @@ public class FaturaCompraController {
     @PutMapping("/{id}/confirmar")
     @Operation(summary = "Confirmar fatura de compra")
     public ResponseEntity<FaturaCompraEntity> confirmar(@PathVariable Integer id) {
-        return faturaCompraRepo.findById(id).map(f -> {
-            f.setEstado("CONFIRMADO");
-            return ResponseEntity.ok(faturaCompraRepo.save(f));
-        }).orElse(ResponseEntity.notFound().build());
+        return commandBus.send(new ConfirmarFaturaCompraCommand(id));
     }
 
     @PutMapping("/{id}/anular")

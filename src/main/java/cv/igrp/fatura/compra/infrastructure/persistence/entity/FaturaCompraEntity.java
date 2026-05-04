@@ -55,6 +55,9 @@ public class FaturaCompraEntity extends AuditEntity {
     @Column(name = "estado", nullable = false, length = 20)
     private String estado = "RASCUNHO";
 
+    @Column(name = "dt_confirmacao")
+    private LocalDate dtConfirmacao;
+
     @NotNull
     @Column(name = "pago", nullable = false)
     private Boolean pago = false;

@@ -45,5 +45,11 @@ next-env.d.ts
 # docker
 # docker-compose.yml
 node_modules
-node_modules
-node_modules
+
+# local data and crash logs
+data/
+hs_err_pid*.log
+replay_pid*.log
+
+# claude code
+.claude/

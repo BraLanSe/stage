@@ -63,9 +63,8 @@ public class SecurityConfig {
           return configuration;
         }));
 
-        if ("development".equals(activeProfile) || "staging".equals(activeProfile)) {
-            // Disable security in development mode
-            http.csrf(AbstractHttpConfigurer::disable); // Disable CSRF protection
+        if ("development".equals(activeProfile)) {
+            http.csrf(AbstractHttpConfigurer::disable);
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }
