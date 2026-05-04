@@ -10,35 +10,49 @@ public final class FaturaItemCalculo {
     public record Resultado(
         BigDecimal valorBruto,
         BigDecimal descontoComercialValor,
+        BigDecimal descontoFinanceiroValor,
         BigDecimal valorLiquido,
         BigDecimal valorImposto,
         BigDecimal valorTotal
     ) {}
 
-    /**
-     * Calculates line-item monetary values from TTC (tax-inclusive) unit price.
-     * IVA is applied to valorLiquido (after discount), consistent with the create handler.
-     */
     public static Resultado calcular(
             BigDecimal quantidade,
             BigDecimal precoUnitario,
             BigDecimal descontoComercialPerc,
             BigDecimal percentagemIva) {
+        return calcular(quantidade, precoUnitario, descontoComercialPerc, null, percentagemIva);
+    }
+
+    /**
+     * Full calculation with both commercial and financial discounts.
+     * Financial discount is applied after commercial discount, on the remaining base.
+     */
+    public static Resultado calcular(
+            BigDecimal quantidade,
+            BigDecimal precoUnitario,
+            BigDecimal descontoComercialPerc,
+            BigDecimal descontoFinanceiroPerc,
+            BigDecimal percentagemIva) {
 
         BigDecimal qty    = nvl(quantidade, BigDecimal.ONE);
         BigDecimal preco  = nvl(precoUnitario, BigDecimal.ZERO);
-        BigDecimal desc   = nvl(descontoComercialPerc, BigDecimal.ZERO);
+        BigDecimal descC  = nvl(descontoComercialPerc, BigDecimal.ZERO);
+        BigDecimal descF  = nvl(descontoFinanceiroPerc, BigDecimal.ZERO);
         BigDecimal iva    = nvl(percentagemIva, BigDecimal.ZERO);
 
-        BigDecimal bruto    = qty.multiply(preco).setScale(4, RoundingMode.HALF_UP);
-        BigDecimal descVal  = bruto.multiply(desc)
-                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-        BigDecimal liquido  = bruto.subtract(descVal).setScale(4, RoundingMode.HALF_UP);
-        BigDecimal imposto  = liquido.multiply(iva)
-                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-        BigDecimal total    = liquido.add(imposto).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal bruto       = qty.multiply(preco).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal descCVal    = bruto.multiply(descC)
+                                      .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+        BigDecimal afterComercial = bruto.subtract(descCVal);
+        BigDecimal descFVal    = afterComercial.multiply(descF)
+                                               .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+        BigDecimal liquido     = afterComercial.subtract(descFVal).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal imposto     = liquido.multiply(iva)
+                                        .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+        BigDecimal total       = liquido.add(imposto).setScale(4, RoundingMode.HALF_UP);
 
-        return new Resultado(bruto, descVal, liquido, imposto, total);
+        return new Resultado(bruto, descCVal, descFVal, liquido, imposto, total);
     }
 
     private static BigDecimal nvl(BigDecimal v, BigDecimal def) {

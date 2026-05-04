@@ -58,9 +58,22 @@ function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
+function round4(v: number): number {
+  return Math.round(v * 10000) / 10000;
+}
+
 function n(v: number | undefined | null): number {
   const x = Number(v);
   return Number.isNaN(x) ? 0 : x;
+}
+
+/** Mirror of FaturaItemCalculo.calcular() — no commercial discount in the create flow */
+function calcItem(qty: number, priceTTC: number, ivaPerc: number) {
+  const htUnit = round2(priceTTC / (1 + ivaPerc / 100)); // matches what onSubmit sends
+  const bruto   = round4(qty * htUnit);
+  const imposto = round4(bruto * ivaPerc / 100);
+  const total   = round4(bruto + imposto);
+  return { bruto, imposto, total };
 }
 
 function calcLinha(qty: number, priceTTC: number): number {
@@ -123,19 +136,23 @@ export default function NovaFaturaVendaPage() {
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
   const watchedItens = watch("itens") || [];
 
-  const valorTotal = round2(
-    watchedItens.reduce(
-      (acc, item) => acc + round2(n(item?.quantidade) * n(item?.precoUnitario)),
-      0,
-    ),
+  // Summary mirrors FaturaItemCalculo.calcular(): HT unit price is rounded to 2dp before
+  // being sent to the backend, so display must use the same htUnit to avoid cent divergence.
+  const { valorIliquido, valorImposto, valorTotal } = watchedItens.reduce(
+    (acc, item) => {
+      const { bruto, imposto, total } = calcItem(
+        n(item?.quantidade),
+        n(item?.precoUnitario),
+        n(item?.percentagemIva),
+      );
+      return {
+        valorIliquido: acc.valorIliquido + bruto,
+        valorImposto:  acc.valorImposto  + imposto,
+        valorTotal:    acc.valorTotal    + total,
+      };
+    },
+    { valorIliquido: 0, valorImposto: 0, valorTotal: 0 },
   );
-  const valorIliquido = round2(
-    watchedItens.reduce((acc, item) => {
-      const ttc = round2(n(item?.quantidade) * n(item?.precoUnitario));
-      return acc + round2(ttc / (1 + n(item?.percentagemIva) / 100));
-    }, 0),
-  );
-  const valorImposto = round2(valorTotal - valorIliquido);
 
   async function onSubmit(values: FormValues) {
     try {

@@ -8,9 +8,11 @@ import cv.igrp.fatura.compra.application.commands.CreateFaturaCompraCommand;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraAtualizarDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraCreateDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraItemAtualizarDTO;
+import cv.igrp.fatura.compra.application.dto.FaturaCompraReadDTO;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
+import cv.igrp.fatura.shared.util.FaturaItemCalculo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,8 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import cv.igrp.fatura.shared.util.FaturaItemCalculo;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,32 +38,34 @@ public class FaturaCompraController {
 
     @GetMapping
     @Operation(summary = "Listar faturas de compra")
-    public ResponseEntity<List<FaturaCompraEntity>> list() {
-        return ResponseEntity.ok(faturaCompraRepo.findAll());
+    public ResponseEntity<List<FaturaCompraReadDTO>> list() {
+        return ResponseEntity.ok(faturaCompraRepo.findAll().stream()
+                .map(FaturaCompraReadDTO::from)
+                .toList());
     }
 
     @PostMapping
     @Operation(summary = "Criar fatura de compra")
-    public ResponseEntity<FaturaCompraEntity> create(@RequestBody @Valid FaturaCompraCreateDTO dto) {
-        return commandBus.send(new CreateFaturaCompraCommand(dto));
+    public ResponseEntity<FaturaCompraReadDTO> create(@RequestBody @Valid FaturaCompraCreateDTO dto) {
+        return toDto(commandBus.send(new CreateFaturaCompraCommand(dto)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obter fatura de compra por ID")
-    public ResponseEntity<FaturaCompraEntity> getById(@PathVariable Integer id) {
+    public ResponseEntity<FaturaCompraReadDTO> getById(@PathVariable Integer id) {
         return faturaCompraRepo.findById(id)
-                .map(ResponseEntity::ok)
+                .map(entity -> ResponseEntity.ok(FaturaCompraReadDTO.from(entity)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @Transactional
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar fatura de compra (apenas RASCUNHO)")
-    public ResponseEntity<FaturaCompraEntity> update(@PathVariable Integer id,
-                                                     @RequestBody FaturaCompraAtualizarDTO dto) {
+    public ResponseEntity<FaturaCompraReadDTO> update(@PathVariable Integer id,
+                                                      @RequestBody FaturaCompraAtualizarDTO dto) {
         return faturaCompraRepo.findById(id).map(fatura -> {
             if ("CONFIRMADO".equals(fatura.getEstado())) {
-                return ResponseEntity.status(422).<FaturaCompraEntity>build();
+                return ResponseEntity.status(422).<FaturaCompraReadDTO>build();
             }
             if (dto.getFornecedorId() != null) {
                 fornecedorRepo.findById(dto.getFornecedorId()).ifPresent(fatura::setFornecedor);
@@ -104,22 +106,28 @@ public class FaturaCompraController {
                 fatura.setValorFatura(valorFatura);
                 fatura.setValorPorPagar(valorFatura);
             }
-            return ResponseEntity.ok(faturaCompraRepo.save(fatura));
+            return ResponseEntity.ok(FaturaCompraReadDTO.from(faturaCompraRepo.save(fatura)));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}/confirmar")
     @Operation(summary = "Confirmar fatura de compra")
-    public ResponseEntity<FaturaCompraEntity> confirmar(@PathVariable Integer id) {
-        return commandBus.send(new ConfirmarFaturaCompraCommand(id));
+    public ResponseEntity<FaturaCompraReadDTO> confirmar(@PathVariable Integer id) {
+        return toDto(commandBus.send(new ConfirmarFaturaCompraCommand(id)));
+    }
+
+    private static ResponseEntity<FaturaCompraReadDTO> toDto(ResponseEntity<FaturaCompraEntity> result) {
+        FaturaCompraEntity body = result.getBody();
+        if (body == null) return ResponseEntity.status(result.getStatusCode()).build();
+        return ResponseEntity.status(result.getStatusCode()).body(FaturaCompraReadDTO.from(body));
     }
 
     @PutMapping("/{id}/anular")
     @Operation(summary = "Anular fatura de compra")
-    public ResponseEntity<FaturaCompraEntity> anular(@PathVariable Integer id) {
+    public ResponseEntity<FaturaCompraReadDTO> anular(@PathVariable Integer id) {
         return faturaCompraRepo.findById(id).map(f -> {
             f.setEstado("ANULADO");
-            return ResponseEntity.ok(faturaCompraRepo.save(f));
+            return ResponseEntity.ok(FaturaCompraReadDTO.from(faturaCompraRepo.save(f)));
         }).orElse(ResponseEntity.notFound().build());
     }
 }

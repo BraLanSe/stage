@@ -13,6 +13,7 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSer
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrUnidadeRepository;
 import cv.igrp.fatura.shared.config.ApplicationAuditorAware;
 import cv.igrp.fatura.shared.domain.exceptions.IgrpResponseStatusException;
+import cv.igrp.fatura.shared.util.FaturaItemCalculo;
 import cv.igrp.fatura.venda.application.dto.*;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.*;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.*;
@@ -111,27 +112,20 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
                 item.setContaGlId(itemDto.getContaGlId());
             }
 
-            // Calculate values
-            BigDecimal valorBruto = itemDto.getQuantidade().multiply(itemDto.getPrecoUnitario()).setScale(4, RoundingMode.HALF_UP);
-            item.setValorBruto(valorBruto);
-
-            BigDecimal descontoComercialValor = BigDecimal.ZERO;
-            if (itemDto.getDescontoComercialPerc() != null && itemDto.getDescontoComercialPerc().compareTo(BigDecimal.ZERO) > 0) {
-                descontoComercialValor = valorBruto.multiply(itemDto.getDescontoComercialPerc()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+            // Calculate values via shared utility
+            var calc = FaturaItemCalculo.calcular(
+                    itemDto.getQuantidade(), itemDto.getPrecoUnitario(),
+                    itemDto.getDescontoComercialPerc(), itemDto.getDescontoFinanceiroPerc(), null);
+            item.setValorBruto(calc.valorBruto());
+            if (calc.descontoComercialValor().compareTo(BigDecimal.ZERO) > 0) {
                 item.setDescontoComercialPerc(itemDto.getDescontoComercialPerc());
-                item.setDescontoComercialValor(descontoComercialValor);
+                item.setDescontoComercialValor(calc.descontoComercialValor());
             }
-
-            BigDecimal descontoFinanceiroValor = BigDecimal.ZERO;
-            if (itemDto.getDescontoFinanceiroPerc() != null && itemDto.getDescontoFinanceiroPerc().compareTo(BigDecimal.ZERO) > 0) {
-                descontoFinanceiroValor = valorBruto.subtract(descontoComercialValor)
-                        .multiply(itemDto.getDescontoFinanceiroPerc()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+            if (calc.descontoFinanceiroValor().compareTo(BigDecimal.ZERO) > 0) {
                 item.setDescontoFinanceiroPerc(itemDto.getDescontoFinanceiroPerc());
-                item.setDescontoFinanceiroValor(descontoFinanceiroValor);
+                item.setDescontoFinanceiroValor(calc.descontoFinanceiroValor());
             }
-
-            BigDecimal valorLiquido = valorBruto.subtract(descontoComercialValor).subtract(descontoFinanceiroValor).setScale(4, RoundingMode.HALF_UP);
-            item.setValorLiquido(valorLiquido);
+            item.setValorLiquido(calc.valorLiquido());
 
             // Process taxes
             BigDecimal itemTotalImposto = BigDecimal.ZERO;
@@ -160,10 +154,10 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
             }
 
             item.setValorImposto(itemTotalImposto);
-            item.setValorTotal(valorLiquido.add(itemTotalImposto).setScale(4, RoundingMode.HALF_UP));
+            item.setValorTotal(calc.valorLiquido().add(itemTotalImposto).setScale(4, RoundingMode.HALF_UP));
 
             fatura.getItems().add(item);
-            totalIliquido = totalIliquido.add(valorBruto);
+            totalIliquido = totalIliquido.add(calc.valorBruto());
             totalImposto = totalImposto.add(itemTotalImposto);
         }
 
