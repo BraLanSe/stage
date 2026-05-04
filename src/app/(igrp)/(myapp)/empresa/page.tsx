@@ -57,6 +57,7 @@ const ENQUADRAMENTOS = [
   { value: "REGIME_SIMPLIFICADO", label: "Regime Simplificado" },
   { value: "ISENTO", label: "Isento" },
   { value: "PEQUENO_CONTRIBUINTE", label: "Pequeno Contribuinte" },
+  { value: "REMP", label: "REMP — Regime Especial Micro e Pequenas Empresas" },
 ];
 
 const PAISES = [
@@ -73,9 +74,8 @@ const MOEDAS = [
 
 function getTaxaIvaPadrao(enquadramento: string | undefined): number {
   if (!enquadramento) return 15;
-  if (enquadramento === "ISENTO" || enquadramento === "PEQUENO_CONTRIBUINTE") {
-    return 0;
-  }
+  if (enquadramento === "ISENTO" || enquadramento === "PEQUENO_CONTRIBUINTE") return 0;
+  if (enquadramento === "REMP") return 4;
   return 15;
 }
 
@@ -475,6 +475,10 @@ export default function EmpresaPage() {
                   form.enquadramento === "PEQUENO_CONTRIBUINTE" ? (
                     <p className="mt-1 text-xs text-amber-600">
                       Enquadramento isento — IVA automaticamente 0%.
+                    </p>
+                  ) : form.enquadramento === "REMP" ? (
+                    <p className="mt-1 text-xs text-emerald-600">
+                      Regime REMP — taxa reduzida de 4% aplicada automaticamente.
                     </p>
                   ) : form.enquadramento ? (
                     <p className="mt-1 text-xs text-[#3579f6]">

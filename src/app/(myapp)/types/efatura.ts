@@ -248,6 +248,14 @@ export interface MetodoPagamento {
   ativo: boolean;
 }
 
+export interface PrEnquadramento {
+  id?: number;
+  codigo: string;
+  desig: string;
+  descr?: string;
+  estado?: string;
+}
+
 // ── Cadastro ─────────────────────────────────────────────────
 
 export type TipoEntidade = "SINGULAR" | "COLETIVO";

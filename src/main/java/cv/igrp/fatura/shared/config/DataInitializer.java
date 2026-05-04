@@ -1,7 +1,9 @@
 package cv.igrp.fatura.shared.config;
 
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrEnquadramentoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaTipoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
+import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrEnquadramentoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +24,41 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataInitializer implements ApplicationRunner {
 
+    private final PrEnquadramentoRepository prEnquadramentoRepo;
     private final PrFaturaTipoRepository prFaturaTipoRepo;
     private final PrSerieRepository prSerieRepo;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        seedEnquadramentos();
         seedTiposFatura();
         seedSeries();
+    }
+
+    // ── pr_enquadramento ──────────────────────────────────────
+
+    private void seedEnquadramentos() {
+        if (prEnquadramentoRepo.count() > 0) {
+            log.debug("[DataInitializer] pr_enquadramento already seeded, skipping.");
+            return;
+        }
+
+        List.of(
+            new String[]{"CO",         "Contabilidade Organizada",                        null},
+            new String[]{"RS",         "Regime Simplificado",                             null},
+            new String[]{"ISENTO",     "Isento",                                          "Entidade isenta de IVA"},
+            new String[]{"PC",         "Pequeno Contribuinte",                            "Regime de pequeno contribuinte"},
+            new String[]{"REMP",       "Regime Especial das Micro e Pequenas Empresas",   "Taxa de IVA reduzida a 4%"}
+        ).forEach(row -> {
+            var e = new PrEnquadramentoEntity();
+            e.setCodigo(row[0]);
+            e.setDesig(row[1]);
+            e.setDescr(row[2]);
+            prEnquadramentoRepo.save(e);
+        });
+
+        log.info("[DataInitializer] Seeded {} enquadramentos.", prEnquadramentoRepo.count());
     }
 
     // ── pr_fatura_tipo ────────────────────────────────────────
