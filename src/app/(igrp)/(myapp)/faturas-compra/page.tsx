@@ -6,16 +6,14 @@ import {
   IGRPBadge,
   IGRPButton,
   IGRPContainer,
+  IGRPTable,
 } from "@igrp/igrp-framework-react-design-system";
 import Link from "next/link";
 import { useState } from "react";
-import type {
-  DocFiscalStatus,
-  EstadoFatura,
-  FaturaCompra,
-  PagamentoStatus,
-} from "@/app/(myapp)/types/efatura";
+import type { FaturaCompraReadDTO } from "@/app/(myapp)/types/efatura";
 import { useFaturasCompra } from "@/hooks/use-faturas-compra";
+
+// ── Helpers ──────────────────────────────────────────────────
 
 function formatCVE(value?: number) {
   if (value === undefined || value === null) return "—";
@@ -34,51 +32,7 @@ function formatDate(iso?: string) {
   });
 }
 
-function PagamentoBadge({ status }: { status?: PagamentoStatus }) {
-  if (!status) return null;
-  const styles: Record<PagamentoStatus, string> = {
-    NAO_PROCESSADO: "bg-amber-100 text-amber-800 border border-amber-300",
-    PROCESSADO: "bg-emerald-100 text-emerald-800 border border-emerald-300",
-    PARCIAL: "bg-blue-100 text-blue-800 border border-blue-300",
-  };
-  const labels: Record<PagamentoStatus, string> = {
-    NAO_PROCESSADO: "Não Processado",
-    PROCESSADO: "Processado",
-    PARCIAL: "Parcial",
-  };
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${styles[status]}`}
-    >
-      {labels[status]}
-    </span>
-  );
-}
-
-function DocFiscalBadge({ status }: { status?: DocFiscalStatus }) {
-  if (!status || status === "NAO_ENVIADO") return null;
-  const styles: Record<Exclude<DocFiscalStatus, "NAO_ENVIADO">, string> = {
-    VALIDADO: "bg-emerald-500 text-white",
-    RECUSADO: "bg-red-500 text-white",
-    PENDENTE: "bg-gray-400 text-white",
-  };
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles[status]}`}
-    >
-      {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
-  );
-}
-
-function EstadoBadge({ estado }: { estado?: EstadoFatura }) {
-  if (!estado) return null;
-  return (
-    <IGRPBadge color={estado === "CONFIRMADO" ? "success" : "secondary"}>
-      {estado === "CONFIRMADO" ? "Confirmado" : "Rascunho"}
-    </IGRPBadge>
-  );
-}
+// ── Ações Menu ───────────────────────────────────────────────
 
 function AcoesMenu({ id }: { id?: number }) {
   const [open, setOpen] = useState(false);
@@ -140,189 +94,7 @@ function AcoesMenu({ id }: { id?: number }) {
   );
 }
 
-function TableSkeleton() {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-sm">
-        <tbody>
-          {Array.from({ length: 6 }, (_, i) => (
-            <tr key={i} className="border-b border-gray-100">
-              <td className="px-3 py-3"><div className="mx-auto h-3.5 w-6 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-2 py-3"><div className="h-3.5 w-4 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="h-3.5 w-24 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="h-3.5 w-36 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="h-3.5 w-20 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="ml-auto h-3.5 w-24 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="ml-auto h-3.5 w-16 animate-pulse rounded bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="mx-auto h-5 w-20 animate-pulse rounded-full bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="mx-auto h-5 w-16 animate-pulse rounded-full bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="mx-auto h-5 w-16 animate-pulse rounded-full bg-gray-200" /></td>
-              <td className="px-3 py-3"><div className="mx-auto h-6 w-14 animate-pulse rounded bg-gray-200" /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function FaturasTable({ faturas }: { faturas: FaturaCompra[] }) {
-  if (faturas.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
-          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400" aria-hidden="true">
-            <rect x="8" y="4" width="32" height="40" rx="3" />
-            <path d="M16 16h16M16 22h16M16 28h10" />
-            <path d="M8 12l-4 4 4 4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-700">Nenhuma fatura de compra registada</p>
-          <p className="mt-1 text-xs text-gray-400">Comece por registar a sua primeira fatura de compra.</p>
-        </div>
-        <Link
-          href="/faturas-compra/nova"
-          className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-        >
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden="true">
-            <line x1="10" y1="5" x2="10" y2="15" /><line x1="5" y1="10" x2="15" y2="10" />
-          </svg>
-          Nova Fatura de Compra
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
-            <th className="w-10 px-3 py-2 text-center font-medium text-gray-500">
-              #
-            </th>
-            <th className="w-8 px-2 py-2">
-              <input type="checkbox" className="rounded border-gray-300" />
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-600">
-              Nº Documento
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-600">
-              Fornecedor
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-600">
-              Data Vencimento
-            </th>
-            <th className="px-3 py-2 text-right font-medium text-gray-600">
-              Valor da fatura
-            </th>
-            <th className="px-3 py-2 text-right font-medium text-gray-600">
-              Valor pago
-            </th>
-            <th className="px-3 py-2 text-center font-medium text-gray-600">
-              Pagamento
-            </th>
-            <th className="px-3 py-2 text-center font-medium text-gray-600">
-              Estado
-            </th>
-            <th className="px-3 py-2 text-center font-medium text-gray-600">
-              Doc. Fiscais Eletrónico
-            </th>
-            <th className="px-3 py-2 text-center font-medium text-gray-600">
-              Ações
-            </th>
-          </tr>
-          <tr className="border-b border-gray-200 bg-white">
-            <td className="px-3 py-1" />
-            <td className="px-2 py-1" />
-            <td className="px-3 py-1">
-              <input className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400" />
-            </td>
-            <td className="px-3 py-1">
-              <select className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none">
-                <option value=""></option>
-              </select>
-            </td>
-            <td className="px-3 py-1">
-              <div className="flex items-center rounded border border-gray-200 bg-white px-2 py-0.5">
-                <input
-                  type="date"
-                  className="w-full text-xs focus:outline-none"
-                />
-              </div>
-            </td>
-            <td className="px-3 py-1">
-              <input className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none" />
-            </td>
-            <td className="px-3 py-1">
-              <input className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none" />
-            </td>
-            <td className="px-3 py-1">
-              <select className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none">
-                <option value=""></option>
-              </select>
-            </td>
-            <td className="px-3 py-1" />
-            <td className="px-3 py-1">
-              <select className="w-full rounded border border-gray-200 px-2 py-0.5 text-xs focus:outline-none">
-                <option value=""></option>
-              </select>
-            </td>
-            <td className="px-3 py-1" />
-          </tr>
-        </thead>
-        <tbody>
-          {faturas.map((f, idx) => (
-            <tr
-              key={f.id}
-              className="border-b border-gray-100 hover:bg-gray-50"
-            >
-              <td className="px-3 py-2.5 text-center text-gray-500">
-                {idx + 1}
-              </td>
-              <td className="px-2 py-2.5">
-                <input type="checkbox" className="rounded border-gray-300" />
-              </td>
-              <td className="px-3 py-2.5">
-                <Link
-                  href={`/faturas-compra/${f.id}`}
-                  className="font-medium text-blue-600 hover:underline"
-                >
-                  {f.numero ?? `#${f.id}`}
-                </Link>
-              </td>
-              <td className="px-3 py-2.5 text-gray-700">
-                {f.fornecedorNome ?? `Fornecedor ${f.fornecedorId}`}
-              </td>
-              <td className="px-3 py-2.5 text-gray-600">
-                {formatDate(f.dataVencimento)}
-              </td>
-              <td className="px-3 py-2.5 text-right font-medium text-gray-800">
-                {formatCVE(f.total)}
-              </td>
-              <td className="px-3 py-2.5 text-right text-gray-600">
-                {formatCVE(0)}
-              </td>
-              <td className="px-3 py-2.5 text-center">
-                <PagamentoBadge status="NAO_PROCESSADO" />
-              </td>
-              <td className="px-3 py-2.5 text-center">
-                <EstadoBadge estado={f.estado} />
-              </td>
-              <td className="px-3 py-2.5 text-center">
-                <DocFiscalBadge status={undefined} />
-              </td>
-              <td className="px-3 py-2.5 text-center">
-                <AcoesMenu id={f.id} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+// ── Page ─────────────────────────────────────────────────────
 
 export default function FaturasCompraPage() {
   const [page, setPage] = useState(0);
@@ -331,6 +103,7 @@ export default function FaturasCompraPage() {
   const totalElements = data?.totalElements ?? 0;
   const from = totalElements === 0 ? 0 : page * 10 + 1;
   const to = Math.min(page * 10 + (data?.content.length ?? 0), totalElements);
+  const faturas = (data?.content ?? []) as FaturaCompraReadDTO[];
 
   return (
     <IGRPContainer id="faturas-compra" name="faturas-compra" tag="faturas-compra" className="flex flex-col gap-0 p-0">
@@ -390,20 +163,6 @@ export default function FaturasCompraPage() {
                 className="ml-1.5 w-32 bg-transparent text-xs focus:outline-none"
               />
             </div>
-            <div className="flex h-7 items-center rounded-full border border-gray-300 bg-white px-2.5 gap-1.5">
-              <svg
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-3.5 w-3.5 text-gray-500"
-                aria-hidden="true"
-              >
-                <rect x="3" y="4" width="14" height="13" rx="2" />
-                <path d="M7 2v3M13 2v3M3 9h14" />
-              </svg>
-              <span className="text-xs text-gray-400">▾</span>
-            </div>
             <div className="ml-auto flex items-center gap-1.5">
               <Link
                 href="/faturas-compra/nova"
@@ -439,38 +198,9 @@ export default function FaturasCompraPage() {
                   <path d="M16 8a8 8 0 0 1-13.66 4.24M4 16v-4h4" />
                 </svg>
               </button>
-              <button
-                type="button"
-                className="flex h-7 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 text-xs text-gray-600 hover:bg-gray-50"
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="h-3.5 w-3.5"
-                  aria-hidden="true"
-                >
-                  <circle cx="10" cy="7" r="4" />
-                  <path d="M2 17c0-3.3 2.7-6 6-6h4c3.3 0 6 2.7 6 6" />
-                </svg>
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-3 w-3"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
             </div>
           </div>
 
-          {isLoading && <TableSkeleton />}
           {isError && (
             <div className="px-5 pt-4">
               <IGRPAlert variant="soft" color="destructive">
@@ -478,8 +208,60 @@ export default function FaturasCompraPage() {
               </IGRPAlert>
             </div>
           )}
-          {!isLoading && !isError && (
-            <FaturasTable faturas={data?.content ?? []} />
+
+          {!isError && (
+            <IGRPTable
+              id="faturas-compra-table"
+              tag="table-faturas-compra"
+              content={isLoading ? [] : faturas}
+              columns={[
+                {
+                  header: "Nº Documento",
+                  accessorKey: "codigo",
+                  render: (v) => String(v ?? "—"),
+                },
+                {
+                  header: "Fornecedor",
+                  accessorKey: "fornecedor",
+                  render: (v) =>
+                    (v as FaturaCompraReadDTO["fornecedor"] | null)?.desig ?? "—",
+                },
+                {
+                  header: "Data Vencimento",
+                  accessorKey: "dtVencimentoFatura",
+                  render: (v) => formatDate(v as string | undefined),
+                },
+                {
+                  header: "Valor Fatura",
+                  accessorKey: "valorFatura",
+                  render: (v) => formatCVE(v as number | undefined),
+                },
+                {
+                  header: "Valor Pago",
+                  accessorKey: "valorPago",
+                  render: (v) => formatCVE(v as number | undefined),
+                },
+                {
+                  header: "Pagamento",
+                  accessorKey: "pago",
+                  render: (v) => (
+                    <IGRPBadge color={(v as boolean) ? "success" : "warning"}>
+                      {(v as boolean) ? "Pago" : "Não Pago"}
+                    </IGRPBadge>
+                  ),
+                },
+                {
+                  header: "Estado",
+                  accessorKey: "estado",
+                  render: (v) => (
+                    <IGRPBadge color={(v as string) === "CONFIRMADO" ? "success" : "secondary"}>
+                      {(v as string) === "CONFIRMADO" ? "Confirmado" : "Rascunho"}
+                    </IGRPBadge>
+                  ),
+                },
+              ]}
+              actions={(row) => <AcoesMenu id={row.original.id} />}
+            />
           )}
 
           {data && data.totalElements > 0 && (

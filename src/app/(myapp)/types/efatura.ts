@@ -355,22 +355,88 @@ export interface EmitirDFEPayload {
   termosPagamento?: string;
 }
 
-// ── Parametrização raw backend types ─────────────────────────
+// ── Read DTOs (mirrors backend FaturaVendaReadDTO / FaturaCompraReadDTO) ─────
 
-export interface PrFaturaTipo {
-  id: number;
-  codigo: string;
-  desig: string;
+export interface FaturaVendaItemReadDTO {
+  id?: number;
+  numLinha?: number;
+  desig?: string;
+  descr?: string;
+  quantidade?: number;
+  precoUnitario?: CVE;
+  codigoArtigo?: string;
+  descontoComercialPerc?: number;
+  descontoComercialValor?: CVE;
+  descontoFinanceiroPerc?: number;
+  descontoFinanceiroValor?: CVE;
+  valorBruto?: CVE;
+  valorLiquido?: CVE;
+  valorImposto?: CVE;
+  valorTotal?: CVE;
+  contaGlId?: number;
   estado?: string;
+  impostos?: Array<{
+    id?: number;
+    tipoCalculo?: string;
+    taxa?: number;
+    valorFixo?: CVE;
+    baseCalculo?: CVE;
+    valorImposto?: CVE;
+    contaGlId?: number;
+    ordem?: number;
+  }>;
 }
 
-export interface PrSerie {
-  id: number;
-  codigo: string;
-  desig?: string;
-  prFaturaTipo?: { id: number; codigo: string; desig?: string };
-  contador?: number;
-  estado?: string;
+export interface FaturaVendaReadDTO {
+  id?: number;
+  codigo?: string;
+  codigoReferencia?: string;
+  dtFaturacao?: string;
+  limitFaturacao?: string;
+  dtVencimentoFatura?: string;
+  dtConfirmacao?: string;
+  estado?: EstadoFatura;
+  pago?: boolean;
+  descontoFinanceiro?: CVE;
+  descontoComercial?: CVE;
+  valorIliquido?: CVE;
+  valorImposto?: CVE;
+  valorFatura?: CVE;
+  valorPago?: CVE;
+  valorPorPagar?: CVE;
+  termCondicoes?: string;
+  nota?: string;
+  utilizador?: string;
+  tipoFatura?: { id: number; codigo: string; desig: string };
+  prSerie?: { id: number; codigo: string; desig?: string };
+  cliente?: { id: number; codigo?: string; desig: string; nif?: string };
+  items?: FaturaVendaItemReadDTO[];
+}
+
+export interface FaturaCompraReadDTO {
+  id?: number;
+  codigo?: string;
+  codigoReferencia?: string;
+  dtFaturacao?: string;
+  limitFaturacao?: string;
+  dtVencimentoFatura?: string;
+  dtConfirmacao?: string;
+  estado?: EstadoFatura;
+  pago?: boolean;
+  descontoFinanceiro?: CVE;
+  descontoComercial?: CVE;
+  valorIliquido?: CVE;
+  valorImposto?: CVE;
+  valorFatura?: CVE;
+  valorPago?: CVE;
+  valorPorPagar?: CVE;
+  termCondicoes?: string;
+  nota?: string;
+  utilizador?: string;
+  tipoFatura?: { id: number; codigo: string; desig: string };
+  prSerie?: { id: number; codigo: string; desig?: string };
+  fornecedor?: { id: number; codigo?: string; desig: string; nif?: string };
+  items?: FaturaVendaItemReadDTO[];
 }
 
 // ── Pagamento ─────────────────────────────────────────────────
