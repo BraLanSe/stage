@@ -55,10 +55,9 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         var tipoFatura = tipoRepo.findById(dto.getTipoFaturaId())
                 .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Tipo de fatura não encontrado: " + dto.getTipoFaturaId()));
 
-        PrSerieEntity serie = serieRepo.findById(dto.getPrSerieId())
+        PrSerieEntity serie = serieRepo.findByIdForUpdate(dto.getPrSerieId())
                 .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Série não encontrada: " + dto.getPrSerieId()));
 
-        // Increment serie counter
         serie.setContador(serie.getContador() + 1);
         serieRepo.save(serie);
 
