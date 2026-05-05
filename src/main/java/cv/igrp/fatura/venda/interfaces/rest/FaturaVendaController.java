@@ -7,6 +7,7 @@ import cv.igrp.fatura.venda.application.commands.ConfirmarFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.CreateFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.commands.UpdateFaturaVendaCommand;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaCreateDTO;
+import cv.igrp.fatura.venda.application.service.FaturaVendaPdfService;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaEntity;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,7 @@ public class FaturaVendaController {
 
     private final CommandBus commandBus;
     private final FaturaVendaRepository faturaVendaRepo;
+    private final FaturaVendaPdfService pdfService;
 
     @GetMapping
     @Operation(summary = "Listar faturas de venda com filtros opcionais")
@@ -105,5 +109,21 @@ public class FaturaVendaController {
     @ApiResponse(responseCode = "422", description = "Fatura não pode ser anulada no estado atual")
     public ResponseEntity<FaturaVendaEntity> anular(@PathVariable Integer id) {
         return commandBus.send(new AnularFaturaVendaCommand(id));
+    }
+
+    @GetMapping(value = "/{id}/print", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Exportar fatura de venda em PDF")
+    @ApiResponse(responseCode = "200", description = "PDF gerado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Fatura não encontrada")
+    public ResponseEntity<byte[]> print(@PathVariable Integer id) {
+        return faturaVendaRepo.findByIdWithItems(id)
+                .map(fatura -> {
+                    byte[] pdf = pdfService.generate(fatura);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentDisposition(ContentDisposition.inline()
+                            .filename("fatura-" + fatura.getCodigo() + ".pdf").build());
+                    return ResponseEntity.ok().headers(headers).body(pdf);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -11,9 +11,13 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, Integer> {
+    @Query("SELECT f FROM FaturaVendaEntity f JOIN FETCH f.cliente JOIN FETCH f.tipoFatura JOIN FETCH f.prSerie LEFT JOIN FETCH f.items WHERE f.id = :id")
+    Optional<FaturaVendaEntity> findByIdWithItems(@Param("id") Integer id);
+
     @Query("SELECT f FROM FaturaVendaEntity f JOIN FETCH f.cliente JOIN FETCH f.tipoFatura JOIN FETCH f.prSerie WHERE f.cliente.id = :clienteId")
     List<FaturaVendaEntity> findByCliente_Id(@Param("clienteId") Integer clienteId);
 
