@@ -60,6 +60,9 @@ public class FaturaVendaReadDTO {
         private String codigo;
         private String desig;
         private String nif;
+        private String email;
+        private String telefone;
+        private String endereco;
     }
 
     @Data
@@ -140,6 +143,9 @@ public class FaturaVendaReadDTO {
             c.setCodigo(e.getCliente().getCodigo());
             c.setDesig(e.getCliente().getDesig());
             c.setNif(e.getCliente().getNif());
+            c.setEmail(e.getCliente().getEmail());
+            c.setTelefone(e.getCliente().getTelefone());
+            c.setEndereco(e.getCliente().getEndereco());
             dto.setCliente(c);
         }
         dto.setItems(e.getItems() == null ? Collections.emptyList()
