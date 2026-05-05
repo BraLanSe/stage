@@ -12,22 +12,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Dedicated PDF export controller.
- * Uses plain @RestController (no @IgrpController) so Spring MVC routes
- * GET /{id}/print directly without IGRP framework interception.
+ * PDF export controller mapped to /api/v1/pdf/** — a path that no
+ * @IgrpController owns, so IGRP's high-priority HandlerMapping never
+ * intercepts GET requests here and Spring MVC routes them normally.
  */
 @RestController
-@RequestMapping("api/v1/faturas-venda")
+@RequestMapping("api/v1/pdf")
 @RequiredArgsConstructor
-@Tag(name = "FaturaVenda", description = "Gestão de faturas de venda")
+@Tag(name = "PDF Export", description = "Exportação de documentos em PDF")
 public class FaturaPdfController {
 
     private final FaturaVendaRepository faturaVendaRepo;
     private final FaturaPdfService faturaPdfService;
 
-    @GetMapping("/{id}/print")
+    @GetMapping("/faturas-venda/{id}")
     @Operation(summary = "Gerar PDF fiscal da fatura de venda")
-    public ResponseEntity<byte[]> print(@PathVariable Integer id) {
+    public ResponseEntity<byte[]> printFaturaVenda(@PathVariable Integer id) {
         return faturaVendaRepo.findById(id).map(fatura -> {
             byte[] pdf = faturaPdfService.gerarRecibo(FaturaVendaReadDTO.from(fatura));
             String filename = "fatura-" + (fatura.getCodigo() != null ? fatura.getCodigo() : id) + ".pdf";
