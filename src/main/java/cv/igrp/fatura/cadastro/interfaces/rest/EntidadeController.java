@@ -38,8 +38,7 @@ public class EntidadeController {
      * Create-or-update (singleton pattern).
      * Accepts both POST (initial setup) and PUT (subsequent updates).
      */
-    @PostMapping
-    @PutMapping
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT})
     @Operation(summary = "Criar ou atualizar entidade")
     public ResponseEntity<EntidadeEntity> createOrUpdate(@RequestBody @Valid EntidadeDTO dto) {
         EntidadeEntity entity;
