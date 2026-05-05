@@ -84,6 +84,7 @@ public class SecurityConfig {
                               "/swagger-resources/**", "/webjars/**", "/actuator/**"
                           )
                           .permitAll()
+                          .requestMatchers("/api/v1/pdf/**").permitAll()
                           .anyRequest()
                           .authenticated()
                 )
