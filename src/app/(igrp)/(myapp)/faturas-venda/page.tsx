@@ -32,10 +32,19 @@ function formatDate(iso?: string) {
   });
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
+
 // ── Ações Menu ───────────────────────────────────────────────
 
 function AcoesMenu({ id }: { id?: number }) {
   const [open, setOpen] = useState(false);
+
+  function handlePrint() {
+    if (id == null) return;
+    window.open(`${API_BASE}/faturas-venda/${id}/print`, "_blank");
+    setOpen(false);
+  }
+
   return (
     <div className="relative inline-block">
       <button
@@ -60,7 +69,7 @@ function AcoesMenu({ id }: { id?: number }) {
             className="fixed inset-0 z-10 cursor-default"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-20 mt-1 w-40 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <div className="absolute right-0 z-20 mt-1 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
             <Link
               href={`/faturas-venda/${id}`}
               className="block px-4 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
@@ -70,9 +79,12 @@ function AcoesMenu({ id }: { id?: number }) {
             </Link>
             <button
               type="button"
-              className="block w-full px-4 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
+              onClick={handlePrint}
             >
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5" aria-hidden="true">
+                <path d="M5 4v3H3a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2h2a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-2V4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z" />
+              </svg>
               Imprimir PDF
             </button>
             <button

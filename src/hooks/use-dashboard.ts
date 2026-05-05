@@ -36,3 +36,11 @@ export function usePorEstado() {
     staleTime: 1000 * 60 * 5,
   });
 }
+
+export function useTopClientes(limit = 5) {
+  return useQuery({
+    queryKey: [DASHBOARD_KEY, "top-clientes", limit],
+    queryFn: () => dashboardApi.topClientes(limit),
+    staleTime: 1000 * 60 * 5,
+  });
+}

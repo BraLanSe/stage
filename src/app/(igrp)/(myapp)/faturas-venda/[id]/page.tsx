@@ -633,6 +633,34 @@ export default function FaturaVendaDetailPage() {
             onChange={(e) => setNota(e.target.value)}
           />
 
+          {/* Audit Trail */}
+          {((fatura as any).createdBy || (fatura as any).createdDate) && (
+            <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-2.5 text-xs text-gray-500">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden="true">
+                <circle cx="10" cy="10" r="8" />
+                <path d="M10 6v4l2.5 2.5" />
+              </svg>
+              <span>
+                Criado por{" "}
+                <strong className="font-semibold text-gray-700">
+                  {(fatura as any).createdBy ?? "—"}
+                </strong>{" "}
+                em{" "}
+                <strong className="font-semibold text-gray-700">
+                  {(fatura as any).createdDate
+                    ? new Date((fatura as any).createdDate).toLocaleDateString("pt-PT", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </strong>
+              </span>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-border pt-4">
             <IGRPButton
@@ -652,7 +680,10 @@ export default function FaturaVendaDetailPage() {
                 variant="outline"
                 showIcon
                 iconName="Printer"
-                onClick={() => window.print()}
+                onClick={() => {
+                  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
+                  window.open(`${base}/faturas-venda/${id}/print`, "_blank");
+                }}
               >
                 Exportar PDF
               </IGRPButton>

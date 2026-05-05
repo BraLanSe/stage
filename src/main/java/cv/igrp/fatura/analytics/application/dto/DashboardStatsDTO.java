@@ -42,4 +42,6 @@ public class DashboardStatsDTO {
     private List<VendasPorMeioDTO> vendasPorMeio;
 
     private List<TopProdutoDTO> topProdutos;
+
+    private List<TopClienteDTO> topClientes;
 }

@@ -1,6 +1,7 @@
 package cv.igrp.fatura.analytics.interfaces.rest;
 
 import cv.igrp.fatura.analytics.application.dto.DashboardStatsDTO;
+import cv.igrp.fatura.analytics.application.dto.TopClienteDTO;
 import cv.igrp.fatura.analytics.application.dto.TopProdutoDTO;
 import cv.igrp.fatura.analytics.application.dto.VendasMensaisDTO;
 import cv.igrp.fatura.analytics.application.dto.VendasPorMeioDTO;
@@ -98,6 +99,16 @@ public class DashboardController {
             ));
         }
 
+        // ── Top 5 clients ──────────────────────────────────────────
+        List<TopClienteDTO> topClientes = new ArrayList<>();
+        for (Object[] row : faturaVendaRepo.findTopClientes(PageRequest.of(0, 5))) {
+            topClientes.add(new TopClienteDTO(
+                    (String) row[0],
+                    (String) row[1],
+                    orZero((BigDecimal) row[2])
+            ));
+        }
+
         return ResponseEntity.ok(DashboardStatsDTO.builder()
                 .totalClientes(totalClientes)
                 .totalFornecedores(totalFornecedores)
@@ -108,6 +119,7 @@ public class DashboardController {
                 .vendasMensais(vendasMensais)
                 .vendasPorMeio(vendasPorMeio)
                 .topProdutos(topProdutos)
+                .topClientes(topClientes)
                 .build());
     }
 

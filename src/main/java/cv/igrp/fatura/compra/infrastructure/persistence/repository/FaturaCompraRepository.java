@@ -20,10 +20,9 @@ public interface FaturaCompraRepository extends JpaRepository<FaturaCompraEntity
     @Query("SELECT SUM(f.valorFatura) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO'")
     BigDecimal sumTotalDespesas();
 
-    @Query(value = "SELECT YEAR(dt_faturacao) AS yr, MONTH(dt_faturacao) AS mo, SUM(valor_fatura) AS total " +
-                   "FROM fatura_compra WHERE estado = 'CONFIRMADO' AND YEAR(dt_faturacao) = :ano " +
-                   "GROUP BY YEAR(dt_faturacao), MONTH(dt_faturacao) " +
-                   "ORDER BY yr, mo",
-           nativeQuery = true)
+    @Query("SELECT YEAR(f.dtFaturacao), MONTH(f.dtFaturacao), SUM(f.valorFatura) " +
+           "FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO' AND YEAR(f.dtFaturacao) = :ano " +
+           "GROUP BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao) " +
+           "ORDER BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao)")
     List<Object[]> findMensaisConfirmadas(@Param("ano") int ano);
 }

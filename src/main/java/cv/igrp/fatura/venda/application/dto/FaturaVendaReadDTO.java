@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +33,8 @@ public class FaturaVendaReadDTO {
     private String termCondicoes;
     private String nota;
     private String utilizador;
+    private String createdBy;
+    private LocalDateTime createdDate;
     private TipoFaturaInfo tipoFatura;
     private SerieInfo prSerie;
     private ClienteInfo cliente;
@@ -114,6 +117,8 @@ public class FaturaVendaReadDTO {
         dto.setTermCondicoes(e.getTermCondicoes());
         dto.setNota(e.getNota());
         dto.setUtilizador(e.getUtilizador());
+        dto.setCreatedBy(e.getCreatedBy());
+        dto.setCreatedDate(e.getCreatedDate());
 
         if (e.getTipoFatura() != null) {
             TipoFaturaInfo t = new TipoFaturaInfo();

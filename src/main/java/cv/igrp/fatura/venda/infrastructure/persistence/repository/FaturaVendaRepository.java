@@ -23,10 +23,15 @@ public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, 
     @Query("SELECT f.estado, COUNT(f) FROM FaturaVendaEntity f GROUP BY f.estado")
     List<Object[]> countByEstado();
 
-    @Query(value = "SELECT YEAR(dt_faturacao) AS yr, MONTH(dt_faturacao) AS mo, SUM(valor_fatura) AS total " +
-                   "FROM fatura_venda WHERE estado = 'CONFIRMADO' AND YEAR(dt_faturacao) = :ano " +
-                   "GROUP BY YEAR(dt_faturacao), MONTH(dt_faturacao) " +
-                   "ORDER BY yr, mo",
-           nativeQuery = true)
+    @Query("SELECT YEAR(f.dtFaturacao), MONTH(f.dtFaturacao), SUM(f.valorFatura) " +
+           "FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO' AND YEAR(f.dtFaturacao) = :ano " +
+           "GROUP BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao) " +
+           "ORDER BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao)")
     List<Object[]> findMensaisConfirmadas(@Param("ano") int ano);
+
+    @Query("SELECT f.cliente.desig, f.cliente.nif, SUM(f.valorFatura) " +
+           "FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO' " +
+           "GROUP BY f.cliente.desig, f.cliente.nif " +
+           "ORDER BY SUM(f.valorFatura) DESC")
+    List<Object[]> findTopClientes(org.springframework.data.domain.Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package cv.igrp.fatura.analytics.interfaces.rest;
 
+import cv.igrp.fatura.analytics.application.dto.TopClienteDTO;
 import cv.igrp.fatura.analytics.application.dto.TopProdutoDTO;
 import cv.igrp.fatura.analytics.application.dto.VendasMensaisDTO;
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
@@ -66,6 +67,22 @@ public class ReportController {
             result.add(new TopProdutoDTO(
                     (String) row[0],
                     orZero((BigDecimal) row[1]),
+                    orZero((BigDecimal) row[2])
+            ));
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/vendas/top-clientes")
+    @Operation(summary = "Top N clientes por volume de faturação")
+    public ResponseEntity<List<TopClienteDTO>> topClientes(
+            @RequestParam(defaultValue = "5") int limit) {
+
+        List<TopClienteDTO> result = new ArrayList<>();
+        for (Object[] row : faturaVendaRepo.findTopClientes(PageRequest.of(0, Math.min(limit, 20)))) {
+            result.add(new TopClienteDTO(
+                    (String) row[0],
+                    (String) row[1],
                     orZero((BigDecimal) row[2])
             ));
         }

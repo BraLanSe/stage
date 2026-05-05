@@ -1,4 +1,4 @@
-import type { DashboardStats, TopProduto } from "@/app/(myapp)/types/efatura";
+import type { DashboardStats, TopCliente, TopProduto } from "@/app/(myapp)/types/efatura";
 import { apiRequest } from "./client";
 
 export interface VendasMensaisData {
@@ -23,4 +23,7 @@ export const dashboardApi = {
 
   porEstado: () =>
     apiRequest<EstadoCount[]>("/reports/vendas/por-estado"),
+
+  topClientes: (limit = 5) =>
+    apiRequest<TopCliente[]>(`/reports/vendas/top-clientes?limit=${limit}`),
 };

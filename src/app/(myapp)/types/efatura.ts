@@ -407,6 +407,8 @@ export interface FaturaVendaReadDTO {
   termCondicoes?: string;
   nota?: string;
   utilizador?: string;
+  createdBy?: string;
+  createdDate?: string;
   tipoFatura?: { id: number; codigo: string; desig: string };
   prSerie?: { id: number; codigo: string; desig?: string };
   cliente?: { id: number; codigo?: string; desig: string; nif?: string };
@@ -467,6 +469,12 @@ export interface TopProduto {
   quantidade: number;
 }
 
+export interface TopCliente {
+  desig: string;
+  nif?: string;
+  totalFaturado: CVE;
+}
+
 export interface DashboardStats {
   totalClientes: number;
   totalFornecedores: number;
@@ -481,4 +489,5 @@ export interface DashboardStats {
   /** Estado breakdown reused for the donut chart (Confirmado/Rascunho/Anulado). */
   vendasPorMeio: Array<{ meio: string; valor: CVE; cor: string }>;
   topProdutos?: TopProduto[];
+  topClientes?: TopCliente[];
 }
