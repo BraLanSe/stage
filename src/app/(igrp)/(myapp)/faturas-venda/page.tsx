@@ -41,7 +41,7 @@ function AcoesMenu({ id }: { id?: number }) {
 
   function handlePrint() {
     if (id == null) return;
-    window.open(`${API_BASE}/faturas-venda/${id}/pdf`, "_blank");
+    window.open(`${API_BASE}/pdf/faturas-venda/${id}`, "_blank");
     setOpen(false);
   }
 
