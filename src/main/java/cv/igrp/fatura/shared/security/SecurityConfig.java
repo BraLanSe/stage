@@ -83,6 +83,8 @@ public class SecurityConfig {
                           .permitAll()
                           .requestMatchers("/api/v1/pdf/**")
                           .permitAll()
+                          .requestMatchers("/api/pdf-engine/**")
+                          .permitAll()
                           .anyRequest()
                           .authenticated()
                 )
