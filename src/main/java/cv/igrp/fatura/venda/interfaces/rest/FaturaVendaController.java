@@ -9,6 +9,7 @@ import cv.igrp.fatura.venda.application.dto.FaturaVendaAtualizarDTO;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaCreateDTO;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaItemAtualizarDTO;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaReadDTO;
+import cv.igrp.fatura.venda.application.service.FaturaPdfService;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaEntity;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaItemEntity;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
@@ -17,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,7 @@ public class FaturaVendaController {
     private final CommandBus commandBus;
     private final FaturaVendaRepository faturaVendaRepo;
     private final ClienteRepository clienteRepo;
+    private final FaturaPdfService faturaPdfService;
 
     @GetMapping
     @Operation(summary = "Listar faturas de venda")
@@ -123,6 +127,22 @@ public class FaturaVendaController {
         FaturaVendaEntity body = result.getBody();
         if (body == null) return ResponseEntity.status(result.getStatusCode()).build();
         return ResponseEntity.status(result.getStatusCode()).body(FaturaVendaReadDTO.from(body));
+    }
+
+    @GetMapping("/{id}/pdf")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Exportar PDF fiscal da fatura de venda")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable Integer id) {
+        return faturaVendaRepo.findById(id)
+                .map(fatura -> {
+                    byte[] pdf = faturaPdfService.gerarRecibo(FaturaVendaReadDTO.from(fatura));
+                    String filename = "fatura-" + (fatura.getCodigo() != null ? fatura.getCodigo() : id) + ".pdf";
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.APPLICATION_PDF)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                            .body(pdf);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}/anular")
