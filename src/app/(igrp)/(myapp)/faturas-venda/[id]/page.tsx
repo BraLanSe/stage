@@ -33,7 +33,6 @@ import {
   useFaturaVenda,
 } from "@/hooks/use-faturas-venda";
 import { faturasVendaApi } from "@/lib/api/faturas-venda";
-import { printFatura } from "@/shared/utils/fatura-print";
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -681,7 +680,10 @@ export default function FaturaVendaDetailPage() {
                 variant="outline"
                 showIcon
                 iconName="Printer"
-                onClick={() => printFatura(id)}
+                onClick={() => {
+                  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
+                  window.open(`${base}/faturas-venda/${id}/pdf`, "_blank");
+                }}
               >
                 Exportar PDF
               </IGRPButton>
