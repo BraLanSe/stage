@@ -681,8 +681,9 @@ export default function FaturaVendaDetailPage() {
                 showIcon
                 iconName="Printer"
                 onClick={() => {
-                  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
-                  window.open(`${base}/pdf/faturas-venda/${id}`, "_blank");
+                  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
+                  const origin = apiBase.replace(/\/api\/v1\/?$/, "");
+                  window.open(`${origin}/print-service/fatura/${id}`, "_blank");
                 }}
               >
                 Exportar PDF

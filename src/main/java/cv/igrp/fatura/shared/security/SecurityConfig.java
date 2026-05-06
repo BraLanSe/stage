@@ -85,6 +85,8 @@ public class SecurityConfig {
                           .permitAll()
                           .requestMatchers("/api/pdf-engine/**")
                           .permitAll()
+                          .requestMatchers("/print-service/**")
+                          .permitAll()
                           .anyRequest()
                           .authenticated()
                 )

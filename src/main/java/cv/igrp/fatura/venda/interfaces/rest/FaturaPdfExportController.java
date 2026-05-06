@@ -4,7 +4,6 @@ import cv.igrp.fatura.venda.application.dto.FaturaVendaReadDTO;
 import cv.igrp.fatura.venda.application.service.FaturaPdfService;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,19 +13,24 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/pdf/faturas-venda")
-@RequiredArgsConstructor
+@RequestMapping("/print-service")
 public class FaturaPdfExportController {
 
     private final FaturaVendaRepository faturaVendaRepo;
     private final FaturaPdfService faturaPdfService;
 
-    @PostConstruct
-    void init() {
-        log.info(">>> FaturaPdfExportController registered — GET /api/v1/pdf/faturas-venda/{id}");
+    public FaturaPdfExportController(FaturaVendaRepository faturaVendaRepo, FaturaPdfService faturaPdfService) {
+        this.faturaVendaRepo = faturaVendaRepo;
+        this.faturaPdfService = faturaPdfService;
+        log.info(">>> FaturaPdfExportController INSTANTIATED — route: GET /print-service/fatura/{{id}}");
     }
 
-    @GetMapping("/{id}")
+    @PostConstruct
+    void init() {
+        log.info(">>> FaturaPdfExportController READY — GET /print-service/fatura/{{id}}");
+    }
+
+    @GetMapping("/fatura/{id}")
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> exportPdf(@PathVariable Integer id) {
         return faturaVendaRepo.findById(id)
