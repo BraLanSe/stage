@@ -3,35 +3,30 @@ package cv.igrp.fatura.venda.interfaces.rest;
 import cv.igrp.fatura.venda.application.dto.FaturaVendaReadDTO;
 import cv.igrp.fatura.venda.application.service.FaturaPdfService;
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
-@RequestMapping("/print-service")
-public class FaturaPdfExportController {
+@RequestMapping("api/v1/pdf/faturas-venda")
+@RequiredArgsConstructor
+@Tag(name = "FaturaPrint", description = "Exportação PDF de faturas")
+public class FaturaPrintController {
 
     private final FaturaVendaRepository faturaVendaRepo;
     private final FaturaPdfService faturaPdfService;
 
-    public FaturaPdfExportController(FaturaVendaRepository faturaVendaRepo, FaturaPdfService faturaPdfService) {
-        this.faturaVendaRepo = faturaVendaRepo;
-        this.faturaPdfService = faturaPdfService;
-        log.info(">>> FaturaPdfExportController INSTANTIATED — route: GET /print-service/fatura/{{id}}");
-    }
-
-    @PostConstruct
-    void init() {
-        log.info(">>> FaturaPdfExportController READY — GET /print-service/fatura/{{id}}");
-    }
-
-    @GetMapping("/fatura/{id}")
+    @GetMapping("/{id}")
     @Transactional(readOnly = true)
+    @Operation(summary = "Exportar PDF fiscal da fatura de venda")
     public ResponseEntity<byte[]> exportPdf(@PathVariable Integer id) {
         return faturaVendaRepo.findById(id)
                 .map(fatura -> {
