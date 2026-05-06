@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/pdf-engine")
+@RequestMapping("/api/v1/pdf/faturas-venda")
 @RequiredArgsConstructor
 public class FaturaPdfExportController {
 
@@ -23,10 +23,10 @@ public class FaturaPdfExportController {
 
     @PostConstruct
     void init() {
-        log.info(">>> FaturaPdfExportController registered — GET /api/pdf-engine/fatura/{id}");
+        log.info(">>> FaturaPdfExportController registered — GET /api/v1/pdf/faturas-venda/{id}");
     }
 
-    @GetMapping("/fatura/{id}")
+    @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> exportPdf(@PathVariable Integer id) {
         return faturaVendaRepo.findById(id)
