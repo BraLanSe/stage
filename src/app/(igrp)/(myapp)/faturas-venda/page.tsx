@@ -12,6 +12,8 @@ import Link from "next/link";
 import { useState } from "react";
 import type { FaturaVendaReadDTO } from "@/app/(myapp)/types/efatura";
 import { useFaturasVenda } from "@/hooks/use-faturas-venda";
+import { PrintAction } from "@/shared/components/PrintAction";
+import { printFatura } from "@/shared/utils/fatura-print";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -32,8 +34,6 @@ function formatDate(iso?: string) {
   });
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
-
 // ── Ações Menu ───────────────────────────────────────────────
 
 function AcoesMenu({ id }: { id?: number }) {
@@ -41,7 +41,7 @@ function AcoesMenu({ id }: { id?: number }) {
 
   function handlePrint() {
     if (id == null) return;
-    window.open(`${API_BASE}/faturas-venda/${id}/print`, "_blank");
+    printFatura(id);
     setOpen(false);
   }
 
@@ -273,7 +273,14 @@ export default function FaturasVendaPage() {
                   ),
                 },
               ]}
-              actions={(row) => <AcoesMenu id={row.original.id} />}
+              actions={(row) => (
+                <div className="flex items-center gap-1.5">
+                  {row.original.id != null && (
+                    <PrintAction id={row.original.id} />
+                  )}
+                  <AcoesMenu id={row.original.id} />
+                </div>
+              )}
             />
           )}
 
