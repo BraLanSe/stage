@@ -41,10 +41,17 @@ const itemSchema = z.object({
   percentagemIva: z.number({ error: "IVA inválido" }).min(0, "IVA não pode ser negativo").max(100, "IVA não pode exceder 100%"),
 });
 
+const MEIOS_PAGAMENTO = [
+  { label: "Dinheiro (Liquide)",    value: "Dinheiro" },
+  { label: "Cheque",                value: "Cheque" },
+  { label: "Cartão Vinte4 (Carte)", value: "CartaoVinte4" },
+] as const;
+
 const schema = z.object({
   clienteId: z.number({ error: "Selecione um cliente" }),
   tipoFaturaId: z.number({ error: "Selecione o tipo de documento" }),
   prSerieId: z.number({ error: "Selecione uma série" }),
+  meioPagamento: z.string().optional(),
   dataVencimento: z.string().optional(),
   observacoes: z.string().optional(),
   itens: z.array(itemSchema).min(1, "Adicione pelo menos um item"),
@@ -58,21 +65,17 @@ function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-function round4(v: number): number {
-  return Math.round(v * 10000) / 10000;
-}
-
 function n(v: number | undefined | null): number {
   const x = Number(v);
   return Number.isNaN(x) ? 0 : x;
 }
 
-/** Mirror of FaturaItemCalculo.calcular() — no commercial discount in the create flow */
+/** Mirror of FaturaItemCalculo.calcular() — fiscal rounding to 2dp throughout */
 function calcItem(qty: number, priceTTC: number, ivaPerc: number) {
-  const htUnit = round2(priceTTC / (1 + ivaPerc / 100)); // matches what onSubmit sends
-  const bruto   = round4(qty * htUnit);
-  const imposto = round4(bruto * ivaPerc / 100);
-  const total   = round4(bruto + imposto);
+  const htUnit = round2(priceTTC / (1 + ivaPerc / 100));
+  const bruto   = round2(qty * htUnit);
+  const imposto = round2(bruto * ivaPerc / 100);
+  const total   = round2(bruto + imposto);
   return { bruto, imposto, total };
 }
 
@@ -115,14 +118,14 @@ export default function NovaFaturaVendaPage() {
     ? seriesData
     : ((seriesData as unknown as { content?: typeof seriesData })?.content ?? []);
 
-  const [selectedProdutos, setSelectedProdutos] = useState<Record<string, string>>({});
+  const [addProdutoId, setAddProdutoId] = useState<string>("");
+  const [addQty, setAddQty] = useState<number>(1);
 
   const {
     register,
     control,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -154,12 +157,26 @@ export default function NovaFaturaVendaPage() {
     { valorIliquido: 0, valorImposto: 0, valorTotal: 0 },
   );
 
+  function handleAdicionarProduto() {
+    const produto = produtos.find((p) => String(p.id) === addProdutoId);
+    if (!produto) return;
+    append({
+      descricao: produto.desig,
+      quantidade: addQty,
+      precoUnitario: produto.preco ?? 0,
+      percentagemIva: 15,
+    });
+    setAddProdutoId("");
+    setAddQty(1);
+  }
+
   async function onSubmit(values: FormValues) {
     try {
       const fatura = await criar({
         clienteId: values.clienteId,
         tipoFaturaId: values.tipoFaturaId,
         prSerieId: values.prSerieId,
+        meioPagamento: values.meioPagamento,
         dataVencimento: values.dataVencimento,
         observacoes: values.observacoes,
         itens: values.itens.map(
@@ -223,6 +240,27 @@ export default function NovaFaturaVendaPage() {
                     value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.clienteId?.message}
+                  />
+                )}
+              />
+
+              {/* Meio de Pagamento */}
+              <Controller
+                name="meioPagamento"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="meioPagamento"
+                    tag="select-meioPagamento"
+                    label="Meio de Pagamento"
+                    placeholder="Selecionar meio…"
+                    options={MEIOS_PAGAMENTO.map((m) => ({
+                      label: m.label,
+                      value: m.value,
+                    }))}
+                    value={field.value ?? undefined}
+                    onValueChange={(v) => field.onChange(v)}
+                    error={errors.meioPagamento?.message}
                   />
                 )}
               />
@@ -304,24 +342,53 @@ export default function NovaFaturaVendaPage() {
         {/* Itens da Fatura */}
         <IGRPCard name="card-itens-fatura" tag="card-itens-fatura" className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
           <IGRPCardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">Itens da Fatura</h2>
+            <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">
+              Itens da Fatura
+            </h2>
+
+            {/* Product selector above the table */}
+            <div className="mb-5 flex items-end gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+              <div className="flex-1">
+                <IGRPSelect
+                  name="add-produto"
+                  tag="select-add-produto"
+                  label="Selecionar Produto"
+                  placeholder="Escolha um produto para adicionar…"
+                  options={produtos.map((p) => ({
+                    label: `${p.codigo ? `[${p.codigo}] ` : ""}${p.desig}`,
+                    value: String(p.id),
+                  }))}
+                  value={addProdutoId}
+                  onValueChange={setAddProdutoId}
+                />
+              </div>
+              <div className="w-28">
+                <IGRPInputNumber
+                  name="add-qty"
+                  label="Quantidade"
+                  min={0.01}
+                  step={1}
+                  value={addQty}
+                  onChange={(v) => setAddQty(Number(v) || 1)}
+                />
+              </div>
               <IGRPButton
-                name="adicionar-linha"
-                tag="btn-adicionar-linha"
+                name="btn-add-produto"
+                tag="btn-add-produto"
+                type="button"
+                onClick={handleAdicionarProduto}
+                disabled={!addProdutoId}
+              >
+                + Adicionar
+              </IGRPButton>
+              <IGRPButton
+                name="btn-add-linha-vazia"
+                tag="btn-add-linha-vazia"
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    descricao: "",
-                    quantidade: 1,
-                    precoUnitario: 0,
-                    percentagemIva: 15,
-                  })
-                }
+                onClick={() => append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 })}
               >
-                + Adicionar Linha
+                + Linha Vazia
               </IGRPButton>
             </div>
 
@@ -364,31 +431,11 @@ export default function NovaFaturaVendaPage() {
                     return (
                       <IGRPTableRowPrimitive key={field.id}>
                         <IGRPTableCellPrimitive className="align-top py-2 min-w-[220px]">
-                          <div className="flex flex-col gap-1.5">
-                            <IGRPSelect
-                              name={`produto-select-${i}`}
-                              tag={`select-produto-${i}`}
-                              placeholder="Selecionar produto…"
-                              value={selectedProdutos[field.id] ?? ""}
-                              options={produtos.map((p) => ({
-                                label: `${p.codigo ? `[${p.codigo}] ` : ""}${p.desig}`,
-                                value: String(p.id),
-                              }))}
-                              onValueChange={(v) => {
-                                setSelectedProdutos((prev) => ({ ...prev, [field.id]: v }));
-                                const produto = produtos.find((p) => String(p.id) === v);
-                                if (produto) {
-                                  setValue(`itens.${i}.descricao`, produto.desig, { shouldValidate: true });
-                                  setValue(`itens.${i}.precoUnitario`, produto.preco ?? 0, { shouldValidate: true });
-                                }
-                              }}
-                            />
-                            <IGRPInputText
-                              placeholder="Ou descreva manualmente…"
-                              error={itemErrors?.descricao?.message}
-                              {...register(`itens.${i}.descricao`)}
-                            />
-                          </div>
+                          <IGRPInputText
+                            placeholder="Designação / Serviço…"
+                            error={itemErrors?.descricao?.message}
+                            {...register(`itens.${i}.descricao`)}
+                          />
                         </IGRPTableCellPrimitive>
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller

@@ -133,6 +133,7 @@ export interface CriarFaturaVendaRequest {
   dataVencimento?: string;
   condicoesPagamento?: string;
   observacoes?: string;
+  meioPagamento?: string;
   itens: Omit<
     ItemFaturaVenda,
     | "id"

@@ -167,6 +167,21 @@ export const IGRP_DEFAULT_MENU: IGRPMenuItemArgs[] = [
     applicationCode: "APP_EFATURA",
     roles: [],
   },
+  {
+    id: 111,
+    code: "EFATURA_DADOS_BANCARIOS",
+    name: "Dados Bancários",
+    type: "MENU_PAGE",
+    position: 3,
+    icon: "Landmark",
+    status: "ACTIVE",
+    target: "_self",
+    url: "dados-bancarios",
+    pageSlug: "dados-bancarios",
+    parentCode: "EFATURA_CONFIG_GROUP",
+    applicationCode: "APP_EFATURA",
+    roles: [],
+  },
   // ── Legacy test entries ──────────────────────────────────
   {
     id: 43,

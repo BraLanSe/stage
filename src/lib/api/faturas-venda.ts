@@ -70,6 +70,7 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
   if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
   if (data.condicoesPagamento) dto.termCondicoes = data.condicoesPagamento;
   if (data.observacoes) dto.nota = data.observacoes;
+  if (data.meioPagamento) dto.meioPagamento = data.meioPagamento;
   return dto;
 }
 
