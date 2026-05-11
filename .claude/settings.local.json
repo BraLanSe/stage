@@ -75,7 +75,16 @@
       "Bash(javap -p target/classes/cv/igrp/fatura/venda/interfaces/rest/FaturaPdfExportController.class)",
       "Bash(javap -verbose target/classes/cv/igrp/fatura/venda/interfaces/rest/FaturaPdfExportController.class)",
       "Bash(powershell -Command \".\\\\.claude\\\\skills\\\\frontend-check.ps1\")",
-      "Bash(dir \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\\\\target\\\\classes\\\\cv\\\\igrp\\\\fatura\\\\cadastro\\\\interfaces\\\\rest\\\\\" 2>&1 *)"
+      "Bash(dir \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\\\\target\\\\classes\\\\cv\\\\igrp\\\\fatura\\\\cadastro\\\\interfaces\\\\rest\\\\\" 2>&1 *)",
+      "PowerShell(git *)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" remote -v)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFatura-front\" remote -v)",
+      "Bash(git -C \"C:\\\\Temp\\\\fatura-livraison\" remote -v)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" branch -a)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFatura-front\" branch -a)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" status --short)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFatura-front\" status --short)",
+      "Bash(git commit -m 'chore: sync frontend changes \\(payment method, rounding\\) before branch split *)"
     ]
   }
 }

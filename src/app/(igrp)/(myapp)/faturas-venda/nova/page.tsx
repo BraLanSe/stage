@@ -149,9 +149,9 @@ export default function NovaFaturaVendaPage() {
         n(item?.percentagemIva),
       );
       return {
-        valorIliquido: acc.valorIliquido + bruto,
-        valorImposto:  acc.valorImposto  + imposto,
-        valorTotal:    acc.valorTotal    + total,
+        valorIliquido: round2(acc.valorIliquido + bruto),
+        valorImposto:  round2(acc.valorImposto  + imposto),
+        valorTotal:    round2(acc.valorTotal    + total),
       };
     },
     { valorIliquido: 0, valorImposto: 0, valorTotal: 0 },
@@ -424,7 +424,7 @@ export default function NovaFaturaVendaPage() {
                   {fields.map((field, i) => {
                     const item = watchedItens[i];
                     const linhaTotal = item
-                      ? calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0)
+                      ? round2(calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0))
                       : 0;
                     const itemErrors = errors.itens?.[i];
 

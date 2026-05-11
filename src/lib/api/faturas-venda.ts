@@ -43,18 +43,14 @@ function toFaturaVendaDTO(data: CriarFaturaVendaRequest): Record<string, unknown
     return row;
   });
 
-  const valorIliquido = round2(
-    (data.itens ?? []).reduce((acc, item) => {
-      return acc + round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario)));
-    }, 0),
-  );
-  const valorImposto = round2(
-    (data.itens ?? []).reduce((acc, item) => {
-      const base = round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario)));
-      const iva = parseFloat(String((item as Record<string, unknown>).percentagemIva ?? 0));
-      return acc + round2(base * (iva / 100));
-    }, 0),
-  );
+  const valorIliquido = (data.itens ?? []).reduce((acc, item) => {
+    return round2(acc + round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario))));
+  }, 0);
+  const valorImposto = (data.itens ?? []).reduce((acc, item) => {
+    const base = round2(parseFloat(String(item.quantidade)) * parseFloat(String(item.precoUnitario)));
+    const iva = parseFloat(String((item as Record<string, unknown>).percentagemIva ?? 0));
+    return round2(acc + round2(base * (iva / 100)));
+  }, 0);
   const valorFatura = round2(valorIliquido + valorImposto);
 
   const dto: Record<string, unknown> = {
