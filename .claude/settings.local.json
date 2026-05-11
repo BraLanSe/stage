@@ -87,7 +87,8 @@
       "Bash(Get-ChildItem -Recurse -File)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(git push *)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "PowerShell(Select-String -Path \"C:\\\\Users\\\\bradl\\\\.claude\\\\projects\\\\C--Users-bradl-OneDrive-Ambiente-de-Trabalho-igrp-premi-re-essai-projects-eFatura\\\\175f6869-6ca7-490a-aaec-529c3f1fc89e\\\\tool-results\\\\bp8s85x7k.txt\" -Pattern \"livraison|error|fatal|files changed\" | Select-Object -Last 20 | ForEach-Object { $_.Line })"
     ]
   }
 }
