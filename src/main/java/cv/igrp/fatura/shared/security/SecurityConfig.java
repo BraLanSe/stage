@@ -26,7 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
     @Value("${auth.jwt.issuer}")
@@ -84,7 +84,7 @@ public class SecurityConfig {
                               "/swagger-resources/**", "/webjars/**", "/actuator/**"
                           )
                           .permitAll()
-                          .requestMatchers("/api/v1/pdf/**").permitAll()
+                          .requestMatchers("/api/pdf-engine/**").permitAll()
                           .anyRequest()
                           .authenticated()
                 )

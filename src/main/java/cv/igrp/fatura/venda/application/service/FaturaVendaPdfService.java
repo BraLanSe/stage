@@ -1,11 +1,20 @@
 package cv.igrp.fatura.venda.application.service;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
+import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.DadosBancariosEntity;
+import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.DadosBancariosRepository;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaEntity;
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaItemEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
@@ -13,9 +22,13 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 
 @Service
+@RequiredArgsConstructor
 public class FaturaVendaPdfService {
+
+    private final DadosBancariosRepository dadosBancariosRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Color BRAND_DARK  = new Color(30, 58, 95);
@@ -23,6 +36,7 @@ public class FaturaVendaPdfService {
     private static final Color GREY_TEXT   = new Color(90, 90, 90);
 
     public byte[] generate(FaturaVendaEntity f) {
+        var dadosBancarios = dadosBancariosRepository.findAll().stream().findFirst().orElse(null);
         try (var out = new ByteArrayOutputStream()) {
             var doc = new Document(PageSize.A4, 40, 40, 50, 40);
             PdfWriter.getInstance(doc, out);
@@ -34,11 +48,16 @@ public class FaturaVendaPdfService {
             doc.add(Chunk.NEWLINE);
             addItemsTable(doc, f);
             doc.add(Chunk.NEWLINE);
+            if (f.getMeioPagamento() != null && !f.getMeioPagamento().isBlank()) {
+                addMeioPagamento(doc, f.getMeioPagamento());
+            }
             addTotals(doc, f);
             if (f.getNota() != null && !f.getNota().isBlank()) {
                 doc.add(Chunk.NEWLINE);
                 addNota(doc, f.getNota());
             }
+            doc.add(Chunk.NEWLINE);
+            addFooter(doc, f, dadosBancarios);
 
             doc.close();
             return out.toByteArray();
@@ -54,7 +73,6 @@ public class FaturaVendaPdfService {
         tbl.setWidthPercentage(100);
         tbl.setWidths(new float[]{60, 40});
 
-        // Left: title block
         var titleFont = new Font(Font.HELVETICA, 20, Font.BOLD, Color.WHITE);
         var subFont   = new Font(Font.HELVETICA, 9, Font.NORMAL, Color.WHITE);
 
@@ -67,7 +85,6 @@ public class FaturaVendaPdfService {
         titleCell.addElement(new Phrase(f.getCodigo(), subFont));
         tbl.addCell(titleCell);
 
-        // Right: dates / status
         var metaFont  = new Font(Font.HELVETICA, 8, Font.NORMAL, GREY_TEXT);
         var valFont   = new Font(Font.HELVETICA, 9, Font.BOLD, BRAND_DARK);
         var rightCell = new PdfPCell();
@@ -109,34 +126,7 @@ public class FaturaVendaPdfService {
     }
 
     private PdfPCell partyCell(String label, String body) {
-        var labelFont = new Font(Font.HELVETICA, 7, Font.BOLD, Color.WHITE);
-        var bodyFont  = new Font(Font.HELVETICA, 9, Font.NORMAL, new Color(30, 30, 30));
-
-        var cell = new PdfPCell();
-        cell.setBorderColor(BRAND_LIGHT);
-        cell.setPadding(8);
-
-        var header = new Paragraph(label.toUpperCase(), labelFont);
-        header.setSpacingAfter(4);
-        cell.setBackgroundColor(BRAND_DARK);
-        cell.addElement(header);
-
-        var inner = new PdfPCell();
-        inner.setBorder(Rectangle.NO_BORDER);
-        inner.setPadding(6);
-        inner.addElement(new Paragraph(body, bodyFont));
-
-        // wrap in a nested table so background can differ
-        var nested = new PdfPTable(1);
-        nested.setWidthPercentage(100);
-        nested.addCell(inner);
-
-        cell.setBackgroundColor(Color.WHITE);
-        cell.setBorder(Rectangle.BOX);
-        cell.setBorderColor(BRAND_LIGHT);
-        cell.setBorderWidth(0.5f);
-
-        // rebuild without bg on header — simpler flat approach
+        var bodyFont = new Font(Font.HELVETICA, 9, Font.NORMAL, new Color(30, 30, 30));
         var flat = new PdfPCell();
         flat.setBorder(Rectangle.BOX);
         flat.setBorderColor(BRAND_LIGHT);
@@ -159,7 +149,6 @@ public class FaturaVendaPdfService {
         tbl.setWidthPercentage(100);
         tbl.setWidths(new float[]{8, 34, 10, 14, 14, 14});
 
-        // column headers
         String[] headers = {"#", "Descrição", "Qtd", "Preço Unit.", "Imposto", "Total"};
         for (String h : headers) {
             var cell = new PdfPCell(new Phrase(h,
@@ -183,6 +172,24 @@ public class FaturaVendaPdfService {
             tbl.addCell(numCell(fmt2(item.getValorTotal()), rowFontB, bg));
             alt = !alt;
         }
+
+        doc.add(tbl);
+    }
+
+    // ── Payment method ───────────────────────────────────────────────────────
+
+    private void addMeioPagamento(Document doc, String meioPagamento) throws DocumentException {
+        var tbl = new PdfPTable(1);
+        tbl.setWidthPercentage(45);
+        tbl.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        var cell = new PdfPCell();
+        cell.setBorder(Rectangle.TOP);
+        cell.setBorderColor(BRAND_LIGHT);
+        cell.setPadding(5);
+        cell.addElement(new Phrase("Meio de Pagamento: " + meioPagamento,
+                new Font(Font.HELVETICA, 8, Font.ITALIC, GREY_TEXT)));
+        tbl.addCell(cell);
 
         doc.add(tbl);
     }
@@ -240,6 +247,77 @@ public class FaturaVendaPdfService {
         doc.add(new Paragraph(nota, new Font(Font.HELVETICA, 8, Font.NORMAL)));
     }
 
+    // ── Footer: QR code + Dados Bancários ───────────────────────────────────
+
+    private void addFooter(Document doc, FaturaVendaEntity f, DadosBancariosEntity banco) throws Exception {
+        var tbl = new PdfPTable(2);
+        tbl.setWidthPercentage(100);
+        tbl.setWidths(new float[]{22, 78});
+
+        // Left: QR code
+        var qrCell = new PdfPCell();
+        qrCell.setBorder(Rectangle.BOX);
+        qrCell.setBorderColor(BRAND_LIGHT);
+        qrCell.setBorderWidth(0.5f);
+        qrCell.setPadding(6);
+        qrCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        qrCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        try {
+            Image qr = buildQrCode(f);
+            qr.scaleToFit(80, 80);
+            qrCell.addElement(qr);
+        } catch (Exception e) {
+            qrCell.addElement(new Paragraph("QR indisponível",
+                    new Font(Font.HELVETICA, 7, Font.ITALIC, GREY_TEXT)));
+        }
+        tbl.addCell(qrCell);
+
+        // Right: dados bancários
+        var bankCell = new PdfPCell();
+        bankCell.setBorder(Rectangle.BOX);
+        bankCell.setBorderColor(BRAND_LIGHT);
+        bankCell.setBorderWidth(0.5f);
+        bankCell.setPadding(8);
+        bankCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+        var sectionLbl = new Paragraph("DADOS BANCÁRIOS",
+                new Font(Font.HELVETICA, 7, Font.BOLD, GREY_TEXT));
+        sectionLbl.setSpacingAfter(4);
+        bankCell.addElement(sectionLbl);
+
+        var lf = new Font(Font.HELVETICA, 8, Font.NORMAL, GREY_TEXT);
+        var vf = new Font(Font.HELVETICA, 9, Font.BOLD, BRAND_DARK);
+
+        if (banco != null) {
+            bankCell.addElement(labelValue("Banco", safe(banco.getBanco()), lf, vf));
+            bankCell.addElement(labelValue("IBAN",  safe(banco.getIban()),  lf, vf));
+            if (banco.getSwift() != null && !banco.getSwift().isBlank()) {
+                bankCell.addElement(labelValue("SWIFT", banco.getSwift(), lf, vf));
+            }
+        } else {
+            bankCell.addElement(new Paragraph("Sem dados bancários registados.",
+                    new Font(Font.HELVETICA, 8, Font.ITALIC, GREY_TEXT)));
+        }
+        tbl.addCell(bankCell);
+
+        doc.add(tbl);
+    }
+
+    private Image buildQrCode(FaturaVendaEntity f) throws Exception {
+        String nif = (f.getCliente() != null && f.getCliente().getNif() != null)
+                ? f.getCliente().getNif() : "N/A";
+        String content = String.format("NIF:%s;DATA:%s;TOTAL:%s;COD:%s",
+                nif, format(f.getDtFaturacao()), fmt2(f.getValorFatura()), f.getCodigo());
+
+        var hints = new EnumMap<EncodeHintType, Object>(EncodeHintType.class);
+        hints.put(EncodeHintType.MARGIN, 1);
+        BitMatrix matrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, 150, 150, hints);
+
+        var bos = new ByteArrayOutputStream();
+        MatrixToImageWriter.writeToStream(matrix, "PNG", bos);
+        return Image.getInstance(bos.toByteArray());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private Phrase labelValue(String label, String value, Font lf, Font vf) {
@@ -247,6 +325,10 @@ public class FaturaVendaPdfService {
         p.add(new Chunk(label + ": ", lf));
         p.add(new Chunk(value + "\n", vf));
         return p;
+    }
+
+    private String safe(String s) {
+        return s != null && !s.isBlank() ? s : "—";
     }
 
     private PdfPCell numCell(String text, Font font, Color bg) {

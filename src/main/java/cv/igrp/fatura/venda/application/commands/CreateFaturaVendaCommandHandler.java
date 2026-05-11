@@ -84,6 +84,7 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
         fatura.setPrSerie(serie);
         fatura.setTermCondicoes(dto.getTermCondicoes());
         fatura.setNota(dto.getNota());
+        fatura.setMeioPagamento(dto.getMeioPagamento());
         fatura.setUtilizador("system");
         fatura.setDescontoFinanceiro(BigDecimal.ZERO);
         fatura.setDescontoComercial(BigDecimal.ZERO);

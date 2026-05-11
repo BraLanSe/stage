@@ -94,6 +94,9 @@ public class FaturaVendaEntity extends AuditEntity {
     @Column(name = "nota")
     private String nota;
 
+    @Column(name = "meio_pagamento", length = 100)
+    private String meioPagamento;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)

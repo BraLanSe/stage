@@ -48,6 +48,9 @@ public class FaturaVendaCreateDTO {
     @Schema(description = "Observações internas", example = "Entrega urgente")
     private String nota;
 
+    @Schema(description = "Meio de pagamento utilizado", example = "Cartão Vinte4")
+    private String meioPagamento;
+
     @NotNull
     @Size(min = 1)
     @Schema(description = "Linhas de artigos da fatura (mínimo 1)", requiredMode = Schema.RequiredMode.REQUIRED)
