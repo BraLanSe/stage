@@ -109,7 +109,7 @@ export default function FaturasVendaPage() {
 
   const totalElements = data?.totalElements ?? 0;
   const from = totalElements === 0 ? 0 : page * 10 + 1;
-  const to = Math.min(page * 10 + (data?.content.length ?? 0), totalElements);
+  const to = Math.min(page * 10 + (data?.content?.length ?? 0), totalElements);
   const faturas = (data?.content ?? []) as FaturaVendaReadDTO[];
 
   return (
