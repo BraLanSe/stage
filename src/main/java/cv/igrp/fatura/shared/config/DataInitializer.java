@@ -1,5 +1,9 @@
 package cv.igrp.fatura.shared.config;
 
+import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.ClienteEntity;
+import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.FornecedorEntity;
+import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ClienteRepository;
+import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.FornecedorRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrEnquadramentoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaTipoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
@@ -27,6 +31,8 @@ public class DataInitializer implements ApplicationRunner {
     private final PrEnquadramentoRepository prEnquadramentoRepo;
     private final PrFaturaTipoRepository prFaturaTipoRepo;
     private final PrSerieRepository prSerieRepo;
+    private final ClienteRepository clienteRepo;
+    private final FornecedorRepository fornecedorRepo;
 
     @Override
     @Transactional
@@ -34,6 +40,8 @@ public class DataInitializer implements ApplicationRunner {
         seedEnquadramentos();
         seedTiposFatura();
         seedSeries();
+        seedDemoClientes();
+        seedDemoFornecedores();
     }
 
     // ── pr_enquadramento ──────────────────────────────────────
@@ -111,5 +119,56 @@ public class DataInitializer implements ApplicationRunner {
         });
 
         log.info("[DataInitializer] Seeded {} séries.", prSerieRepo.count());
+    }
+
+    // ── demo clientes ─────────────────────────────────────────
+
+    private void seedDemoClientes() {
+        if (clienteRepo.count() > 0) {
+            log.debug("[DataInitializer] clientes already seeded, skipping.");
+            return;
+        }
+        record C(String codigo, String desig, String nif, boolean coletivo) {}
+        List.of(
+            new C("C-00000001", "Empresa Demo Lda",       "500000001", true),
+            new C("C-00000002", "João Silva",              "123456789", false),
+            new C("C-00000003", "Cabo Verde Serviços SA",  "500000002", true)
+        ).forEach(c -> {
+            var e = new ClienteEntity();
+            e.setCodigo(c.codigo());
+            e.setDesig(c.desig());
+            e.setNif(c.nif());
+            e.setIndColetivo(c.coletivo());
+            e.setAplicarImpostos(true);
+            e.setEstado("ATIVO");
+            e.setPais("CPV");
+            clienteRepo.save(e);
+        });
+        log.info("[DataInitializer] Seeded {} demo clientes.", clienteRepo.count());
+    }
+
+    // ── demo fornecedores ─────────────────────────────────────
+
+    private void seedDemoFornecedores() {
+        if (fornecedorRepo.count() > 0) {
+            log.debug("[DataInitializer] fornecedores already seeded, skipping.");
+            return;
+        }
+        record F(String codigo, String desig, String nif) {}
+        List.of(
+            new F("F-00000001", "Fornecedor Alpha Lda",  "600000001"),
+            new F("F-00000002", "Importações Beta SA",   "600000002")
+        ).forEach(f -> {
+            var e = new FornecedorEntity();
+            e.setCodigo(f.codigo());
+            e.setDesig(f.desig());
+            e.setNif(f.nif());
+            e.setIndColetivo(true);
+            e.setAplicarImpostos(true);
+            e.setEstado("ATIVO");
+            e.setPais("CPV");
+            fornecedorRepo.save(e);
+        });
+        log.info("[DataInitializer] Seeded {} demo fornecedores.", fornecedorRepo.count());
     }
 }
