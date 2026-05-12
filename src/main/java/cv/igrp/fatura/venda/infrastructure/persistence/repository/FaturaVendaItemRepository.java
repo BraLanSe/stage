@@ -19,4 +19,11 @@ public interface FaturaVendaItemRepository extends JpaRepository<FaturaVendaItem
            "GROUP BY i.desig " +
            "ORDER BY SUM(i.valorTotal) DESC")
     List<Object[]> findTopProdutos(Pageable pageable);
+
+    @Query("SELECT i.desig, i.codigoArtigo, COALESCE(SUM(i.quantidade), 0), COALESCE(SUM(i.valorTotal), 0) " +
+           "FROM FaturaVendaItemEntity i " +
+           "WHERE i.faturaVenda.estado = 'CONFIRMADO' " +
+           "GROUP BY i.desig, i.codigoArtigo " +
+           "ORDER BY SUM(i.valorTotal) DESC")
+    List<Object[]> top5ProdutosVendidos(Pageable pageable);
 }

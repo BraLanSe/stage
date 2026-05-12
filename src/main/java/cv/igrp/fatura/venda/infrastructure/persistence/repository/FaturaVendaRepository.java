@@ -50,6 +50,14 @@ public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, 
            "ORDER BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao)")
     List<Object[]> findMensaisConfirmadas(@Param("ano") int ano);
 
+    @Query("SELECT MONTH(f.dtFaturacao), COALESCE(SUM(f.valorFatura), 0) " +
+           "FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO' AND YEAR(f.dtFaturacao) = :ano " +
+           "GROUP BY MONTH(f.dtFaturacao)")
+    List<Object[]> sumValorFaturaByMonth(@Param("ano") int ano);
+
+    @Query("SELECT f.estado, COUNT(f), COALESCE(SUM(f.valorFatura), 0) FROM FaturaVendaEntity f GROUP BY f.estado")
+    List<Object[]> countAndSumByEstado();
+
     @Query("SELECT f.cliente.desig, f.cliente.nif, SUM(f.valorFatura) " +
            "FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO' " +
            "GROUP BY f.cliente.desig, f.cliente.nif " +

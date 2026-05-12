@@ -36,4 +36,9 @@ public interface FaturaCompraRepository extends JpaRepository<FaturaCompraEntity
            "GROUP BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao) " +
            "ORDER BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao)")
     List<Object[]> findMensaisConfirmadas(@Param("ano") int ano);
+
+    @Query("SELECT MONTH(f.dtFaturacao), COALESCE(SUM(f.valorFatura), 0) " +
+           "FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO' AND YEAR(f.dtFaturacao) = :ano " +
+           "GROUP BY MONTH(f.dtFaturacao)")
+    List<Object[]> sumValorFaturaByMonth(@Param("ano") int ano);
 }

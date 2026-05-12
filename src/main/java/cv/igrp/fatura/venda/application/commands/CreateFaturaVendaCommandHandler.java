@@ -168,7 +168,7 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
                             ? impostoDto.getTipoCalculo() : imposto.getTipoCalculo();
 
                     // Base for calculation — DTO value or item valorLiquido
-                    BigDecimal base = impostoDto.getBaseCalculo() != null ? impostoDto.getBaseCalculo() : valorLiquido;
+                    BigDecimal base = impostoDto.getBaseCalculo() != null ? impostoDto.getBaseCalculo() : calc.valorLiquido();
 
                     BigDecimal taxa = null;
                     BigDecimal valorFixo = null;
