@@ -39,6 +39,8 @@ const itemSchema = z.object({
     .positive("A quantidade deve ser superior a 0"),
   precoUnitario: z.number({ error: "Preço inválido" }).min(0, "O preço não pode ser negativo"),
   percentagemIva: z.number({ error: "IVA inválido" }).min(0, "IVA não pode ser negativo").max(100, "IVA não pode exceder 100%"),
+  descontoPerc: z.number().min(0).max(100).optional(),
+  descontoValor: z.number().min(0).optional(),
 });
 
 const MEIOS_PAGAMENTO = [
@@ -70,17 +72,18 @@ function n(v: number | undefined | null): number {
   return Number.isNaN(x) ? 0 : x;
 }
 
-/** Mirror of FaturaItemCalculo.calcular() — fiscal rounding to 2dp throughout */
-function calcItem(qty: number, priceTTC: number, ivaPerc: number) {
-  const htUnit = round2(priceTTC / (1 + ivaPerc / 100));
-  const bruto   = round2(qty * htUnit);
-  const imposto = round2(bruto * ivaPerc / 100);
-  const total   = round2(bruto + imposto);
-  return { bruto, imposto, total };
-}
-
-function calcLinha(qty: number, priceTTC: number): number {
-  return round2(n(qty) * n(priceTTC));
+/**
+ * Calculates HT base, IVA, and total for a line item.
+ * descontoPerc is applied to the TTC base before extracting HT — identical
+ * percentage applied to either HT or TTC yields the same ratio.
+ */
+function calcItem(qty: number, priceTTC: number, ivaPerc: number, descontoPerc = 0) {
+  const baseTTC  = round2(qty * priceTTC);
+  const discTTC  = round2(baseTTC * descontoPerc / 100);
+  const netTTC   = round2(baseTTC - discTTC);
+  const netHT    = round2(netTTC / (1 + ivaPerc / 100));
+  const imposto  = round2(netHT * ivaPerc / 100);
+  return { bruto: netHT, imposto, total: round2(netHT + imposto) };
 }
 
 function formatCVE(v: number) {
@@ -136,27 +139,25 @@ export default function NovaFaturaVendaPage() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      itens: [
-        { descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 },
-      ],
+      itens: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "itens" });
   const watchedItens = watch("itens") || [];
 
-  // Summary mirrors FaturaItemCalculo.calcular(): HT unit price is rounded to 2dp before
-  // being sent to the backend, so display must use the same htUnit to avoid cent divergence.
   const { valorIliquido, valorImposto, valorTotal } = watchedItens.reduce(
     (acc, item) => {
       const { bruto, imposto, total } = calcItem(
         n(item?.quantidade),
         n(item?.precoUnitario),
         n(item?.percentagemIva),
+        n(item?.descontoPerc),
       );
       return {
         valorIliquido: round2(acc.valorIliquido + bruto),
@@ -176,6 +177,8 @@ export default function NovaFaturaVendaPage() {
       quantidade: addQty,
       precoUnitario: produto.preco ?? 0,
       percentagemIva: 15,
+      descontoPerc: 0,
+      descontoValor: 0,
     });
     setAddProdutoId("");
     setAddQty(1);
@@ -191,11 +194,12 @@ export default function NovaFaturaVendaPage() {
         dataVencimento: values.dataVencimento,
         observacoes: values.observacoes,
         itens: values.itens.map(
-          ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
+          ({ descricao, quantidade, precoUnitario, percentagemIva, descontoPerc }) => ({
             desig: descricao,
             quantidade,
             precoUnitario: round2(precoUnitario / (1 + percentagemIva / 100)),
             percentagemIva,
+            descontoComercialPerc: round2(descontoPerc ?? 0),
           }),
         ),
       });
@@ -397,7 +401,7 @@ export default function NovaFaturaVendaPage() {
                 tag="btn-add-linha-vazia"
                 type="button"
                 variant="outline"
-                onClick={() => append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 })}
+                onClick={() => append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15, descontoPerc: 0, descontoValor: 0 })}
               >
                 + Linha Vazia
               </IGRPButton>
@@ -416,11 +420,17 @@ export default function NovaFaturaVendaPage() {
                     <IGRPTableHeadPrimitive>
                       Produto / Serviço
                     </IGRPTableHeadPrimitive>
-                    <IGRPTableHeadPrimitive className="w-28">
+                    <IGRPTableHeadPrimitive className="w-24">
                       Qtd.
                     </IGRPTableHeadPrimitive>
                     <IGRPTableHeadPrimitive className="w-32">
                       Preço Unit. (c/ IVA)
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-24">
+                      Desc. (%)
+                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-28">
+                      Desc. (Valor)
                     </IGRPTableHeadPrimitive>
                     <IGRPTableHeadPrimitive className="w-24">
                       IVA %
@@ -432,22 +442,36 @@ export default function NovaFaturaVendaPage() {
                   </IGRPTableRowPrimitive>
                 </IGRPTableHeaderPrimitive>
                 <IGRPTableBodyPrimitive>
+                  {fields.length === 0 && (
+                    <IGRPTableRowPrimitive>
+                      <IGRPTableCellPrimitive colSpan={8} className="py-8 text-center text-sm text-gray-400">
+                        Nenhum item adicionado. Use o seletor acima para adicionar produtos.
+                      </IGRPTableCellPrimitive>
+                    </IGRPTableRowPrimitive>
+                  )}
                   {fields.map((field, i) => {
                     const item = watchedItens[i];
-                    const linhaTotal = item
-                      ? round2(calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0))
-                      : 0;
+                    const { total: linhaTotal } = calcItem(
+                      n(item?.quantidade),
+                      n(item?.precoUnitario),
+                      n(item?.percentagemIva),
+                      n(item?.descontoPerc),
+                    );
                     const itemErrors = errors.itens?.[i];
+                    const baseTTC = round2(n(item?.quantidade) * n(item?.precoUnitario));
 
                     return (
                       <IGRPTableRowPrimitive key={field.id}>
-                        <IGRPTableCellPrimitive className="align-top py-2 min-w-[220px]">
+                        {/* Descrição */}
+                        <IGRPTableCellPrimitive className="align-top py-2 min-w-[200px]">
                           <IGRPInputText
                             placeholder="Designação / Serviço…"
                             error={itemErrors?.descricao?.message}
                             {...register(`itens.${i}.descricao`)}
                           />
                         </IGRPTableCellPrimitive>
+
+                        {/* Quantidade */}
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller
                             name={`itens.${i}.quantidade`}
@@ -458,12 +482,19 @@ export default function NovaFaturaVendaPage() {
                                 min={0}
                                 step={0.01}
                                 value={f.value}
-                                onChange={f.onChange}
+                                onChange={(v) => {
+                                  f.onChange(v);
+                                  const newBase = round2(n(v) * n(item?.precoUnitario));
+                                  const perc = n(item?.descontoPerc);
+                                  setValue(`itens.${i}.descontoValor`, round2(newBase * perc / 100));
+                                }}
                                 error={itemErrors?.quantidade?.message}
                               />
                             )}
                           />
                         </IGRPTableCellPrimitive>
+
+                        {/* Preço Unitário */}
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller
                             name={`itens.${i}.precoUnitario`}
@@ -474,12 +505,65 @@ export default function NovaFaturaVendaPage() {
                                 min={0}
                                 step={0.01}
                                 value={f.value}
-                                onChange={f.onChange}
+                                onChange={(v) => {
+                                  f.onChange(v);
+                                  const newBase = round2(n(item?.quantidade) * n(v));
+                                  const perc = n(item?.descontoPerc);
+                                  setValue(`itens.${i}.descontoValor`, round2(newBase * perc / 100));
+                                }}
                                 error={itemErrors?.precoUnitario?.message}
                               />
                             )}
                           />
                         </IGRPTableCellPrimitive>
+
+                        {/* Desconto % */}
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.descontoPerc`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.descontoPerc`}
+                                min={0}
+                                max={100}
+                                step={0.01}
+                                value={f.value}
+                                onChange={(v) => {
+                                  const perc = round2(Number(v) || 0);
+                                  f.onChange(perc);
+                                  setValue(`itens.${i}.descontoValor`, round2(baseTTC * perc / 100));
+                                }}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+
+                        {/* Desconto Valor */}
+                        <IGRPTableCellPrimitive className="align-top py-2">
+                          <Controller
+                            name={`itens.${i}.descontoValor`}
+                            control={control}
+                            render={({ field: f }) => (
+                              <IGRPInputNumber
+                                name={`itens.${i}.descontoValor`}
+                                min={0}
+                                step={0.01}
+                                value={f.value}
+                                onChange={(v) => {
+                                  const val = round2(Number(v) || 0);
+                                  f.onChange(val);
+                                  setValue(
+                                    `itens.${i}.descontoPerc`,
+                                    baseTTC > 0 ? round2((val / baseTTC) * 100) : 0,
+                                  );
+                                }}
+                              />
+                            )}
+                          />
+                        </IGRPTableCellPrimitive>
+
+                        {/* IVA % */}
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller
                             name={`itens.${i}.percentagemIva`}
@@ -497,16 +581,19 @@ export default function NovaFaturaVendaPage() {
                             )}
                           />
                         </IGRPTableCellPrimitive>
+
+                        {/* Total Linha */}
                         <IGRPTableCellPrimitive className="text-right font-medium align-top py-4">
                           {formatCVE(linhaTotal)}
                         </IGRPTableCellPrimitive>
+
+                        {/* Remover */}
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <IGRPButton
                             name={`remover-linha-${i}`}
                             type="button"
                             variant="ghost"
                             size="sm"
-                            disabled={fields.length === 1}
                             onClick={() => remove(i)}
                           >
                             ×
