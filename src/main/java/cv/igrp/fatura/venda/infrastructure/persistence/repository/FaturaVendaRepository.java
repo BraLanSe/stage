@@ -23,6 +23,24 @@ public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, 
     @Query("SELECT SUM(f.valorFatura) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
     BigDecimal sumTotalVendas();
 
+    @Query("SELECT COALESCE(SUM(f.valorIliquido), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
+    BigDecimal sumValorIliquido();
+
+    @Query("SELECT COALESCE(SUM(f.valorImposto), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
+    BigDecimal sumValorImposto();
+
+    @Query("SELECT COALESCE(SUM(f.valorFatura), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
+    BigDecimal sumValorFatura();
+
+    @Query("SELECT COALESCE(SUM(f.valorFatura), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO' AND f.dtFaturacao >= :from AND f.dtFaturacao < :to")
+    BigDecimal sumValorFaturaBetween(@Param("from") java.time.LocalDate from, @Param("to") java.time.LocalDate to);
+
+    @Query("SELECT COUNT(f) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
+    Long countConfirmado();
+
+    @Query("SELECT COALESCE(SUM(f.valorPorPagar), 0) FROM FaturaVendaEntity f WHERE f.estado = 'CONFIRMADO'")
+    BigDecimal sumValorPorPagar();
+
     @Query("SELECT f.estado, COUNT(f) FROM FaturaVendaEntity f GROUP BY f.estado")
     List<Object[]> countByEstado();
 

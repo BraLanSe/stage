@@ -22,6 +22,15 @@ public interface FaturaCompraRepository extends JpaRepository<FaturaCompraEntity
     @Query("SELECT SUM(f.valorFatura) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO'")
     BigDecimal sumTotalDespesas();
 
+    @Query("SELECT COALESCE(SUM(f.valorFatura), 0) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO' AND f.dtFaturacao >= :from AND f.dtFaturacao < :to")
+    BigDecimal sumValorFaturaBetween(@Param("from") java.time.LocalDate from, @Param("to") java.time.LocalDate to);
+
+    @Query("SELECT COUNT(f) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO'")
+    Long countConfirmado();
+
+    @Query("SELECT COALESCE(SUM(f.valorPorPagar), 0) FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO'")
+    BigDecimal sumValorPorPagar();
+
     @Query("SELECT YEAR(f.dtFaturacao), MONTH(f.dtFaturacao), SUM(f.valorFatura) " +
            "FROM FaturaCompraEntity f WHERE f.estado = 'CONFIRMADO' AND YEAR(f.dtFaturacao) = :ano " +
            "GROUP BY YEAR(f.dtFaturacao), MONTH(f.dtFaturacao) " +

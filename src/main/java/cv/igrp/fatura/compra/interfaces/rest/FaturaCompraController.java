@@ -143,12 +143,18 @@ public class FaturaCompraController {
     }
 
     @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Transactional(readOnly = true)
     @Operation(summary = "Exportar fatura de compra em PDF")
     public ResponseEntity<byte[]> pdf(@PathVariable Integer id) {
-        byte[] bytes = pdfService.gerarPdfById(id);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"fatura-compra-" + id + ".pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(bytes);
+        return faturaCompraRepo.findById(id)
+                .map(fatura -> {
+                    byte[] bytes = pdfService.gerarPdf(FaturaCompraReadDTO.from(fatura));
+                    String filename = "fatura-compra-" + (fatura.getCodigo() != null ? fatura.getCodigo() : id) + ".pdf";
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.APPLICATION_PDF)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                            .body(bytes);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
