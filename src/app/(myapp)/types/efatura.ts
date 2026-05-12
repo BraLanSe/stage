@@ -438,9 +438,14 @@ export interface FaturaCompraReadDTO {
   valorFatura?: CVE;
   valorPago?: CVE;
   valorPorPagar?: CVE;
+  meioPagamento?: string;
   termCondicoes?: string;
   nota?: string;
   utilizador?: string;
+  fornecedorBanco?: string;
+  fornecedorIban?: string;
+  nossoBanco?: string;
+  nossoIban?: string;
   tipoFatura?: { id: number; codigo: string; desig: string };
   prSerie?: { id: number; codigo: string; desig?: string };
   fornecedor?: { id: number; codigo?: string; desig: string; nif?: string };

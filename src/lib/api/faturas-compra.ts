@@ -1,6 +1,7 @@
 import type {
   CriarFaturaCompraRequest,
   FaturaCompra,
+  FaturaCompraReadDTO,
   PaginatedResponse,
 } from "@/app/(myapp)/types/efatura";
 import { apiRequest } from "./client";
@@ -76,7 +77,7 @@ export const faturasCompraApi = {
       `${BASE}?page=${page}&size=${size}`,
     ),
 
-  obter: (id: number) => apiRequest<FaturaCompra>(`${BASE}/${id}`),
+  obter: (id: number) => apiRequest<FaturaCompraReadDTO>(`${BASE}/${id}`),
 
   criar: (data: CriarFaturaCompraRequest) => {
     const dto = toFaturaCompraDTO(data);
