@@ -21,7 +21,7 @@ public class DadosBancariosEntity extends AuditEntity {
     @Column(name = "banco", length = 100)
     private String banco;
 
-    @Column(name = "nib", length = 25)
+    @Column(name = "nib", length = 50)
     private String nib;
 
     @Column(name = "iban", length = 34)
@@ -33,6 +33,6 @@ public class DadosBancariosEntity extends AuditEntity {
     @Column(name = "titular", length = 150)
     private String titular;
 
-    @Column(name = "estado", nullable = false, length = 20)
+    @Column(name = "estado", nullable = true, length = 20)
     private String estado = "ATIVO";
 }
