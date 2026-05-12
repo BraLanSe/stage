@@ -83,8 +83,13 @@ public class CreateFaturaCompraCommandHandler implements CommandHandler<CreateFa
         fatura.setPago(false);
         fatura.setFornecedor(fornecedor);
         fatura.setPrSerie(serie);
+        fatura.setMeioPagamento(dto.getMeioPagamento());
         fatura.setTermCondicoes(dto.getTermCondicoes());
         fatura.setNota(dto.getNota());
+        fatura.setFornecedorBanco(dto.getFornecedorBanco());
+        fatura.setFornecedorIban(dto.getFornecedorIban());
+        fatura.setNossoBanco(dto.getNossoBanco());
+        fatura.setNossoIban(dto.getNossoIban());
         fatura.setUtilizador(auditorAware.getPreferredUsername());
         fatura.setDescontoFinanceiro(BigDecimal.ZERO);
         fatura.setDescontoComercial(BigDecimal.ZERO);

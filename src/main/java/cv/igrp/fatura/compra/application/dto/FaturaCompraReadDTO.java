@@ -29,9 +29,14 @@ public class FaturaCompraReadDTO {
     private BigDecimal valorFatura;
     private BigDecimal valorPago;
     private BigDecimal valorPorPagar;
+    private String meioPagamento;
     private String termCondicoes;
     private String nota;
     private String utilizador;
+    private String fornecedorBanco;
+    private String fornecedorIban;
+    private String nossoBanco;
+    private String nossoIban;
     private TipoFaturaInfo tipoFatura;
     private SerieInfo prSerie;
     private FornecedorInfo fornecedor;
@@ -111,9 +116,14 @@ public class FaturaCompraReadDTO {
         dto.setValorFatura(e.getValorFatura());
         dto.setValorPago(e.getValorPago());
         dto.setValorPorPagar(e.getValorPorPagar());
+        dto.setMeioPagamento(e.getMeioPagamento());
         dto.setTermCondicoes(e.getTermCondicoes());
         dto.setNota(e.getNota());
         dto.setUtilizador(e.getUtilizador());
+        dto.setFornecedorBanco(e.getFornecedorBanco());
+        dto.setFornecedorIban(e.getFornecedorIban());
+        dto.setNossoBanco(e.getNossoBanco());
+        dto.setNossoIban(e.getNossoIban());
 
         if (e.getTipoFatura() != null) {
             TipoFaturaInfo t = new TipoFaturaInfo();

@@ -29,6 +29,12 @@ import { useFornecedores, useProdutos } from "@/hooks/use-cadastro";
 import { useCriarFaturaCompra } from "@/hooks/use-faturas-compra";
 import { parametrizacaoApi } from "@/lib/api/parametrizacao";
 
+const MEIOS_PAGAMENTO = [
+  { label: "Dinheiro",       value: "Dinheiro" },
+  { label: "Cheque",         value: "Cheque" },
+  { label: "Transferência",  value: "Transferencia" },
+] as const;
+
 const itemSchema = z.object({
   descricao: z.string().min(1, "Descrição obrigatória"),
   quantidade: z
@@ -44,11 +50,16 @@ const itemSchema = z.object({
 });
 
 const schema = z.object({
-  fornecedorId: z.number({ error: "Selecione um fornecedor" }),
-  tipoFaturaId: z.number({ error: "Selecione o tipo de documento" }),
-  prSerieId: z.number({ error: "Selecione uma série" }),
-  dataVencimento: z.string().optional(),
-  observacoes: z.string().optional(),
+  fornecedorId:    z.number({ error: "Selecione um fornecedor" }),
+  tipoFaturaId:    z.number({ error: "Selecione o tipo de documento" }),
+  prSerieId:       z.number({ error: "Selecione uma série" }),
+  meioPagamento:   z.string().optional(),
+  dataVencimento:  z.string().optional(),
+  observacoes:     z.string().optional(),
+  fornecedorBanco: z.string().optional(),
+  fornecedorIban:  z.string().optional(),
+  nossoBanco:      z.string().optional(),
+  nossoIban:       z.string().optional(),
   itens: z.array(itemSchema).min(1, "Adicione pelo menos um item"),
 });
 
@@ -77,6 +88,16 @@ function formatCVE(v: number) {
   }).format(v);
 }
 
+function formatCVEInt(v: number) {
+  if (Number.isNaN(v)) return "0 CVE";
+  return new Intl.NumberFormat("pt-CV", {
+    style: "currency",
+    currency: "CVE",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(v);
+}
+
 export default function NovaFaturaCompraPage() {
   const router = useRouter();
   const { mutateAsync: criar, isPending } = useCriarFaturaCompra();
@@ -84,9 +105,8 @@ export default function NovaFaturaCompraPage() {
   const fornecedores = fornecedoresPage?.content ?? [];
   const { data: produtosPage } = useProdutos(0, 100);
   const produtos = produtosPage?.content ?? [];
-  const [selectedProdutos, setSelectedProdutos] = useState<
-    Record<string, string>
-  >({});
+  const [addProdutoId, setAddProdutoId] = useState<string>("");
+  const [addQty, setAddQty] = useState<number>(1);
 
   const { data: tiposFaturaData, isLoading: tiposFaturaLoading } = useQuery({
     queryKey: ["parametrizacao", "tipos-fatura"],
@@ -108,7 +128,6 @@ export default function NovaFaturaCompraPage() {
     control,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -121,10 +140,7 @@ export default function NovaFaturaCompraPage() {
   const itens = watch("itens");
 
   const valorTotal = round2(
-    itens.reduce(
-      (acc, item) => acc + round2(n(item?.quantidade) * n(item?.precoUnitario)),
-      0,
-    ),
+    itens.reduce((acc, item) => acc + round2(n(item?.quantidade) * n(item?.precoUnitario)), 0),
   );
   const valorIliquido = round2(
     itens.reduce((acc, item) => {
@@ -133,24 +149,41 @@ export default function NovaFaturaCompraPage() {
     }, 0),
   );
   const valorImposto = round2(valorTotal - valorIliquido);
+  const valorTotalFinal = Math.round(valorTotal);
+
+  function handleAdicionarProduto() {
+    const produto = produtos.find((p) => String(p.id) === addProdutoId);
+    if (!produto) return;
+    append({
+      descricao: produto.desig,
+      quantidade: addQty,
+      precoUnitario: produto.preco ?? 0,
+      percentagemIva: 15,
+    });
+    setAddProdutoId("");
+    setAddQty(1);
+  }
 
   async function onSubmit(values: FormValues) {
     try {
       const fatura = await criar({
-        fornecedorId: values.fornecedorId,
-        tipoFaturaId: values.tipoFaturaId,
-        prSerieId: values.prSerieId,
-        dataVencimento: values.dataVencimento,
-        observacoes: values.observacoes,
-        itens: values.itens.map(
-          ({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
-            desig: descricao,
-            descricao,
-            quantidade,
-            precoUnitario: round2(precoUnitario / (1 + percentagemIva / 100)),
-            percentagemIva,
-          }),
-        ),
+        fornecedorId:    values.fornecedorId,
+        tipoFaturaId:    values.tipoFaturaId,
+        prSerieId:       values.prSerieId,
+        meioPagamento:   values.meioPagamento,
+        dataVencimento:  values.dataVencimento,
+        observacoes:     values.observacoes,
+        fornecedorBanco: values.fornecedorBanco,
+        fornecedorIban:  values.fornecedorIban,
+        nossoBanco:      values.nossoBanco,
+        nossoIban:       values.nossoIban,
+        itens: values.itens.map(({ descricao, quantidade, precoUnitario, percentagemIva }) => ({
+          desig: descricao,
+          descricao,
+          quantidade,
+          precoUnitario: round2(precoUnitario / (1 + percentagemIva / 100)),
+          percentagemIva,
+        })),
       });
       toast.success("Fatura de compra criada com sucesso!");
       router.push(`/faturas-compra/${fatura.id}`);
@@ -167,14 +200,7 @@ export default function NovaFaturaCompraPage() {
       tag="nova-fatura-compra"
       className="mx-auto max-w-5xl p-6 bg-[#f7f9fc] min-h-screen"
     >
-      <IGRPButton
-        name="force-studio"
-        tag="force-studio"
-        id="force-studio"
-        className="sr-only"
-      >
-        FORCE
-      </IGRPButton>
+      <IGRPButton name="force-studio" tag="force-studio" id="force-studio" className="sr-only">FORCE</IGRPButton>
       <IGRPPageHeader
         name="nova-fatura-compra-header"
         tag="nova-fatura-compra-header"
@@ -184,21 +210,16 @@ export default function NovaFaturaCompraPage() {
         backButtonText="Faturas de Compra"
       />
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 mt-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 mt-6">
         {/* Informações Gerais */}
-        <IGRPCard
-          name="card-info-gerais"
-          tag="card-info-gerais"
-          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
-        >
+        <IGRPCard name="card-info-gerais" tag="card-info-gerais"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
           <IGRPCardContent className="p-6">
             <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">
               Informações Gerais
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+
               {/* Fornecedor */}
               <Controller
                 name="fornecedorId"
@@ -210,13 +231,28 @@ export default function NovaFaturaCompraPage() {
                     label="Fornecedor"
                     required
                     placeholder="Selecionar fornecedor…"
-                    options={fornecedores.map((f) => ({
-                      label: f.desig,
-                      value: String(f.id),
-                    }))}
+                    options={fornecedores.map((f) => ({ label: f.desig, value: String(f.id) }))}
                     value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.fornecedorId?.message}
+                  />
+                )}
+              />
+
+              {/* Meio de Pagamento */}
+              <Controller
+                name="meioPagamento"
+                control={control}
+                render={({ field }) => (
+                  <IGRPSelect
+                    name="meioPagamento"
+                    tag="select-meioPagamento"
+                    label="Meio de Pagamento"
+                    placeholder="Selecionar meio…"
+                    options={MEIOS_PAGAMENTO.map((m) => ({ label: m.label, value: m.value }))}
+                    value={field.value ?? undefined}
+                    onValueChange={(v) => field.onChange(v)}
+                    error={errors.meioPagamento?.message}
                   />
                 )}
               />
@@ -231,14 +267,9 @@ export default function NovaFaturaCompraPage() {
                     tag="select-tipoFaturaId"
                     label="Tipo de Documento"
                     required
-                    placeholder={
-                      tiposFaturaLoading ? "A carregar…" : "Selecionar tipo…"
-                    }
+                    placeholder={tiposFaturaLoading ? "A carregar…" : "Selecionar tipo…"}
                     disabled={tiposFaturaLoading}
-                    options={tiposFatura.map((t) => ({
-                      label: t.desig,
-                      value: String(t.id),
-                    }))}
+                    options={tiposFatura.map((t) => ({ label: t.desig, value: String(t.id) }))}
                     value={field.value ? String(field.value) : undefined}
                     onValueChange={(v) => field.onChange(Number(v))}
                     error={errors.tipoFaturaId?.message}
@@ -256,9 +287,7 @@ export default function NovaFaturaCompraPage() {
                     tag="select-prSerieId"
                     label="Série"
                     required
-                    placeholder={
-                      seriesLoading ? "A carregar…" : "Selecionar série…"
-                    }
+                    placeholder={seriesLoading ? "A carregar…" : "Selecionar série…"}
                     disabled={seriesLoading}
                     options={series.map((s) => ({
                       label: `${s.codigo}${s.desig ? ` — ${s.desig}` : ""}`,
@@ -295,111 +324,141 @@ export default function NovaFaturaCompraPage() {
           </IGRPCardContent>
         </IGRPCard>
 
-        {/* Itens da Fatura */}
-        <IGRPCard
-          name="card-itens-fatura"
-          tag="card-itens-fatura"
-          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
-        >
+        {/* Dados Bancários */}
+        <IGRPCard name="card-dados-bancarios" tag="card-dados-bancarios"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
           <IGRPCardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">
-                Itens da Fatura
-              </h2>
+            <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">
+              Dados Bancários
+            </h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Fornecedor */}
+              <div className="flex flex-col gap-3">
+                <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                  Fornecedor (beneficiário)
+                </p>
+                <IGRPInputText
+                  id="input-fornecedorBanco"
+                  tag="input-fornecedorBanco"
+                  label="Banco"
+                  placeholder="Ex: BCA, CECV…"
+                  {...register("fornecedorBanco")}
+                />
+                <IGRPInputText
+                  id="input-fornecedorIban"
+                  tag="input-fornecedorIban"
+                  label="IBAN"
+                  placeholder="CV60 0002 0000 0000 0000 0"
+                  {...register("fornecedorIban")}
+                />
+              </div>
+              {/* Nossa empresa */}
+              <div className="flex flex-col gap-3">
+                <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                  Nossa Empresa (pagador)
+                </p>
+                <IGRPInputText
+                  id="input-nossoBanco"
+                  tag="input-nossoBanco"
+                  label="Banco"
+                  placeholder="Ex: BCA, CECV…"
+                  {...register("nossoBanco")}
+                />
+                <IGRPInputText
+                  id="input-nossoIban"
+                  tag="input-nossoIban"
+                  label="IBAN"
+                  placeholder="CV60 0002 0000 0000 0000 0"
+                  {...register("nossoIban")}
+                />
+              </div>
+            </div>
+          </IGRPCardContent>
+        </IGRPCard>
+
+        {/* Itens da Fatura */}
+        <IGRPCard name="card-itens-fatura" tag="card-itens-fatura"
+          className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
+          <IGRPCardContent className="p-6">
+            <h2 className="mb-4 text-base font-semibold border-l-[3px] border-[#3579f6] pl-2">
+              Itens da Fatura
+            </h2>
+
+            {/* Product selector */}
+            <div className="mb-5 flex items-end gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+              <div className="flex-1">
+                <IGRPSelect
+                  name="add-produto"
+                  tag="select-add-produto"
+                  label="Selecionar Produto"
+                  placeholder="Escolha um produto para adicionar…"
+                  options={produtos.map((p) => ({
+                    label: `${p.codigo ? `[${p.codigo}] ` : ""}${p.desig}`,
+                    value: String(p.id),
+                  }))}
+                  value={addProdutoId}
+                  onValueChange={setAddProdutoId}
+                />
+              </div>
+              <div className="w-28">
+                <IGRPInputNumber
+                  name="add-qty"
+                  label="Quantidade"
+                  min={0.01}
+                  step={1}
+                  value={addQty}
+                  onChange={(v) => setAddQty(Number(v) || 1)}
+                />
+              </div>
               <IGRPButton
-                name="adicionar-linha"
-                tag="btn-adicionar-linha"
+                name="btn-add-produto"
+                tag="btn-add-produto"
+                type="button"
+                onClick={handleAdicionarProduto}
+                disabled={!addProdutoId}
+              >
+                + Adicionar
+              </IGRPButton>
+              <IGRPButton
+                name="btn-add-linha-vazia"
+                tag="btn-add-linha-vazia"
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    descricao: "",
-                    quantidade: 1,
-                    precoUnitario: 0,
-                    percentagemIva: 15,
-                  })
-                }
+                onClick={() => append({ descricao: "", quantidade: 1, precoUnitario: 0, percentagemIva: 15 })}
               >
-                + Adicionar Linha
+                + Linha Vazia
               </IGRPButton>
             </div>
 
             {errors.itens && !Array.isArray(errors.itens) && (
-              <p className="mb-3 text-sm text-destructive">
-                {errors.itens.message}
-              </p>
+              <p className="mb-3 text-sm text-destructive">{errors.itens.message}</p>
             )}
 
             <div className="overflow-x-auto">
               <IGRPTablePrimitive>
                 <IGRPTableHeaderPrimitive>
                   <IGRPTableRowPrimitive>
-                    <IGRPTableHeadPrimitive>
-                      Produto / Serviço
-                    </IGRPTableHeadPrimitive>
-                    <IGRPTableHeadPrimitive className="w-28">
-                      Qtd.
-                    </IGRPTableHeadPrimitive>
-                    <IGRPTableHeadPrimitive className="w-32">
-                      Preço Unit. (c/ IVA)
-                    </IGRPTableHeadPrimitive>
-                    <IGRPTableHeadPrimitive className="w-24">
-                      IVA %
-                    </IGRPTableHeadPrimitive>
-                    <IGRPTableHeadPrimitive className="w-36 text-right">
-                      Total Linha
-                    </IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive>Produto / Serviço</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-28">Qtd.</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-32">Preço Unit. (c/ IVA)</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-24">IVA %</IGRPTableHeadPrimitive>
+                    <IGRPTableHeadPrimitive className="w-36 text-right">Total Linha</IGRPTableHeadPrimitive>
                     <IGRPTableHeadPrimitive className="w-10" />
                   </IGRPTableRowPrimitive>
                 </IGRPTableHeaderPrimitive>
                 <IGRPTableBodyPrimitive>
                   {fields.map((field, i) => {
                     const item = itens[i];
-                    const linhaTotal = item
-                      ? calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0)
-                      : 0;
+                    const linhaTotal = item ? calcLinha(item.quantidade ?? 0, item.precoUnitario ?? 0) : 0;
+                    const itemErrors = errors.itens?.[i];
                     return (
                       <IGRPTableRowPrimitive key={field.id}>
                         <IGRPTableCellPrimitive className="align-top py-2 min-w-[220px]">
-                          <div className="flex flex-col gap-1.5">
-                            <IGRPSelect
-                              name={`produto-select-${i}`}
-                              tag={`select-produto-${i}`}
-                              placeholder="Selecionar produto…"
-                              value={selectedProdutos[field.id] ?? ""}
-                              options={produtos.map((p) => ({
-                                label: `${p.codigo ? `[${p.codigo}] ` : ""}${p.desig}`,
-                                value: String(p.id),
-                              }))}
-                              onValueChange={(v) => {
-                                setSelectedProdutos((prev) => ({
-                                  ...prev,
-                                  [field.id]: v,
-                                }));
-                                const produto = produtos.find(
-                                  (p) => String(p.id) === v,
-                                );
-                                if (produto) {
-                                  setValue(
-                                    `itens.${i}.descricao`,
-                                    produto.desig,
-                                    { shouldValidate: true },
-                                  );
-                                  setValue(
-                                    `itens.${i}.precoUnitario`,
-                                    produto.preco ?? 0,
-                                    { shouldValidate: true },
-                                  );
-                                }
-                              }}
-                            />
-                            <IGRPInputText
-                              placeholder="Ou descreva manualmente…"
-                              error={errors.itens?.[i]?.descricao?.message}
-                              {...register(`itens.${i}.descricao`)}
-                            />
-                          </div>
+                          <IGRPInputText
+                            placeholder="Designação / Serviço…"
+                            error={itemErrors?.descricao?.message}
+                            {...register(`itens.${i}.descricao`)}
+                          />
                         </IGRPTableCellPrimitive>
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <Controller
@@ -408,11 +467,9 @@ export default function NovaFaturaCompraPage() {
                             render={({ field: f }) => (
                               <IGRPInputNumber
                                 name={`itens.${i}.quantidade`}
-                                min={0}
-                                step={0.01}
-                                value={f.value}
-                                onChange={f.onChange}
-                                error={errors.itens?.[i]?.quantidade?.message}
+                                min={0} step={0.01}
+                                value={f.value} onChange={f.onChange}
+                                error={itemErrors?.quantidade?.message}
                               />
                             )}
                           />
@@ -424,13 +481,9 @@ export default function NovaFaturaCompraPage() {
                             render={({ field: f }) => (
                               <IGRPInputNumber
                                 name={`itens.${i}.precoUnitario`}
-                                min={0}
-                                step={0.01}
-                                value={f.value}
-                                onChange={f.onChange}
-                                error={
-                                  errors.itens?.[i]?.precoUnitario?.message
-                                }
+                                min={0} step={0.01}
+                                value={f.value} onChange={f.onChange}
+                                error={itemErrors?.precoUnitario?.message}
                               />
                             )}
                           />
@@ -442,14 +495,9 @@ export default function NovaFaturaCompraPage() {
                             render={({ field: f }) => (
                               <IGRPInputNumber
                                 name={`itens.${i}.percentagemIva`}
-                                min={0}
-                                max={100}
-                                step={0.1}
-                                value={f.value}
-                                onChange={f.onChange}
-                                error={
-                                  errors.itens?.[i]?.percentagemIva?.message
-                                }
+                                min={0} max={100} step={0.1}
+                                value={f.value} onChange={f.onChange}
+                                error={itemErrors?.percentagemIva?.message}
                               />
                             )}
                           />
@@ -460,10 +508,7 @@ export default function NovaFaturaCompraPage() {
                         <IGRPTableCellPrimitive className="align-top py-2">
                           <IGRPButton
                             name={`remover-linha-${i}`}
-                            tag={`btn-remover-linha-${i}`}
-                            type="button"
-                            variant="ghost"
-                            size="sm"
+                            type="button" variant="ghost" size="sm"
                             disabled={fields.length === 1}
                             onClick={() => remove(i)}
                           >
@@ -482,67 +527,40 @@ export default function NovaFaturaCompraPage() {
         {/* Summary + Ações */}
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-4">
-            <IGRPCard
-              name="card-valor-iliquido"
-              tag="card-valor-iliquido"
-              className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
-            >
+            <IGRPCard name="card-valor-iliquido" tag="card-valor-iliquido"
+              className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
               <IGRPCardContent className="p-5 text-center">
-                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
-                  Valor Ilíquido
-                </p>
-                <p className="text-xl font-semibold text-gray-800">
-                  {formatCVE(valorIliquido)}
-                </p>
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Valor Ilíquido</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorIliquido)}</p>
               </IGRPCardContent>
             </IGRPCard>
-            <IGRPCard
-              name="card-valor-imposto"
-              tag="card-valor-imposto"
-              className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100"
-            >
+            <IGRPCard name="card-valor-imposto" tag="card-valor-imposto"
+              className="rounded-2xl shadow-[0_2px_12px_rgba(53,121,246,0.07)] border border-slate-100">
               <IGRPCardContent className="p-5 text-center">
-                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
-                  IVA
-                </p>
-                <p className="text-xl font-semibold text-gray-800">
-                  {formatCVE(valorImposto)}
-                </p>
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">IVA</p>
+                <p className="text-xl font-semibold text-gray-800">{formatCVE(valorImposto)}</p>
               </IGRPCardContent>
             </IGRPCard>
-            <IGRPCard
-              name="card-valor-total"
-              tag="card-valor-total"
-              className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5"
-            >
+            <IGRPCard name="card-valor-total" tag="card-valor-total"
+              className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5">
               <IGRPCardContent className="p-5 text-center">
-                <p className="text-xs font-medium mb-1 uppercase tracking-wide text-[#3579f6]">
-                  Valor Total
-                </p>
-                <p className="text-2xl font-bold text-[#3579f6]">
-                  {formatCVE(valorTotal)}
-                </p>
+                <p className="text-xs font-medium mb-1 uppercase tracking-wide text-[#3579f6]">Valor Total</p>
+                <p className="text-2xl font-bold text-[#3579f6]">{formatCVEInt(valorTotalFinal)}</p>
               </IGRPCardContent>
             </IGRPCard>
           </div>
           <div className="flex justify-end gap-3">
             <IGRPButton
-              name="cancelar"
-              tag="btn-cancelar"
-              type="button"
-              variant="outline"
+              name="cancelar" tag="btn-cancelar"
+              type="button" variant="outline"
               onClick={() => router.push("/faturas-compra")}
             >
               Cancelar
             </IGRPButton>
             <IGRPButton
-              name="guardar-rascunho"
-              tag="btn-guardar-rascunho"
+              name="guardar-rascunho" tag="btn-guardar-rascunho"
               type="submit"
-              showIcon
-              iconName="Save"
-              loading={isPending}
-              loadingText="A guardar…"
+              loading={isPending} loadingText="A guardar…"
             >
               Guardar Rascunho
             </IGRPButton>

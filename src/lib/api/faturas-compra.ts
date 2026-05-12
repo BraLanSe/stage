@@ -60,8 +60,13 @@ function toFaturaCompraDTO(data: CriarFaturaCompraRequest): Record<string, unkno
     valorFatura: round2(valorIliquido + valorImposto),
     items,
   };
-  if (data.dataVencimento) dto.dtVencimentoFatura = data.dataVencimento;
-  if (data.observacoes) dto.nota = data.observacoes;
+  if (data.meioPagamento)   dto.meioPagamento   = data.meioPagamento;
+  if (data.dataVencimento)  dto.dtVencimentoFatura = data.dataVencimento;
+  if (data.observacoes)     dto.nota            = data.observacoes;
+  if (data.fornecedorBanco) dto.fornecedorBanco = data.fornecedorBanco;
+  if (data.fornecedorIban)  dto.fornecedorIban  = data.fornecedorIban;
+  if (data.nossoBanco)      dto.nossoBanco      = data.nossoBanco;
+  if (data.nossoIban)       dto.nossoIban       = data.nossoIban;
   return dto;
 }
 

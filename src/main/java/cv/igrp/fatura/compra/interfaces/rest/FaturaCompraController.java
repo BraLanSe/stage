@@ -9,6 +9,7 @@ import cv.igrp.fatura.compra.application.dto.FaturaCompraAtualizarDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraCreateDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraItemAtualizarDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraReadDTO;
+import cv.igrp.fatura.compra.application.service.FaturaCompraPdfService;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
@@ -22,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,7 @@ public class FaturaCompraController {
     private final CommandBus commandBus;
     private final FaturaCompraRepository faturaCompraRepo;
     private final FornecedorRepository fornecedorRepo;
+    private final FaturaCompraPdfService pdfService;
 
     @GetMapping
     @Operation(summary = "Listar faturas de compra")
@@ -137,5 +140,15 @@ public class FaturaCompraController {
             f.setEstado("ANULADO");
             return ResponseEntity.ok(FaturaCompraReadDTO.from(faturaCompraRepo.save(f)));
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Exportar fatura de compra em PDF")
+    public ResponseEntity<byte[]> pdf(@PathVariable Integer id) {
+        byte[] bytes = pdfService.gerarPdfById(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"fatura-compra-" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(bytes);
     }
 }

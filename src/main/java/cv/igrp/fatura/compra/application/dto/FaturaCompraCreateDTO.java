@@ -42,11 +42,26 @@ public class FaturaCompraCreateDTO {
     @Schema(description = "ID da série de numeração", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer prSerieId;
 
+    @Schema(description = "Meio de pagamento", example = "Transferencia")
+    private String meioPagamento;
+
     @Schema(description = "Termos e condições de pagamento", example = "Pagamento a 60 dias")
     private String termCondicoes;
 
     @Schema(description = "Observações internas", example = "Recebido com danos parciais")
     private String nota;
+
+    @Schema(description = "Banco do fornecedor para pagamento", example = "BCA")
+    private String fornecedorBanco;
+
+    @Schema(description = "IBAN do fornecedor para pagamento", example = "CV60 0002 0000 0000 1234 5")
+    private String fornecedorIban;
+
+    @Schema(description = "Banco da nossa empresa", example = "BCA")
+    private String nossoBanco;
+
+    @Schema(description = "IBAN da nossa empresa", example = "CV60 0002 0000 0000 9876 5")
+    private String nossoIban;
 
     @NotNull
     @Size(min = 1)

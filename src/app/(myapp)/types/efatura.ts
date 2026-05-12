@@ -202,8 +202,13 @@ export interface CriarFaturaCompraRequest {
   tipoFaturaId: number;
   /** Integer ID from GET /parametrizacao/series (@NotNull in DTO) */
   prSerieId: number;
+  meioPagamento?: string;
   dataVencimento?: string;
   observacoes?: string;
+  fornecedorBanco?: string;
+  fornecedorIban?: string;
+  nossoBanco?: string;
+  nossoIban?: string;
   itens: Omit<
     ItemFaturaCompra,
     "id" | "totalSemIva" | "totalIva" | "totalLinha"

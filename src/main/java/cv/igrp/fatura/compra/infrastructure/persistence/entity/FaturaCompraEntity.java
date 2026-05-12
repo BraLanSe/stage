@@ -6,7 +6,6 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaT
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
 import cv.igrp.framework.stereotype.IgrpEntity;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -59,9 +58,6 @@ public class FaturaCompraEntity extends AuditEntity {
     @Column(name = "estado", nullable = false, length = 20)
     private String estado = "RASCUNHO";
 
-    @Column(name = "dt_confirmacao")
-    private LocalDate dtConfirmacao;
-
     @NotNull
     @Column(name = "pago", nullable = false)
     private Boolean pago = false;
@@ -91,11 +87,26 @@ public class FaturaCompraEntity extends AuditEntity {
     @JoinColumn(name = "fatura_compra_id")
     private FaturaCompraEntity faturaCompraOrigem;
 
+    @Column(name = "meio_pagamento", length = 50)
+    private String meioPagamento;
+
     @Column(name = "term_condicoes")
     private String termCondicoes;
 
     @Column(name = "nota")
     private String nota;
+
+    @Column(name = "fornecedor_banco", length = 100)
+    private String fornecedorBanco;
+
+    @Column(name = "fornecedor_iban", length = 50)
+    private String fornecedorIban;
+
+    @Column(name = "nosso_banco", length = 100)
+    private String nossoBanco;
+
+    @Column(name = "nosso_iban", length = 50)
+    private String nossoIban;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
