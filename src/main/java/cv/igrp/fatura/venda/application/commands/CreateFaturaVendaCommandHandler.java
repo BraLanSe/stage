@@ -6,7 +6,6 @@ import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ClienteRepo
 import cv.igrp.fatura.cadastro.infrastructure.persistence.repository.ProdutoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrImpostoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
-import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrUnidadeEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrFaturaTipoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrImpostoRepository;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.repository.PrSerieRepository;
@@ -64,13 +63,16 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
         serie.setContador(serie.getContador() + 1);
         serieRepo.save(serie);
 
-        // Create fatura
         FaturaVendaEntity fatura = new FaturaVendaEntity();
         fatura.setCodigo(serie.getCodigo() + "-" + serie.getContador());
         fatura.setCodigoReferencia(dto.getCodigoReferencia());
         fatura.setTipoFatura(tipoFatura);
         fatura.setDtFaturacao(dto.getDtFaturacao());
         fatura.setLimitFaturacao(dto.getLimitFaturacao());
+        if (dto.getDtVencimentoFatura() != null && dto.getDtVencimentoFatura().isBefore(dto.getDtFaturacao())) {
+            throw IgrpResponseStatusException.of(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A data de vencimento não pode ser anterior à data de faturação.");
+        }
         fatura.setDtVencimentoFatura(dto.getDtVencimentoFatura());
         fatura.setEstado("RASCUNHO");
         fatura.setPago(false);
@@ -95,16 +97,42 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
             FaturaVendaItemEntity item = new FaturaVendaItemEntity();
             item.setFaturaVenda(fatura);
             item.setNumLinha(itemDto.getNumLinha());
-            item.setDesig(itemDto.getDesig());
             item.setDescr(itemDto.getDescr());
             item.setQuantidade(itemDto.getQuantidade());
-            item.setPrecoUnitario(itemDto.getPrecoUnitario());
-            item.setCodigoArtigo(itemDto.getCodigoArtigo());
             item.setEstado("ATIVO");
 
+            // Snapshot (spec §4 + §6): copier desig, codigoArtigo, precoUnitario depuis le produit
+            // Les valeurs du DTO ont priorité sur celles du produit (override explicite possible)
             if (itemDto.getProdutoId() != null) {
-                produtoRepo.findById(itemDto.getProdutoId()).ifPresent(item::setProduto);
+                ProdutoEntity produto = produtoRepo.findById(itemDto.getProdutoId())
+                        .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Produto não encontrado: " + itemDto.getProdutoId()));
+                item.setProduto(produto);
+                item.setDesig(itemDto.getDesig() != null && !itemDto.getDesig().isBlank()
+                        ? itemDto.getDesig() : produto.getDesig());
+                item.setCodigoArtigo(itemDto.getCodigoArtigo() != null && !itemDto.getCodigoArtigo().isBlank()
+                        ? itemDto.getCodigoArtigo() : produto.getCodigo());
+                item.setPrecoUnitario(itemDto.getPrecoUnitario() != null
+                        ? itemDto.getPrecoUnitario() : produto.getPreco());
+
+                // Héritage de l'unité depuis le produit si non fournie
+                if (itemDto.getPrUnidadeId() == null && produto.getPrUnidade() != null) {
+                    item.setPrUnidade(produto.getPrUnidade());
+                }
+            } else {
+                // Pas de produit — desig et precoUnitario obligatoires côté appelant
+                if (itemDto.getDesig() == null || itemDto.getDesig().isBlank()) {
+                    throw IgrpResponseStatusException.of(HttpStatus.BAD_REQUEST,
+                            "Linha " + itemDto.getNumLinha() + ": 'desig' obrigatório quando 'produtoId' não é fornecido");
+                }
+                if (itemDto.getPrecoUnitario() == null) {
+                    throw IgrpResponseStatusException.of(HttpStatus.BAD_REQUEST,
+                            "Linha " + itemDto.getNumLinha() + ": 'precoUnitario' obrigatório quando 'produtoId' não é fornecido");
+                }
+                item.setDesig(itemDto.getDesig());
+                item.setCodigoArtigo(itemDto.getCodigoArtigo());
+                item.setPrecoUnitario(itemDto.getPrecoUnitario());
             }
+
             if (itemDto.getPrUnidadeId() != null) {
                 unidadeRepo.findById(itemDto.getPrUnidadeId()).ifPresent(item::setPrUnidade);
             }
@@ -127,7 +155,6 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
             }
             item.setValorLiquido(calc.valorLiquido());
 
-            // Process taxes
             BigDecimal itemTotalImposto = BigDecimal.ZERO;
             item.setImpostos(new ArrayList<>());
 
@@ -136,20 +163,45 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
                     PrImpostoEntity imposto = impostoRepo.findById(impostoDto.getImpostoId())
                             .orElseThrow(() -> IgrpResponseStatusException.of(HttpStatus.NOT_FOUND, "Imposto não encontrado: " + impostoDto.getImpostoId()));
 
+                    // Inherit tipoCalculo from master when not supplied in DTO
+                    String tipoCalculo = (impostoDto.getTipoCalculo() != null && !impostoDto.getTipoCalculo().isBlank())
+                            ? impostoDto.getTipoCalculo() : imposto.getTipoCalculo();
+
+                    // Base for calculation — DTO value or item valorLiquido
+                    BigDecimal base = impostoDto.getBaseCalculo() != null ? impostoDto.getBaseCalculo() : valorLiquido;
+
+                    BigDecimal taxa = null;
+                    BigDecimal valorFixo = null;
+                    BigDecimal valorImpostoCalc;
+
+                    if ("PERCENTAGEM".equals(tipoCalculo)) {
+                        taxa = impostoDto.getTaxa() != null ? impostoDto.getTaxa()
+                                : (imposto.getValor() != null ? imposto.getValor() : BigDecimal.ZERO);
+                        valorImpostoCalc = base.multiply(taxa).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                    } else { // VALOR_FIXO
+                        valorFixo = impostoDto.getValorFixo() != null ? impostoDto.getValorFixo()
+                                : (imposto.getValor() != null ? imposto.getValor() : BigDecimal.ZERO);
+                        valorImpostoCalc = valorFixo;
+                    }
+
+                    // Explicit DTO override takes final precedence
+                    BigDecimal valorImpostoFinal = impostoDto.getValorImposto() != null
+                            ? impostoDto.getValorImposto() : valorImpostoCalc;
+
                     FaturaVendaItemImpostoEntity itemImposto = new FaturaVendaItemImpostoEntity();
                     itemImposto.setFaturaVendaItem(item);
                     itemImposto.setImposto(imposto);
-                    itemImposto.setTipoCalculo(impostoDto.getTipoCalculo());
-                    itemImposto.setBaseCalculo(impostoDto.getBaseCalculo());
-                    itemImposto.setValorImposto(impostoDto.getValorImposto());
-                    itemImposto.setTaxa(impostoDto.getTaxa());
-                    itemImposto.setValorFixo(impostoDto.getValorFixo());
+                    itemImposto.setTipoCalculo(tipoCalculo);
+                    itemImposto.setBaseCalculo(base);
+                    itemImposto.setTaxa(taxa);
+                    itemImposto.setValorFixo(valorFixo);
+                    itemImposto.setValorImposto(valorImpostoFinal);
                     itemImposto.setMotivoNaoAplicarImposto(impostoDto.getMotivoNaoAplicarImposto());
                     itemImposto.setContaGlId(impostoDto.getContaGlId());
                     itemImposto.setOrdem(impostoDto.getOrdem());
 
                     item.getImpostos().add(itemImposto);
-                    itemTotalImposto = itemTotalImposto.add(impostoDto.getValorImposto());
+                    itemTotalImposto = itemTotalImposto.add(valorImpostoFinal);
                 }
             }
 
@@ -168,6 +220,7 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
         fatura.setValorPorPagar(valorFatura);
 
         FaturaVendaEntity saved = faturaVendaRepo.save(fatura);
+        LOGGER.info("FaturaVenda criada: {} ({})", saved.getCodigo(), saved.getId());
         return ResponseEntity.ok(saved);
     }
 }

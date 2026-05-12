@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/fornecedores")
+@RequestMapping(value = "api/v1/fornecedores", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Fornecedores", description = "Gestão de fornecedores")
 public class FornecedorController {

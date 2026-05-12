@@ -1,6 +1,8 @@
 package cv.igrp.fatura.venda.infrastructure.persistence.repository;
 
 import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FaturaVendaRepository extends JpaRepository<FaturaVendaEntity, Integer> {

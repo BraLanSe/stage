@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,7 @@ import java.util.List;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/pagamentos")
+@RequestMapping(value = "api/v1/pagamentos", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Pagamentos", description = "Gestão de pagamentos")
 public class PagamentoController {
@@ -30,8 +33,8 @@ public class PagamentoController {
 
     @GetMapping
     @Operation(summary = "Listar todos os pagamentos")
-    public ResponseEntity<List<PagamentoEntity>> listAll() {
-        return ResponseEntity.ok(pagamentoRepo.findAll());
+    public ResponseEntity<Page<PagamentoEntity>> listAll(Pageable pageable) {
+        return ResponseEntity.ok(pagamentoRepo.findAll(pageable));
     }
 
     @PostMapping

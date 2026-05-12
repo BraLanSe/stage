@@ -6,6 +6,7 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaT
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
 import cv.igrp.framework.stereotype.IgrpEntity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,7 +39,7 @@ public class FaturaCompraEntity extends AuditEntity {
     private String codigoReferencia;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_fatura_id", nullable = false)
     private PrFaturaTipoEntity tipoFatura;
 
@@ -51,6 +52,9 @@ public class FaturaCompraEntity extends AuditEntity {
 
     @Column(name = "dt_vencimento_fatura")
     private LocalDate dtVencimentoFatura;
+
+    @Column(name = "dt_confirmacao")
+    private LocalDate dtConfirmacao;
 
     @Column(name = "estado", nullable = false, length = 20)
     private String estado = "RASCUNHO";
@@ -94,19 +98,20 @@ public class FaturaCompraEntity extends AuditEntity {
     private String nota;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fornecedor_id", nullable = false)
     private FornecedorEntity fornecedor;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pr_serie_id", nullable = false)
     private PrSerieEntity prSerie;
 
     @NotBlank
     @Column(name = "utilizador", nullable = false, length = 100)
-    private String utilizador;
+    private String utilizador = "system";
 
+    @JsonIgnoreProperties("faturaCompra")
     @OneToMany(mappedBy = "faturaCompra", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaturaCompraItemEntity> items = new ArrayList<>();
 }

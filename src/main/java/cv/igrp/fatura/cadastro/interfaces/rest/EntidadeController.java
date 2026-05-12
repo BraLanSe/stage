@@ -10,12 +10,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/entidade")
+@RequestMapping(value = "api/v1/entidade", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Entidade", description = "Gestão da entidade (empresa)")
 public class EntidadeController {

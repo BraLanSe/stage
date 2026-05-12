@@ -26,7 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
     @Value("${auth.jwt.issuer}")

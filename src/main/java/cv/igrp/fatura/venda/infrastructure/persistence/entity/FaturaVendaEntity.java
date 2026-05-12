@@ -6,6 +6,8 @@ import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrFaturaT
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrSerieEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
 import cv.igrp.framework.stereotype.IgrpEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,7 +40,7 @@ public class FaturaVendaEntity extends AuditEntity {
     private String codigoReferencia;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_fatura_id", nullable = false)
     private PrFaturaTipoEntity tipoFatura;
 
@@ -83,6 +85,7 @@ public class FaturaVendaEntity extends AuditEntity {
     @Column(name = "valor_por_pagar", nullable = false, precision = 18, scale = 2)
     private BigDecimal valorPorPagar = BigDecimal.ZERO;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fatura_venda_id")
     private FaturaVendaEntity faturaVendaOrigem;
@@ -93,20 +96,24 @@ public class FaturaVendaEntity extends AuditEntity {
     @Column(name = "nota")
     private String nota;
 
+    @Column(name = "meio_pagamento", length = 100)
+    private String meioPagamento;
+
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
     private ClienteEntity cliente;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pr_serie_id", nullable = false)
     private PrSerieEntity prSerie;
 
     @NotBlank
     @Column(name = "utilizador", nullable = false, length = 100)
-    private String utilizador;
+    private String utilizador = "system";
 
+    @JsonIgnoreProperties("faturaVenda")
     @OneToMany(mappedBy = "faturaVenda", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaturaVendaItemEntity> items = new ArrayList<>();
 }

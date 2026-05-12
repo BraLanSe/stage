@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/produtos")
+@RequestMapping(value = "api/v1/produtos", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Produtos", description = "Gestão de produtos")
 public class ProdutoController {

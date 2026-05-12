@@ -39,7 +39,7 @@ public class PagamentoEntity extends AuditEntity {
     private String numDocumento;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_pagamento_id", nullable = false)
     private PrMetodoPagamentoEntity tipoPagamento;
 

@@ -1,6 +1,7 @@
 package cv.igrp.fatura.venda.infrastructure.persistence.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import cv.igrp.fatura.cadastro.infrastructure.persistence.entity.ProdutoEntity;
 import cv.igrp.fatura.parametrizacao.infrastructure.persistence.entity.PrUnidadeEntity;
 import cv.igrp.fatura.shared.config.AuditEntity;
@@ -97,6 +98,7 @@ public class FaturaVendaItemEntity extends AuditEntity {
     @Column(name = "estado", nullable = false)
     private String estado = "ATIVO";
 
+    @JsonIgnoreProperties("faturaVendaItem")
     @OneToMany(mappedBy = "faturaVendaItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaturaVendaItemImpostoEntity> impostos = new ArrayList<>();
 }

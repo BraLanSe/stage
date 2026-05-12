@@ -14,9 +14,15 @@ import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemE
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
 import cv.igrp.fatura.shared.util.FaturaItemCalculo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +33,12 @@ import java.util.List;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/faturas-compra")
+@RequestMapping(value = "api/v1/faturas-compra", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "FaturaCompra", description = "Gestão de faturas de compra")
 public class FaturaCompraController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FaturaCompraController.class);
 
     private final CommandBus commandBus;
     private final FaturaCompraRepository faturaCompraRepo;

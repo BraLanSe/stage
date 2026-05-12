@@ -15,6 +15,7 @@ import cv.igrp.fatura.venda.infrastructure.persistence.entity.FaturaVendaItemEnt
 import cv.igrp.fatura.venda.infrastructure.persistence.repository.FaturaVendaRepository;
 import cv.igrp.fatura.shared.util.FaturaItemCalculo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +31,12 @@ import java.util.List;
 
 @IgrpController
 @RestController
-@RequestMapping("api/v1/faturas-venda")
+@RequestMapping(value = "api/v1/faturas-venda", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "FaturaVenda", description = "Gestão de faturas de venda")
 public class FaturaVendaController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FaturaVendaController.class);
 
     private final CommandBus commandBus;
     private final FaturaVendaRepository faturaVendaRepo;

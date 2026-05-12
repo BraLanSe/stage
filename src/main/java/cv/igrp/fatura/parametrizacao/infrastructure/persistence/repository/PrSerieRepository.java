@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface PrSerieRepository extends JpaRepository<PrSerieEntity, Integer> {
+
     Optional<PrSerieEntity> findByCodigo(String codigo);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
