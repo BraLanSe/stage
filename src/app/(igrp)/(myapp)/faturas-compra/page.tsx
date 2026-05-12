@@ -76,7 +76,10 @@ function AcoesMenu({ id }: { id?: number }) {
             <button
               type="button"
               className="block w-full px-4 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                window.open(`/api/v1/faturas-compra/${id}/pdf`, "_blank");
+                setOpen(false);
+              }}
             >
               Imprimir PDF
             </button>
