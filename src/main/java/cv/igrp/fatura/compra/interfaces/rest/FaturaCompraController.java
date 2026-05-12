@@ -49,10 +49,8 @@ public class FaturaCompraController {
 
     @GetMapping
     @Operation(summary = "Listar faturas de compra")
-    public ResponseEntity<List<FaturaCompraReadDTO>> list() {
-        return ResponseEntity.ok(faturaCompraRepo.findAll().stream()
-                .map(FaturaCompraReadDTO::from)
-                .toList());
+    public ResponseEntity<Page<FaturaCompraReadDTO>> list(Pageable pageable) {
+        return ResponseEntity.ok(faturaCompraRepo.findAll(pageable).map(FaturaCompraReadDTO::from));
     }
 
     @PostMapping

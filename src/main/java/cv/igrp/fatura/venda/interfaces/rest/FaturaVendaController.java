@@ -21,6 +21,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,10 +49,8 @@ public class FaturaVendaController {
 
     @GetMapping
     @Operation(summary = "Listar faturas de venda")
-    public ResponseEntity<List<FaturaVendaReadDTO>> list() {
-        return ResponseEntity.ok(faturaVendaRepo.findAll().stream()
-                .map(FaturaVendaReadDTO::from)
-                .toList());
+    public ResponseEntity<Page<FaturaVendaReadDTO>> list(Pageable pageable) {
+        return ResponseEntity.ok(faturaVendaRepo.findAll(pageable).map(FaturaVendaReadDTO::from));
     }
 
     @PostMapping
