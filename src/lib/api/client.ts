@@ -2,7 +2,7 @@
 // eFatura — Base API Client → localhost:8082/api/v1
 // ────────────────────────────────────────────────────────────
 
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
 
 export class ApiError extends Error {

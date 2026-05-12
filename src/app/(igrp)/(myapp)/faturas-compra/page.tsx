@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { FaturaCompraReadDTO } from "@/app/(myapp)/types/efatura";
 import { useFaturasCompra } from "@/hooks/use-faturas-compra";
+import { API_BASE } from "@/lib/api/client";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -77,7 +78,7 @@ function AcoesMenu({ id }: { id?: number }) {
               type="button"
               className="block w-full px-4 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
               onClick={() => {
-                window.open(`/api/v1/faturas-compra/${id}/pdf`, "_blank");
+                window.open(`${API_BASE}/faturas-compra/${id}/pdf`, "_blank");
                 setOpen(false);
               }}
             >
