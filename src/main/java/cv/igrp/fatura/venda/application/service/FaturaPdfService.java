@@ -103,10 +103,17 @@ public class FaturaPdfService {
             }
             hdr.addCell(compCell);
 
-            // Right: two stacked bordered boxes
+            // Right: stacked bordered boxes — invoice number / series / ORIGINAL
+            String serieLabel = "";
+            if (fatura.getPrSerie() != null) {
+                var s = fatura.getPrSerie();
+                serieLabel = ok(s.getDesig()) ? s.getDesig() : str(s.getCodigo(), "");
+            }
+
             PdfPTable docBoxes = new PdfPTable(1);
             docBoxes.setWidthPercentage(100);
             docBoxes.addCell(box("Fatura N.º " + codigo, fBold9));
+            if (ok(serieLabel)) docBoxes.addCell(box(serieLabel, fGray8));
             docBoxes.addCell(box("ORIGINAL", fBold9));
 
             PdfPCell docCell = noborder();
