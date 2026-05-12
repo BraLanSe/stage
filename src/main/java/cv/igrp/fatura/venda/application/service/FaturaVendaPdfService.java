@@ -96,7 +96,6 @@ public class FaturaVendaPdfService {
         if (f.getDtVencimentoFatura() != null) {
             rightCell.addElement(labelValue("Data de Vencimento", format(f.getDtVencimentoFatura()), metaFont, valFont));
         }
-        rightCell.addElement(labelValue("Estado", f.getEstado(), metaFont, valFont));
         tbl.addCell(rightCell);
 
         doc.add(tbl);
