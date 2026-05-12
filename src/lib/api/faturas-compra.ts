@@ -1,6 +1,5 @@
 import type {
   CriarFaturaCompraRequest,
-  FaturaCompra,
   FaturaCompraReadDTO,
   PaginatedResponse,
 } from "@/app/(myapp)/types/efatura";
@@ -73,7 +72,7 @@ function toFaturaCompraDTO(data: CriarFaturaCompraRequest): Record<string, unkno
 
 export const faturasCompraApi = {
   listar: (page = 0, size = 10) =>
-    apiRequest<PaginatedResponse<FaturaCompra>>(
+    apiRequest<PaginatedResponse<FaturaCompraReadDTO>>(
       `${BASE}?page=${page}&size=${size}`,
     ),
 
@@ -81,7 +80,7 @@ export const faturasCompraApi = {
 
   criar: (data: CriarFaturaCompraRequest) => {
     const dto = toFaturaCompraDTO(data);
-    return apiRequest<FaturaCompra>(BASE, {
+    return apiRequest<FaturaCompraReadDTO>(BASE, {
       method: "POST",
       body: JSON.stringify(dto),
     });
@@ -102,7 +101,7 @@ export const faturasCompraApi = {
       }[];
     },
   ) =>
-    apiRequest<FaturaCompra>(`${BASE}/${id}`, {
+    apiRequest<FaturaCompraReadDTO>(`${BASE}/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
