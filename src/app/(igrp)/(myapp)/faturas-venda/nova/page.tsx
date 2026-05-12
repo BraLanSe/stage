@@ -92,6 +92,16 @@ function formatCVE(v: number) {
     maximumFractionDigits: 2,
   }).format(v);
 }
+
+function formatCVEInt(v: number) {
+  if (Number.isNaN(v)) return "0 CVE";
+  return new Intl.NumberFormat("pt-CV", {
+    style: "currency",
+    currency: "CVE",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(v);
+}
 /* IGRP-CUSTOM-CODE-END */
 
 export default function NovaFaturaVendaPage() {
@@ -156,6 +166,7 @@ export default function NovaFaturaVendaPage() {
     },
     { valorIliquido: 0, valorImposto: 0, valorTotal: 0 },
   );
+  const valorTotalFinal = Math.round(valorTotal);
 
   function handleAdicionarProduto() {
     const produto = produtos.find((p) => String(p.id) === addProdutoId);
@@ -528,7 +539,7 @@ export default function NovaFaturaVendaPage() {
             <IGRPCard name="card-valor-total" tag="card-valor-total" className="rounded-2xl border border-[#3579f6] bg-[#3579f6]/5">
               <IGRPCardContent className="p-5 text-center">
                 <p className="text-xs font-medium mb-1 uppercase tracking-wide text-[#3579f6]">Valor Total</p>
-                <p className="text-2xl font-bold text-[#3579f6]">{formatCVE(valorTotal)}</p>
+                <p className="text-2xl font-bold text-[#3579f6]">{formatCVEInt(valorTotalFinal)}</p>
               </IGRPCardContent>
             </IGRPCard>
           </div>
