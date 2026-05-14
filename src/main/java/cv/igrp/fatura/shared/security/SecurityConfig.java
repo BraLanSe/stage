@@ -65,6 +65,7 @@ public class SecurityConfig {
 
         if ("development".equals(activeProfile)) {
             http.csrf(AbstractHttpConfigurer::disable);
+            http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }
