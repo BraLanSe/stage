@@ -11,6 +11,7 @@ import cv.igrp.fatura.compra.application.dto.FaturaCompraItemAtualizarDTO;
 import cv.igrp.fatura.compra.application.dto.FaturaCompraReadDTO;
 import cv.igrp.fatura.compra.application.service.FaturaCompraPdfService;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraEntity;
+import cv.igrp.fatura.shared.domain.exceptions.IgrpResponseStatusException;
 import cv.igrp.fatura.compra.infrastructure.persistence.entity.FaturaCompraItemEntity;
 import cv.igrp.fatura.compra.infrastructure.persistence.repository.FaturaCompraRepository;
 import cv.igrp.fatura.shared.util.FaturaItemCalculo;
@@ -74,7 +75,9 @@ public class FaturaCompraController {
                                                       @RequestBody FaturaCompraAtualizarDTO dto) {
         return faturaCompraRepo.findById(id).map(fatura -> {
             if ("CONFIRMADO".equals(fatura.getEstado())) {
-                return ResponseEntity.status(422).<FaturaCompraReadDTO>build();
+                throw IgrpResponseStatusException.of(
+                        org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Fatura já confirmada e não pode ser alterada.");
             }
             if (dto.getFornecedorId() != null) {
                 fornecedorRepo.findById(dto.getFornecedorId()).ifPresent(fatura::setFornecedor);
@@ -102,7 +105,7 @@ public class FaturaCompraController {
                     fatura.getItems().add(item);
                 }
                 BigDecimal valorIliquido = fatura.getItems().stream()
-                        .map(FaturaCompraItemEntity::getValorBruto)
+                        .map(FaturaCompraItemEntity::getValorLiquido)
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
                         .setScale(2, RoundingMode.HALF_UP);
                 BigDecimal valorImposto = fatura.getItems().stream()

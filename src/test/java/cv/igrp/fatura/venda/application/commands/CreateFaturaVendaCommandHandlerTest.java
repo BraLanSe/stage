@@ -149,8 +149,8 @@ class CreateFaturaVendaCommandHandlerTest {
 
         // bruto=1000, descC 10%=100, liquido=900, no IVA, total=900
         assertAll(
-                () -> assertEquals(new BigDecimal("1000.00"), saved.getValorIliquido()),
-                () -> assertEquals(new BigDecimal("1000.00"), saved.getValorFatura()),
+                () -> assertEquals(new BigDecimal("900.00"), saved.getValorIliquido()),
+                () -> assertEquals(new BigDecimal("900.00"), saved.getValorFatura()),
                 () -> assertEquals(1, saved.getItems().size()),
                 () -> assertEquals(bd("900.0000"), saved.getItems().get(0).getValorLiquido()),
                 () -> assertEquals(bd("100.0000"), saved.getItems().get(0).getDescontoComercialValor())
