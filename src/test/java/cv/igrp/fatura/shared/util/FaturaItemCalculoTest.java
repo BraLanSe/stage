@@ -4,123 +4,105 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class FaturaItemCalculoTest {
 
     @Test
-    void calcular_noDiscount_computesCorrectly() {
-        // 2 units × 100.00, 0% discount, 20% IVA
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                new BigDecimal("2"),
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("20")
-        );
+    void shouldCalculateSimpleTotalWithoutDiscount() {
+        var r = FaturaItemCalculo.calcular(
+                bd("2"), bd("100.00"), null, bd("15"));
 
-        assertThat(r.valorBruto()).isEqualByComparingTo("200.0000");
-        assertThat(r.descontoComercialValor()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("200.0000");
-        assertThat(r.valorImposto()).isEqualByComparingTo("40.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("240.0000");
+        assertAll(
+                () -> assertEquals(bd("200.0000"), r.valorBruto()),
+                () -> assertEquals(BigDecimal.ZERO.setScale(4), r.descontoComercialValor().setScale(4)),
+                () -> assertEquals(bd("200.0000"), r.valorLiquido()),
+                () -> assertEquals(bd("30.0000"), r.valorImposto()),
+                () -> assertEquals(bd("230.0000"), r.valorTotal())
+        );
     }
 
     @Test
-    void calcular_withCommercialDiscount_reducesBase() {
-        // 1 unit × 200.00, 10% commercial discount, 20% IVA
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                BigDecimal.ONE,
-                new BigDecimal("200.00"),
-                new BigDecimal("10"),
-                new BigDecimal("20")
-        );
+    void shouldCalculateTotalWithCommercialDiscountCorrectly() {
+        var r = FaturaItemCalculo.calcular(
+                bd("1"), bd("1000.00"), bd("10"), bd("0"));
 
-        assertThat(r.valorBruto()).isEqualByComparingTo("200.0000");
-        assertThat(r.descontoComercialValor()).isEqualByComparingTo("20.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("180.0000");
-        assertThat(r.valorImposto()).isEqualByComparingTo("36.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("216.0000");
+        assertAll(
+                () -> assertEquals(bd("1000.0000"), r.valorBruto()),
+                () -> assertEquals(bd("100.0000"), r.descontoComercialValor()),
+                () -> assertEquals(bd("900.0000"), r.valorLiquido()),
+                () -> assertEquals(bd("0.0000"), r.valorImposto()),
+                () -> assertEquals(bd("900.0000"), r.valorTotal())
+        );
     }
 
     @Test
-    void calcular_withFinancialDiscount_appliedAfterCommercial() {
-        // 1 unit × 1000.00, 10% commercial, 5% financial, 20% IVA
-        // bruto = 1000, descC = 100, afterComercial = 900, descF = 45, liquido = 855, IVA = 171, total = 1026
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                BigDecimal.ONE,
-                new BigDecimal("1000.00"),
-                new BigDecimal("10"),
-                new BigDecimal("5"),
-                new BigDecimal("20")
-        );
+    void shouldApplyFinancialDiscountAfterCommercialDiscount() {
+        // bruto = 1000, descC 10% = 100 → afterC = 900, descF 5% = 45 → liquido = 855
+        var r = FaturaItemCalculo.calcular(
+                bd("1"), bd("1000.00"), bd("10"), bd("5"), bd("0"));
 
-        assertThat(r.valorBruto()).isEqualByComparingTo("1000.0000");
-        assertThat(r.descontoComercialValor()).isEqualByComparingTo("100.0000");
-        assertThat(r.descontoFinanceiroValor()).isEqualByComparingTo("45.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("855.0000");
-        assertThat(r.valorImposto()).isEqualByComparingTo("171.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("1026.0000");
+        assertAll(
+                () -> assertEquals(bd("1000.0000"), r.valorBruto()),
+                () -> assertEquals(bd("100.0000"), r.descontoComercialValor()),
+                () -> assertEquals(bd("45.0000"), r.descontoFinanceiroValor()),
+                () -> assertEquals(bd("855.0000"), r.valorLiquido()),
+                () -> assertEquals(bd("0.0000"), r.valorImposto()),
+                () -> assertEquals(bd("855.0000"), r.valorTotal())
+        );
     }
 
     @Test
-    void calcular_hundredPercentCommercialDiscount_yieldsZeroTotal() {
-        // 100% commercial discount → net and total should be zero
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                BigDecimal.ONE,
-                new BigDecimal("500.00"),
-                new BigDecimal("100"),
-                new BigDecimal("20")
-        );
+    void shouldCalculateTotalWithBothDiscountsAndIva() {
+        // bruto=500, descC 20%=100 → afterC=400, descF 5%=20 → liquido=380, IVA 15%=57 → total=437
+        var r = FaturaItemCalculo.calcular(
+                bd("1"), bd("500.00"), bd("20"), bd("5"), bd("15"));
 
-        assertThat(r.descontoComercialValor()).isEqualByComparingTo("500.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorImposto()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("0.0000");
+        assertAll(
+                () -> assertEquals(bd("500.0000"), r.valorBruto()),
+                () -> assertEquals(bd("100.0000"), r.descontoComercialValor()),
+                () -> assertEquals(bd("20.0000"), r.descontoFinanceiroValor()),
+                () -> assertEquals(bd("380.0000"), r.valorLiquido()),
+                () -> assertEquals(bd("57.0000"), r.valorImposto()),
+                () -> assertEquals(bd("437.0000"), r.valorTotal())
+        );
     }
 
     @Test
-    void calcular_hundredPercentFinancialDiscount_yieldsZeroNet() {
-        // 0% commercial, 100% financial → net = 0
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                BigDecimal.ONE,
-                new BigDecimal("300.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("100"),
-                new BigDecimal("20")
-        );
+    void shouldHandleNullInputsAsZeroOrOne() {
+        // null qty → 1, null price → 0 → all zeros
+        var r = FaturaItemCalculo.calcular(null, null, null, null);
 
-        assertThat(r.descontoFinanceiroValor()).isEqualByComparingTo("300.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("0.0000");
+        assertAll(
+                () -> assertEquals(BigDecimal.ZERO.setScale(4), r.valorBruto().setScale(4)),
+                () -> assertEquals(BigDecimal.ZERO.setScale(4), r.valorTotal().setScale(4))
+        );
     }
 
     @Test
-    void calcular_nullDiscounts_treatedAsZero() {
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                new BigDecimal("3"),
-                new BigDecimal("50.00"),
-                null,
-                null,
-                new BigDecimal("15")
-        );
+    void shouldCalculateWithMultipleQuantity() {
+        // qty=3, price=200, IVA=20% → bruto=600, imposto=120, total=720
+        var r = FaturaItemCalculo.calcular(
+                bd("3"), bd("200.00"), null, bd("20"));
 
-        assertThat(r.valorBruto()).isEqualByComparingTo("150.0000");
-        assertThat(r.descontoComercialValor()).isEqualByComparingTo("0.0000");
-        assertThat(r.descontoFinanceiroValor()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorLiquido()).isEqualByComparingTo("150.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo("172.5000");
+        assertAll(
+                () -> assertEquals(bd("600.0000"), r.valorBruto()),
+                () -> assertEquals(bd("120.0000"), r.valorImposto()),
+                () -> assertEquals(bd("720.0000"), r.valorTotal())
+        );
     }
 
     @Test
-    void calcular_zeroIva_totalEqualsLiquido() {
-        FaturaItemCalculo.Resultado r = FaturaItemCalculo.calcular(
-                new BigDecimal("5"),
-                new BigDecimal("20.00"),
-                BigDecimal.ZERO,
-                BigDecimal.ZERO
-        );
+    void shouldReturnZeroDiscountsWhenNoneProvided() {
+        var r = FaturaItemCalculo.calcular(bd("1"), bd("100"), bd("0"), bd("0"), bd("0"));
 
-        assertThat(r.valorImposto()).isEqualByComparingTo("0.0000");
-        assertThat(r.valorTotal()).isEqualByComparingTo(r.valorLiquido());
+        assertAll(
+                () -> assertEquals(0, r.descontoComercialValor().compareTo(BigDecimal.ZERO)),
+                () -> assertEquals(0, r.descontoFinanceiroValor().compareTo(BigDecimal.ZERO))
+        );
+    }
+
+    private static BigDecimal bd(String val) {
+        return new BigDecimal(val);
     }
 }

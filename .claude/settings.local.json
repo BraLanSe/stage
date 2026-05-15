@@ -84,7 +84,11 @@
       "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFatura-front\" branch -a)",
       "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" status --short)",
       "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFatura-front\" status --short)",
-      "Bash(git commit -m 'chore: sync frontend changes \\(payment method, rounding\\) before branch split *)"
+      "Bash(git commit -m 'chore: sync frontend changes \\(payment method, rounding\\) before branch split *)",
+      "Bash(git push *)",
+      "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" show --stat e79d794a)",
+      "Bash(git *)",
+      "Bash(claude -p 'FIX FRONTEND DISPLAY \\(CORS & MAPPING\\): *)"
     ]
   }
 }
