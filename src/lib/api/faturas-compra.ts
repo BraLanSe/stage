@@ -107,5 +107,5 @@ export const faturasCompraApi = {
     }),
 
   confirmar: (id: number) =>
-    apiRequest<FaturaCompra>(`${BASE}/${id}/confirmar`, { method: "PUT" }),
+    apiRequest<FaturaCompraReadDTO>(`${BASE}/${id}/confirmar`, { method: "PUT" }),
 };

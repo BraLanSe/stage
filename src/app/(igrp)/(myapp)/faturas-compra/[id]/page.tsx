@@ -30,7 +30,7 @@ const MEIOS_PAGAMENTO = [
 ];
 
 function fmt(v?: number | null) {
-  if (v === undefined || v === null) return "0,00";
+  if (v === undefined || v === null || isNaN(v)) return "0,00";
   return new Intl.NumberFormat("pt-CV", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

@@ -32,12 +32,13 @@ import {
   useConfirmarFaturaVenda,
   useFaturaVenda,
 } from "@/hooks/use-faturas-venda";
+import { API_BASE } from "@/lib/api/client";
 import { faturasVendaApi } from "@/lib/api/faturas-venda";
 
 // ── Helpers ───────────────────────────────────────────────────
 
 function fmt(v?: number) {
-  if (v === undefined || v === null) return "—";
+  if (v === undefined || v === null || isNaN(v)) return "0,00";
   return new Intl.NumberFormat("pt-CV", {
     style: "currency",
     currency: "CVE",
@@ -241,12 +242,17 @@ export default function FaturaVendaDetailPage() {
   useEffect(() => {
     if (fatura) {
       const raw = fatura as any;
-      setItens(raw.items ?? fatura.itens ?? []);
+      const rawItems: any[] = raw.items ?? fatura.itens ?? [];
+      setItens(rawItems.map((item: any) => ({
+        ...item,
+        percentagemIva: item.percentagemIva ?? item.impostos?.[0]?.taxa ?? 0,
+      })));
       setSelectedClienteId(fatura.clienteId ?? raw.cliente?.id);
       setSerie(fatura.serie ?? raw.prSerie?.codigo ?? "2022A");
       setData_((fatura.dataEmissao ?? raw.dtFaturacao)?.split("T")[0] ?? "");
       setCondicoes(fatura.condicoesPagamento ?? raw.termCondicoes ?? "3 dias");
       setRequisicao(fatura.requisicao ?? "");
+      setDescFinanceiro(raw.descontoFinanceiro != null ? String(raw.descontoFinanceiro) : "0");
       setNota(fatura.nota ?? "");
     }
   }, [fatura]);
@@ -564,7 +570,7 @@ export default function FaturaVendaDetailPage() {
                   ) : (
                     itens.map((item, i) => (
                       <LinhaProduto
-                        key={i}
+                        key={item.id ?? i}
                         item={item}
                         index={i}
                         onChange={(f, v) => updateItem(i, f, v)}
@@ -681,8 +687,7 @@ export default function FaturaVendaDetailPage() {
                 showIcon
                 iconName="Printer"
                 onClick={() => {
-                  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
-                  window.open(`${base}/pdf/faturas-venda/${id}`, "_blank");
+                  window.open(`${API_BASE}/faturas-venda/${id}/pdf`, "_blank");
                 }}
               >
                 Exportar PDF

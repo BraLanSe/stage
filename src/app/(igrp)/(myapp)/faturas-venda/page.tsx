@@ -12,8 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { FaturaVendaReadDTO } from "@/app/(myapp)/types/efatura";
 import { useFaturasVenda } from "@/hooks/use-faturas-venda";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8082/api/v1";
+import { API_BASE } from "@/lib/api/client";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -41,7 +40,7 @@ function AcoesMenu({ id }: { id?: number }) {
 
   function handlePrint() {
     if (id == null) return;
-    window.open(`${API_BASE}/pdf/faturas-venda/${id}`, "_blank");
+    window.open(`${API_BASE}/faturas-venda/${id}/pdf`, "_blank");
     setOpen(false);
   }
 
