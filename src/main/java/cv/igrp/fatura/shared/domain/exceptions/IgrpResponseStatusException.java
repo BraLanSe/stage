@@ -43,6 +43,6 @@ public class IgrpResponseStatusException extends ErrorResponseException {
     public static <T> IgrpResponseStatusException notFound(String title) {
         var problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problemDetail.setTitle(title);
-        return new IgrpResponseStatusException(HttpStatus.BAD_REQUEST, problemDetail, null);
+        return new IgrpResponseStatusException(HttpStatus.NOT_FOUND, problemDetail, null);
     }
 }

@@ -209,7 +209,7 @@ public class CreateFaturaVendaCommandHandler implements CommandHandler<CreateFat
             item.setValorTotal(calc.valorLiquido().add(itemTotalImposto).setScale(4, RoundingMode.HALF_UP));
 
             fatura.getItems().add(item);
-            totalIliquido = totalIliquido.add(calc.valorBruto());
+            totalIliquido = totalIliquido.add(calc.valorLiquido());
             totalImposto = totalImposto.add(itemTotalImposto);
         }
 
