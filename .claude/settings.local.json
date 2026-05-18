@@ -88,7 +88,16 @@
       "Bash(git push *)",
       "Bash(git -C \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" show --stat e79d794a)",
       "Bash(git *)",
-      "Bash(claude -p 'FIX FRONTEND DISPLAY \\(CORS & MAPPING\\): *)"
+      "Bash(claude -p 'FIX FRONTEND DISPLAY \\(CORS & MAPPING\\): *)",
+      "Bash(mvn test *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\bradl\\\\OneDrive\\\\Ambiente de Trabalho\\\\igrp première essai\\\\projects\\\\eFactura\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)",
+      "Bash(Select-String \"faturas-venda|faturas-compra|faturas-compra.ts|faturas-venda.ts|client.ts\")",
+      "Bash(Get-Content .gitignore)",
+      "Bash(Select-String \"target\")",
+      "Bash(Select-Object -First 10)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

@@ -1,0 +1,34 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "springdoc",
+    "springboot",
+    "igrp",
+    "fatura",
+    "efatura",
+    "datasource",
+    "hikari",
+    "eureka",
+    "kubernetes",
+    "oauth",
+    "resourceserver",
+    "swagger",
+    "openapi",
+    "lombok",
+    "mapstruct",
+    "flyway",
+    "multitenancy",
+    "cadastro",
+    "compra",
+    "venda",
+    "contabilidade",
+    "RASCUNHO",
+    "CONFIRMADO"
+  ],
+  "ignorePaths": [
+    "target/**",
+    "node_modules/**",
+    "*.class"
+  ]
+}
